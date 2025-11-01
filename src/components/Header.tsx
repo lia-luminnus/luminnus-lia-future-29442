@@ -103,6 +103,9 @@ const Header = () => {
           {/* Action Buttons - Desktop */}
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
+            <Link to="/auth" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300">
+              Área do Cliente
+            </Link>
             <a href="https://luminnus-lia-assistant.bubbleapps.io/" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300">
               {t('btn_login')}
             </a>
@@ -132,6 +135,9 @@ const Header = () => {
               <div className="flex justify-center pb-2">
                 <LanguageSwitcher />
               </div>
+              <Link to="/auth" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center" onClick={() => setMobileMenuOpen(false)}>
+                Área do Cliente
+              </Link>
               <a href="https://luminnus-lia-assistant.bubbleapps.io/" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center">
                 {t('btn_login')}
               </a>
