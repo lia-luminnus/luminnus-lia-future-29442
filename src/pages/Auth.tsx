@@ -17,17 +17,68 @@ const Auth = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Redirecionar se já estiver logado
+  /**
+   * REDIRECIONAMENTO AUTOMÁTICO
+   * Se o usuário já estiver logado, redireciona para a Área do Cliente
+   */
   useEffect(() => {
     if (user) {
-      navigate('/');
+      navigate('/area-do-cliente');
     }
   }, [user, navigate]);
 
+  /**
+   * VALIDAÇÃO DE FORMULÁRIO
+   * Verifica se todos os campos obrigatórios estão preenchidos
+   */
+  const validateForm = (): string | null => {
+    if (!email.trim()) {
+      return 'Preencha o campo de email';
+    }
+
+    if (!password.trim()) {
+      return 'Preencha o campo de senha';
+    }
+
+    if (!isLogin && !fullName.trim()) {
+      return 'Preencha o campo de nome completo';
+    }
+
+    // Validação básica de email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return 'Email inválido';
+    }
+
+    // Validação de senha mínima
+    if (password.length < 6) {
+      return 'A senha deve ter no mínimo 6 caracteres';
+    }
+
+    return null;
+  };
+
+  /**
+   * FUNÇÃO DE SUBMIT DO FORMULÁRIO
+   * Valida os campos e envia para autenticação
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validação dos campos
+    const validationError = validateForm();
+    if (validationError) {
+      toast({
+        title: 'Erro de validação',
+        description: validationError,
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
 
+    // Tentativa de autenticação
     const { error } = isLogin
       ? await signIn(email, password)
       : await signUp(email, password, fullName);
@@ -45,14 +96,19 @@ const Auth = () => {
         title: 'Sucesso!',
         description: isLogin ? 'Login realizado com sucesso' : 'Conta criada com sucesso'
       });
-      navigate('/');
+      // Redireciona para a Área do Cliente
+      navigate('/area-do-cliente');
     }
   };
 
+  /**
+   * FUNÇÃO DE LOGIN COM GOOGLE
+   * Inicia o fluxo de autenticação OAuth do Google
+   */
   const handleGoogleSignIn = async () => {
     setLoading(true);
     const { error } = await signInWithGoogle();
-    
+
     if (error) {
       setLoading(false);
       toast({
@@ -61,7 +117,8 @@ const Auth = () => {
         variant: 'destructive'
       });
     }
-    // Não precisamos setLoading(false) aqui porque o redirect vai acontecer
+    // Se não houver erro, o usuário será redirecionado para o Google OAuth
+    // e depois para /area-do-cliente automaticamente
   };
 
   return (
