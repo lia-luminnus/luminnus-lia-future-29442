@@ -121,7 +121,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/area-do-cliente`,
+        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: { full_name: fullName }
       }
     });
@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/area-do-cliente`,
+        redirectTo: `${window.location.origin}/dashboard`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
