@@ -14,7 +14,58 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      user_plans: {
+        Row: {
+          id: string
+          user_id: string
+          plan_name: 'Start' | 'Plus' | 'Pro'
+          status: 'ativo' | 'inativo' | 'cancelado'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          plan_name: 'Start' | 'Plus' | 'Pro'
+          status?: 'ativo' | 'inativo' | 'cancelado'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          plan_name?: 'Start' | 'Plus' | 'Pro'
+          status?: 'ativo' | 'inativo' | 'cancelado'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      profiles: {
+        Row: {
+          id: string
+          user_id: string
+          full_name: string | null
+          avatar_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          full_name?: string | null
+          avatar_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

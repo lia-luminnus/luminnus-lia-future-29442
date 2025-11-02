@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPlan } from '@/hooks/useUserPlan';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import liaLogo from '@/assets/lia-assistant-auth.png';
 
 const Auth = () => {
@@ -13,19 +14,27 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingPlan, setCheckingPlan] = useState(false);
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { hasActivePlan, loading: planLoading } = useUserPlan();
   const { toast } = useToast();
   const navigate = useNavigate();
 
   /**
-   * REDIRECIONAMENTO AUTOMÁTICO
-   * Se o usuário já estiver logado, redireciona para a Área do Cliente
+   * REDIRECIONAMENTO AUTOMÁTICO BASEADO EM PLANO
+   * Se o usuário já estiver logado:
+   * - Se tem plano ativo → redireciona para /area-do-cliente
+   * - Se não tem plano ativo → redireciona para /
    */
   useEffect(() => {
-    if (user) {
-      navigate('/area-do-cliente');
+    if (user && !planLoading) {
+      if (hasActivePlan) {
+        navigate('/area-do-cliente');
+      } else {
+        navigate('/');
+      }
     }
-  }, [user, navigate]);
+  }, [user, hasActivePlan, planLoading, navigate]);
 
   /**
    * VALIDAÇÃO DE FORMULÁRIO
@@ -61,6 +70,7 @@ const Auth = () => {
   /**
    * FUNÇÃO DE SUBMIT DO FORMULÁRIO
    * Valida os campos e envia para autenticação
+   * Após login bem-sucedido, verifica o plano e redireciona adequadamente
    */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +93,8 @@ const Auth = () => {
       ? await signIn(email, password)
       : await signUp(email, password, fullName);
 
-    setLoading(false);
-
     if (error) {
+      setLoading(false);
       toast({
         title: 'Erro',
         description: error.message,
@@ -96,14 +105,17 @@ const Auth = () => {
         title: 'Sucesso!',
         description: isLogin ? 'Login realizado com sucesso' : 'Conta criada com sucesso'
       });
-      // Redireciona para a Área do Cliente
-      navigate('/area-do-cliente');
+
+      // O redirecionamento será feito pelo useEffect após verificar o plano
+      // Mantém loading ativo enquanto verifica
+      setCheckingPlan(true);
     }
   };
 
   /**
    * FUNÇÃO DE LOGIN COM GOOGLE
    * Inicia o fluxo de autenticação OAuth do Google
+   * O redirecionamento pós-login será feito pelo useEffect baseado no plano
    */
   const handleGoogleSignIn = async () => {
     setLoading(true);
@@ -118,8 +130,21 @@ const Auth = () => {
       });
     }
     // Se não houver erro, o usuário será redirecionado para o Google OAuth
-    // e depois para /area-do-cliente automaticamente
+    // O useEffect cuidará do redirecionamento baseado no plano após autenticação
   };
+
+  /**
+   * LOADING STATE VISUAL
+   * Mostra spinner quando está verificando o plano após login
+   */
+  if (checkingPlan || (user && planLoading)) {
+    return (
+      <div className="min-h-screen bg-[#0B0B0F] flex flex-col items-center justify-center px-4">
+        <Loader2 className="w-12 h-12 text-[#00C2FF] animate-spin mb-4" />
+        <p className="text-white/60 text-lg">Verificando seu plano...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center px-4">
