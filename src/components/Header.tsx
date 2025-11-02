@@ -1,14 +1,14 @@
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User, LogOut } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import luminmusLogo from "@/assets/luminnus-logo-gradient.png";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const {
-    t
-  } = useLanguage();
+  const { t } = useLanguage();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -76,6 +76,16 @@ const Header = () => {
     }
     setMobileMenuOpen(false);
   };
+
+  /**
+   * FUNÇÃO DE LOGOUT
+   * Desloga o usuário e redireciona para a página inicial
+   */
+  const handleLogout = async () => {
+    await signOut();
+    setMobileMenuOpen(false);
+    navigate('/');
+  };
   return <header className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-md shadow-lg border-b border-white/10">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20 lg:h-24">
@@ -103,12 +113,34 @@ const Header = () => {
           {/* Action Buttons - Desktop */}
           <div className="hidden md:flex items-center gap-3">
             <LanguageSwitcher />
-            <Link to="/auth" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300">
-              Área do Cliente
-            </Link>
-            <a href="https://luminnus-lia-assistant.bubbleapps.io/" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300">
-              {t('btn_login')}
-            </a>
+
+            {/* Se o usuário estiver logado */}
+            {user ? (
+              <>
+                <Link
+                  to="/area-do-cliente"
+                  className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
+                >
+                  <User className="w-4 h-4" />
+                  Área do Cliente
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-white/20"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sair
+                </button>
+              </>
+            ) : (
+              /* Se o usuário NÃO estiver logado */
+              <Link
+                to="/auth"
+                className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300"
+              >
+                {t('btn_login')}
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -135,12 +167,36 @@ const Header = () => {
               <div className="flex justify-center pb-2">
                 <LanguageSwitcher />
               </div>
-              <Link to="/auth" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center" onClick={() => setMobileMenuOpen(false)}>
-                Área do Cliente
-              </Link>
-              <a href="https://luminnus-lia-assistant.bubbleapps.io/" target="_blank" rel="noopener noreferrer" className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center">
-                {t('btn_login')}
-              </a>
+
+              {/* Se o usuário estiver logado - Mobile */}
+              {user ? (
+                <>
+                  <Link
+                    to="/area-do-cliente"
+                    className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center flex items-center justify-center gap-2"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="w-4 h-4" />
+                    Área do Cliente
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 border border-white/20"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sair
+                  </button>
+                </>
+              ) : (
+                /* Se o usuário NÃO estiver logado - Mobile */
+                <Link
+                  to="/auth"
+                  className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {t('btn_login')}
+                </Link>
+              )}
             </div>
           </nav>}
       </div>
