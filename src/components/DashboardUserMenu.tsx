@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { UserCircle, User, LogOut, ChevronDown } from 'lucide-react';
+import { useUserPlan } from '@/hooks/useUserPlan';
+import { UserCircle, User, LogOut, ChevronDown, CreditCard } from 'lucide-react';
 
 /**
  * COMPONENTE: DashboardUserMenu
@@ -15,6 +16,7 @@ import { UserCircle, User, LogOut, ChevronDown } from 'lucide-react';
 const DashboardUserMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
+  const { userPlan } = useUserPlan();
   const navigate = useNavigate();
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -68,6 +70,39 @@ const DashboardUserMenu = () => {
     .toUpperCase()
     .substring(0, 2);
 
+  /**
+   * FUNÇÃO: FORMATAÇÃO DO STATUS DO PLANO
+   */
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'ativo':
+        return 'text-green-400 bg-green-400/10';
+      case 'inativo':
+        return 'text-yellow-400 bg-yellow-400/10';
+      case 'expirado':
+        return 'text-red-400 bg-red-400/10';
+      case 'cancelado':
+        return 'text-gray-400 bg-gray-400/10';
+      default:
+        return 'text-gray-400 bg-gray-400/10';
+    }
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'ativo':
+        return 'Ativo';
+      case 'inativo':
+        return 'Inativo';
+      case 'expirado':
+        return 'Expirado';
+      case 'cancelado':
+        return 'Cancelado';
+      default:
+        return status;
+    }
+  };
+
   return (
     <div className="relative" ref={menuRef}>
       {/* BOTÃO DE AVATAR */}
@@ -107,6 +142,23 @@ const DashboardUserMenu = () => {
             </div>
           </div>
 
+          {/* INFORMAÇÕES DO PLANO */}
+          {userPlan && (
+            <div className="px-4 py-3 border-b border-white/10 bg-white/5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CreditCard className="w-4 h-4 text-[#00C2FF]" />
+                  <div>
+                    <p className="text-white text-sm font-medium">Plano {userPlan.plano_nome}</p>
+                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(userPlan.status)}`}>
+                      {getStatusLabel(userPlan.status)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* OPÇÕES DO MENU */}
           <div className="py-2">
             {/* VER PERFIL */}
@@ -116,6 +168,18 @@ const DashboardUserMenu = () => {
             >
               <User className="w-5 h-5 text-[#00C2FF]" />
               <span>Ver Perfil</span>
+            </button>
+
+            {/* ÁREA DO CLIENTE */}
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                navigate('/dashboard/plano');
+              }}
+              className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors duration-200 w-full text-left"
+            >
+              <CreditCard className="w-5 h-5 text-[#00C2FF]" />
+              <span>Meu Plano</span>
             </button>
 
             {/* DIVISOR */}
