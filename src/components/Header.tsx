@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import AccountMenu from "@/components/AccountMenu";
 import luminmusLogo from "@/assets/luminnus-logo-gradient.png";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -116,22 +117,7 @@ const Header = () => {
 
             {/* Se o usuário estiver logado */}
             {user ? (
-              <>
-                <Link
-                  to="/area-do-cliente"
-                  className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2"
-                >
-                  <User className="w-4 h-4" />
-                  Área do Cliente
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="bg-white/10 hover:bg-white/20 text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center gap-2 border border-white/20"
-                >
-                  <LogOut className="w-4 h-4" />
-                  Sair
-                </button>
-              </>
+              <AccountMenu />
             ) : (
               /* Se o usuário NÃO estiver logado */
               <Link

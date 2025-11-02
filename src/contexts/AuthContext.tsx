@@ -23,13 +23,15 @@ interface AuthContextType {
 const getErrorMessage = (error: any): string => {
   if (!error) return 'Erro desconhecido';
 
-  // Erro de credenciais inválidas
-  if (error.message?.includes('Invalid login credentials')) {
-    return 'Email ou senha incorretos';
+  // Erro de credenciais inválidas (mensagem específica solicitada)
+  if (error.message?.includes('Invalid login credentials') ||
+      error.message?.includes('Invalid email or password')) {
+    return 'E-mail ou senha inválidos';
   }
 
   // Erro de email já cadastrado
-  if (error.message?.includes('User already registered')) {
+  if (error.message?.includes('User already registered') ||
+      error.message?.includes('already exists')) {
     return 'Este email já está cadastrado';
   }
 
@@ -39,22 +41,32 @@ const getErrorMessage = (error: any): string => {
   }
 
   // Erro de email inválido
-  if (error.message?.includes('Invalid email')) {
+  if (error.message?.includes('Invalid email') ||
+      error.message?.includes('valid email')) {
     return 'Email inválido';
   }
 
-  // Erro de rede/conexão
-  if (error.message?.includes('Failed to fetch') || error.message?.includes('Network')) {
-    return 'Erro de conexão com o banco de dados. Verifique sua internet.';
+  // Erro de rede/conexão (mensagem específica solicitada)
+  if (error.message?.includes('Failed to fetch') ||
+      error.message?.includes('Network') ||
+      error.message?.includes('network') ||
+      error.message?.includes('connection')) {
+    return 'Erro ao conectar. Tente novamente.';
   }
 
   // Erro de tempo de conexão esgotado
   if (error.message?.includes('timeout')) {
-    return 'Tempo de conexão esgotado. Tente novamente.';
+    return 'Erro ao conectar. Tente novamente.';
+  }
+
+  // Erro de campos vazios (será capturado na validação do form)
+  if (error.message?.includes('required') ||
+      error.message?.includes('empty')) {
+    return 'Preencha todos os campos';
   }
 
   // Retorna a mensagem original se não for reconhecida
-  return error.message || 'Erro ao processar a solicitação';
+  return error.message || 'Erro ao conectar. Tente novamente.';
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);

@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Plans from "./pages/Plans";
 import Auth from "./pages/Auth";
 import ClientArea from "./pages/ClientArea";
+import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
@@ -28,6 +29,7 @@ const App = () => (
               <Route path="/planos" element={<Plans />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/area-do-cliente" element={<ClientArea />} />
+              <Route path="/minha-conta" element={<MyAccount />} />
               <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
               <Route path="/termos-de-uso" element={<TermsOfService />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
