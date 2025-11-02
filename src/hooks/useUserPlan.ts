@@ -9,8 +9,10 @@ import { useAuth } from '@/contexts/AuthContext';
 export interface UserPlan {
   id: string;
   user_id: string;
-  plan_name: 'Start' | 'Plus' | 'Pro';
-  status: 'ativo' | 'inativo' | 'cancelado';
+  plano_nome: 'Start' | 'Plus' | 'Pro';
+  status: 'ativo' | 'inativo' | 'expirado' | 'cancelado';
+  data_inicio: string;
+  data_fim: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -41,7 +43,7 @@ export const useUserPlan = () => {
 
   /**
    * FUNÇÃO PARA BUSCAR PLANO DO USUÁRIO
-   * Consulta a tabela user_plans no Supabase
+   * Consulta a tabela planos no Supabase
    */
   const fetchUserPlan = async () => {
     if (!user) {
@@ -53,9 +55,9 @@ export const useUserPlan = () => {
     try {
       setLoading(true);
 
-      // Busca o plano do usuário na tabela user_plans
+      // Busca o plano do usuário na tabela planos
       const { data, error } = await supabase
-        .from('user_plans')
+        .from('planos')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'ativo')

@@ -14,28 +14,34 @@ export type Database = {
   }
   public: {
     Tables: {
-      user_plans: {
+      planos: {
         Row: {
           id: string
           user_id: string
-          plan_name: 'Start' | 'Plus' | 'Pro'
-          status: 'ativo' | 'inativo' | 'cancelado'
+          plano_nome: 'Start' | 'Plus' | 'Pro'
+          status: 'ativo' | 'inativo' | 'expirado' | 'cancelado'
+          data_inicio: string
+          data_fim: string | null
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          plan_name: 'Start' | 'Plus' | 'Pro'
-          status?: 'ativo' | 'inativo' | 'cancelado'
+          plano_nome: 'Start' | 'Plus' | 'Pro'
+          status?: 'ativo' | 'inativo' | 'expirado' | 'cancelado'
+          data_inicio?: string
+          data_fim?: string | null
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          plan_name?: 'Start' | 'Plus' | 'Pro'
-          status?: 'ativo' | 'inativo' | 'cancelado'
+          plano_nome?: 'Start' | 'Plus' | 'Pro'
+          status?: 'ativo' | 'inativo' | 'expirado' | 'cancelado'
+          data_inicio?: string
+          data_fim?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -43,25 +49,173 @@ export type Database = {
       profiles: {
         Row: {
           id: string
-          user_id: string
           full_name: string | null
-          avatar_url: string | null
+          plan_type: 'start' | 'plus' | 'pro' | 'free'
+          company_name: string | null
+          whatsapp_numero: string | null
+          whatsapp_status: 'conectado' | 'desconectado' | 'pendente'
+          whatsapp_qr_code: string | null
+          whatsapp_connected_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          full_name?: string | null
+          plan_type?: 'start' | 'plus' | 'pro' | 'free'
+          company_name?: string | null
+          whatsapp_numero?: string | null
+          whatsapp_status?: 'conectado' | 'desconectado' | 'pendente'
+          whatsapp_qr_code?: string | null
+          whatsapp_connected_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          full_name?: string | null
+          plan_type?: 'start' | 'plus' | 'pro' | 'free'
+          company_name?: string | null
+          whatsapp_numero?: string | null
+          whatsapp_status?: 'conectado' | 'desconectado' | 'pendente'
+          whatsapp_qr_code?: string | null
+          whatsapp_connected_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      chat_conversations: {
+        Row: {
+          id: string
+          user_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          created_at?: string
+        }
+      }
+      chat_messages: {
+        Row: {
+          id: string
+          conversation_id: string
+          role: 'user' | 'assistant'
+          content: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          conversation_id: string
+          role: 'user' | 'assistant'
+          content: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          conversation_id?: string
+          role?: 'user' | 'assistant'
+          content?: string
+          created_at?: string
+        }
+      }
+      agendamentos: {
+        Row: {
+          id: string
+          user_id: string
+          titulo: string
+          data: string
+          hora: string
+          descricao: string | null
+          status: 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
+          criado_em: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          titulo: string
+          data: string
+          hora: string
+          descricao?: string | null
+          status?: 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
+          criado_em?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          titulo?: string
+          data?: string
+          hora?: string
+          descricao?: string | null
+          status?: 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
+          criado_em?: string
+          updated_at?: string
+        }
+      }
+      whatsapp_messages: {
+        Row: {
+          id: string
+          user_id: string
+          direction: 'inbound' | 'outbound'
+          phone_number: string
+          message_content: string
+          status: 'sent' | 'delivered' | 'read' | 'failed'
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          direction: 'inbound' | 'outbound'
+          phone_number: string
+          message_content: string
+          status?: 'sent' | 'delivered' | 'read' | 'failed'
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          direction?: 'inbound' | 'outbound'
+          phone_number?: string
+          message_content?: string
+          status?: 'sent' | 'delivered' | 'read' | 'failed'
+          created_at?: string
+        }
+      }
+      usage_limits: {
+        Row: {
+          id: string
+          user_id: string
+          periodo_mes: string
+          conversas_count: number
+          mensagens_count: number
+          agendamentos_count: number
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
           user_id: string
-          full_name?: string | null
-          avatar_url?: string | null
+          periodo_mes?: string
+          conversas_count?: number
+          mensagens_count?: number
+          agendamentos_count?: number
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
           user_id?: string
-          full_name?: string | null
-          avatar_url?: string | null
+          periodo_mes?: string
+          conversas_count?: number
+          mensagens_count?: number
+          agendamentos_count?: number
           created_at?: string
           updated_at?: string
         }

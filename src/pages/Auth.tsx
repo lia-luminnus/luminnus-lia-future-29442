@@ -15,8 +15,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingPlan, setCheckingPlan] = useState(false);
+  const [showExpiredPlanWarning, setShowExpiredPlanWarning] = useState(false);
   const { signIn, signUp, signInWithGoogle, user } = useAuth();
-  const { hasActivePlan, loading: planLoading } = useUserPlan();
+  const { userPlan, hasActivePlan, loading: planLoading } = useUserPlan();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -24,17 +25,20 @@ const Auth = () => {
    * REDIRECIONAMENTO AUTOMÁTICO BASEADO EM PLANO
    * Se o usuário já estiver logado:
    * - Se tem plano ativo → redireciona para /dashboard
-   * - Se não tem plano ativo → redireciona para /
+   * - Se tem plano expirado/inativo → mostra aviso
+   * - Se não tem plano → redireciona para /
    */
   useEffect(() => {
     if (user && !planLoading) {
       if (hasActivePlan) {
         navigate('/dashboard');
+      } else if (userPlan && (userPlan.status === 'expirado' || userPlan.status === 'inativo')) {
+        setShowExpiredPlanWarning(true);
       } else {
         navigate('/');
       }
     }
-  }, [user, hasActivePlan, planLoading, navigate]);
+  }, [user, hasActivePlan, userPlan, planLoading, navigate]);
 
   /**
    * VALIDAÇÃO DE FORMULÁRIO
@@ -142,6 +146,55 @@ const Auth = () => {
       <div className="min-h-screen bg-[#0B0B0F] flex flex-col items-center justify-center px-4">
         <Loader2 className="w-12 h-12 text-[#00C2FF] animate-spin mb-4" />
         <p className="text-white/60 text-lg">Verificando seu plano...</p>
+      </div>
+    );
+  }
+
+  /**
+   * AVISO DE PLANO EXPIRADO/INATIVO
+   * Mostra mensagem quando o plano do usuário está expirado ou inativo
+   */
+  if (showExpiredPlanWarning) {
+    return (
+      <div className="min-h-screen bg-[#0B0B0F] flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-8 text-center">
+          <div className="mb-6">
+            <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-yellow-500/20 to-orange-500/20 rounded-full flex items-center justify-center">
+              <svg className="w-10 h-10 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">
+              Plano {userPlan?.status === 'expirado' ? 'Expirado' : 'Inativo'}
+            </h1>
+            <p className="text-white/60">
+              {userPlan?.status === 'expirado'
+                ? 'Seu plano expirou. Contrate um novo plano para continuar usando a Lia.'
+                : 'Seu plano está inativo. Ative ou contrate um novo plano para continuar.'
+              }
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <Button
+              onClick={() => navigate('/planos')}
+              className="w-full bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] hover:opacity-90"
+            >
+              Ver Planos Disponíveis
+            </Button>
+
+            <Button
+              onClick={() => {
+                setShowExpiredPlanWarning(false);
+                navigate('/');
+              }}
+              variant="outline"
+              className="w-full border-white/20 text-white hover:bg-white/10"
+            >
+              Voltar ao Início
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
