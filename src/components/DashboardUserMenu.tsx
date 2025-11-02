@@ -1,20 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, LogOut, Settings, UserCircle } from 'lucide-react';
+import { UserCircle, User, LogOut, ChevronDown } from 'lucide-react';
 
 /**
- * COMPONENTE: AccountMenu
+ * COMPONENTE: DashboardUserMenu
  *
- * Menu dropdown exibido quando o usuário está logado.
- * Exibe um ícone de usuário que, ao ser clicado, mostra um menu com:
- * - Minha Conta (informações do usuário)
- * - Área do Cliente
+ * Menu de usuário exibido no topo direito do dashboard.
+ * Mostra avatar e, ao clicar, exibe dropdown com:
+ * - Nome e e-mail
+ * - Ver Perfil
  * - Sair da Conta
- *
- * Props: Nenhuma
  */
-const AccountMenu = () => {
+const DashboardUserMenu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
@@ -22,7 +20,6 @@ const AccountMenu = () => {
 
   /**
    * EFEITO: FECHAR MENU AO CLICAR FORA
-   * Detecta cliques fora do menu e o fecha automaticamente
    */
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -42,7 +39,6 @@ const AccountMenu = () => {
 
   /**
    * FUNÇÃO: HANDLE LOGOUT
-   * Desloga o usuário e redireciona para a página inicial
    */
   const handleLogout = async () => {
     await signOut();
@@ -51,29 +47,48 @@ const AccountMenu = () => {
   };
 
   /**
-   * FUNÇÃO: HANDLE MENU CLICK
-   * Fecha o menu ao clicar em qualquer item
+   * FUNÇÃO: HANDLE VIEW PROFILE
    */
-  const handleMenuClick = () => {
+  const handleViewProfile = () => {
     setIsOpen(false);
+    navigate('/dashboard/configuracoes');
   };
 
   /**
    * EXTRAÇÃO DE DADOS DO USUÁRIO
-   * Pega o nome e email do usuário
    */
   const userName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Usuário';
   const userEmail = user?.email || '';
+
+  // Pega as iniciais do nome para o avatar
+  const initials = userName
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .substring(0, 2);
 
   return (
     <div className="relative" ref={menuRef}>
       {/* BOTÃO DE AVATAR */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] hover:shadow-lg hover:scale-105 transition-all duration-300 border-2 border-white/20"
-        aria-label="Menu de conta"
+        className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-white/5 transition-all duration-200 border border-white/10 hover:border-white/20"
+        aria-label="Menu de usuário"
       >
-        <UserCircle className="w-6 h-6 text-white" />
+        {/* Avatar com iniciais */}
+        <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold">
+          {initials}
+        </div>
+
+        {/* Nome do usuário (oculto em telas pequenas) */}
+        <div className="hidden md:block text-left">
+          <p className="text-white text-sm font-medium truncate max-w-[150px]">{userName}</p>
+          <p className="text-white/60 text-xs truncate max-w-[150px]">{userEmail}</p>
+        </div>
+
+        {/* Ícone de dropdown */}
+        <ChevronDown className={`w-4 h-4 text-white/60 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
 
       {/* DROPDOWN MENU */}
@@ -81,31 +96,27 @@ const AccountMenu = () => {
         <div className="absolute right-0 mt-2 w-72 bg-[#1a1a2e]/95 backdrop-blur-lg border border-white/20 rounded-lg shadow-2xl overflow-hidden animate-fade-in z-50">
           {/* HEADER DO MENU - INFORMAÇÕES DO USUÁRIO */}
           <div className="px-4 py-3 border-b border-white/10 bg-gradient-to-r from-[#6A00FF]/20 to-[#00C2FF]/20">
-            <p className="text-white font-semibold truncate">{userName}</p>
-            <p className="text-white/60 text-sm truncate">{userEmail}</p>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold text-lg">
+                {initials}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold truncate">{userName}</p>
+                <p className="text-white/60 text-sm truncate">{userEmail}</p>
+              </div>
+            </div>
           </div>
 
           {/* OPÇÕES DO MENU */}
           <div className="py-2">
-            {/* MINHA CONTA */}
-            <Link
-              to="/minha-conta"
-              onClick={handleMenuClick}
-              className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors duration-200"
-            >
-              <Settings className="w-5 h-5 text-[#00C2FF]" />
-              <span>Minha Conta</span>
-            </Link>
-
-            {/* ÁREA DO CLIENTE */}
-            <Link
-              to="/dashboard"
-              onClick={handleMenuClick}
-              className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors duration-200"
+            {/* VER PERFIL */}
+            <button
+              onClick={handleViewProfile}
+              className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors duration-200 w-full text-left"
             >
               <User className="w-5 h-5 text-[#00C2FF]" />
-              <span>Área do Cliente</span>
-            </Link>
+              <span>Ver Perfil</span>
+            </button>
 
             {/* DIVISOR */}
             <div className="my-2 border-t border-white/10"></div>
@@ -125,4 +136,4 @@ const AccountMenu = () => {
   );
 };
 
-export default AccountMenu;
+export default DashboardUserMenu;

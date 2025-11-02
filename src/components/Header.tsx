@@ -158,7 +158,7 @@ const Header = () => {
               {user ? (
                 <>
                   <Link
-                    to="/area-do-cliente"
+                    to="/dashboard"
                     className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center flex items-center justify-center gap-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >

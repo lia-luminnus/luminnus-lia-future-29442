@@ -23,13 +23,13 @@ const Auth = () => {
   /**
    * REDIRECIONAMENTO AUTOMÁTICO BASEADO EM PLANO
    * Se o usuário já estiver logado:
-   * - Se tem plano ativo → redireciona para /area-do-cliente
+   * - Se tem plano ativo → redireciona para /dashboard
    * - Se não tem plano ativo → redireciona para /
    */
   useEffect(() => {
     if (user && !planLoading) {
       if (hasActivePlan) {
-        navigate('/area-do-cliente');
+        navigate('/dashboard');
       } else {
         navigate('/');
       }
