@@ -1,10 +1,14 @@
 import { useEffect } from 'react';
-import { useNavigate, Routes, Route } from 'react-router-dom';
+import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserPlan } from '@/hooks/useUserPlan';
 import { Loader2 } from 'lucide-react';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import DashboardUserMenu from '@/components/DashboardUserMenu';
 import DashboardHome from '@/components/dashboard/DashboardHome';
+import DashboardStartHome from '@/components/dashboard/DashboardStartHome';
+import DashboardPlusHome from '@/components/dashboard/DashboardPlusHome';
+import DashboardProHome from '@/components/dashboard/DashboardProHome';
 import DashboardConversas from '@/components/dashboard/DashboardConversas';
 import DashboardAgenda from '@/components/dashboard/DashboardAgenda';
 import DashboardChat from '@/components/dashboard/DashboardChat';
@@ -23,7 +27,9 @@ import DashboardIntegracoes from '@/components/dashboard/DashboardIntegracoes';
  */
 const Dashboard = () => {
   const { user, loading } = useAuth();
+  const { userPlan, loading: planLoading } = useUserPlan();
   const navigate = useNavigate();
+  const location = useLocation();
 
   /**
    * VERIFICAÇÃO DE AUTENTICAÇÃO
@@ -36,10 +42,37 @@ const Dashboard = () => {
   }, [user, loading, navigate]);
 
   /**
-   * LOADING STATE
-   * Mostra spinner enquanto verifica autenticação
+   * ROTEAMENTO BASEADO EM PLANO
+   * Redireciona o usuário para o dashboard específico do plano após autenticação
    */
-  if (loading) {
+  useEffect(() => {
+    if (user && !loading && !planLoading) {
+      // Verifica se está na rota raiz do dashboard
+      if (location.pathname === '/dashboard' || location.pathname === '/dashboard/') {
+        if (userPlan && userPlan.status === 'ativo') {
+          // Redireciona baseado no plano
+          const planName = userPlan.plano_nome;
+          if (planName === 'Plus') {
+            navigate('/dashboard/plus');
+          } else if (planName === 'Pro') {
+            navigate('/dashboard/pro');
+          } else {
+            // Plano Start ou qualquer outro
+            navigate('/dashboard/start');
+          }
+        } else {
+          // Sem plano ativo, redireciona para Start (padrão)
+          navigate('/dashboard/start');
+        }
+      }
+    }
+  }, [user, loading, planLoading, userPlan, location.pathname, navigate]);
+
+  /**
+   * LOADING STATE
+   * Mostra spinner enquanto verifica autenticação e plano
+   */
+  if (loading || planLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0B0B0F] via-[#1a1a2e] to-[#0B0B0F] flex items-center justify-center">
         <Loader2 className="w-8 h-8 text-white animate-spin" />
@@ -73,6 +106,9 @@ const Dashboard = () => {
         <main className="p-8">
           <Routes>
             <Route path="/" element={<DashboardHome />} />
+            <Route path="/start" element={<DashboardStartHome />} />
+            <Route path="/plus" element={<DashboardPlusHome />} />
+            <Route path="/pro" element={<DashboardProHome />} />
             <Route path="/conversas" element={<DashboardConversas />} />
             <Route path="/agenda" element={<DashboardAgenda />} />
             <Route path="/chat" element={<DashboardChat />} />
