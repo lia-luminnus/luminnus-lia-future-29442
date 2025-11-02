@@ -14,6 +14,7 @@ import MyAccount from "./pages/MyAccount";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
+import AdminConfig from "./pages/AdminConfig";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,8 @@ const App = () => (
               <Route path="/minha-conta" element={<MyAccount />} />
               <Route path="/politica-de-privacidade" element={<PrivacyPolicy />} />
               <Route path="/termos-de-uso" element={<TermsOfService />} />
+              {/* Rota secreta de admin - protegida por senha */}
+              <Route path="/config-lia-admin" element={<AdminConfig />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
