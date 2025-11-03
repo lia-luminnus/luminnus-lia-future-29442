@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { isAdminEmail } from '@/hooks/useAdminAuth';
 
 /**
  * INTERFACE DO CONTEXTO DE AUTENTICAÇÃO
@@ -100,12 +101,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
    * FUNÇÃO DE LOGIN
    * Autentica o usuário com email e senha
    * Retorna erro traduzido em português se houver falha
+   * Redireciona automaticamente admins para /admin-dashboard
    */
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       return { error: { message: getErrorMessage(error) } };
+    }
+
+    // Verifica se o usuário é admin e redireciona
+    if (data?.user?.email && isAdminEmail(data.user.email)) {
+      window.location.href = '/admin-dashboard';
     }
 
     return { error: null };
