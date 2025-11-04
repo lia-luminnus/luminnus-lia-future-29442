@@ -2,8 +2,9 @@ import { useEffect } from 'react';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPlan } from '@/hooks/useUserPlan';
-import { isAdminEmail } from '@/hooks/useAdminAuth';
 import { Loader2 } from 'lucide-react';
+
+const ADMIN_EMAILS = ["luminnus.lia.ai@gmail.com"];
 import DashboardSidebar from '@/components/DashboardSidebar';
 import DashboardUserMenu from '@/components/DashboardUserMenu';
 import DashboardHome from '@/components/dashboard/DashboardHome';
@@ -40,7 +41,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
-    } else if (user?.email && isAdminEmail(user.email)) {
+    } else if (user?.email && ADMIN_EMAILS.includes(user.email)) {
       navigate('/admin-dashboard');
     }
   }, [user, loading, navigate]);

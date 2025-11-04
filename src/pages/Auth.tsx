@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPlan } from '@/hooks/useUserPlan';
-import { isAdminEmail } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
+
+const ADMIN_EMAILS = ["luminnus.lia.ai@gmail.com"];
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, Loader2 } from 'lucide-react';
@@ -33,7 +34,7 @@ const Auth = () => {
   useEffect(() => {
     if (user && !planLoading) {
       // Verifica se é admin primeiro
-      if (user.email && isAdminEmail(user.email)) {
+      if (user.email && ADMIN_EMAILS.includes(user.email)) {
         navigate('/admin-dashboard');
       } else if (hasActivePlan) {
         navigate('/dashboard');

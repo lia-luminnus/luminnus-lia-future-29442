@@ -1,7 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { isAdminEmail } from '@/hooks/useAdminAuth';
+
+const ADMIN_EMAILS = ["luminnus.lia.ai@gmail.com"];
 
 /**
  * INTERFACE DO CONTEXTO DE AUTENTICAÇÃO
@@ -111,7 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // Verifica se o usuário é admin e redireciona
-    if (data?.user?.email && isAdminEmail(data.user.email)) {
+    if (data?.user?.email && ADMIN_EMAILS.includes(data.user.email)) {
       window.location.href = '/admin-dashboard';
     }
 
