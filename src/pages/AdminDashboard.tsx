@@ -8,6 +8,7 @@ import { AdminTools } from "@/components/admin/AdminTools";
 import { AdminHistory } from "@/components/admin/AdminHistory";
 import { AdminPlans } from "@/components/admin/AdminPlans";
 import { AdminTechnical } from "@/components/admin/AdminTechnical";
+import AdminLiaChat from "@/components/admin/AdminLiaChat";
 import { Loader2 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -45,6 +46,8 @@ const AdminDashboard = () => {
     switch (activeSection) {
       case "overview":
         return <AdminOverview />;
+      case "lia-chat":
+        return <AdminLiaChat />;
       case "users":
         return <AdminUsers />;
       case "lia-config":
@@ -75,6 +78,7 @@ const AdminDashboard = () => {
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
                 {activeSection === "overview" && "Visão Geral"}
+                {activeSection === "lia-chat" && "Assistente LIA"}
                 {activeSection === "users" && "Gerenciar Usuários"}
                 {activeSection === "lia-config" && "Configurações da LIA"}
                 {activeSection === "tools" && "Ferramentas e Testes"}

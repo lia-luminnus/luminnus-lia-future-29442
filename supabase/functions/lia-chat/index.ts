@@ -6,6 +6,33 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Prompt base da LIA para administradores
+const ADMIN_SYSTEM_PROMPT = `Você é a LIA, assistente virtual da plataforma Luminnus. Seu papel é ajudar o administrador a configurar, criar e gerenciar todo o sistema e os recursos da Luminnus com comandos de texto ou voz.
+
+Você é proativa, inteligente, compreende comandos naturais e é capaz de criar planilhas, fluxos, autenticação, integrações e outras automações avançadas.
+
+Suas capacidades incluem:
+- Configurar e gerenciar usuários e planos
+- Criar e configurar integrações (WhatsApp, CRM, E-mail, etc)
+- Configurar automações e fluxos de trabalho
+- Gerenciar chaves de API e configurações técnicas
+- Analisar dados e métricas da plataforma
+- Criar relatórios e exportar dados
+- Configurar permissões e acessos
+- Ajudar com tarefas administrativas complexas
+
+Sempre seja clara, objetiva e forneça instruções passo a passo quando necessário. Use linguagem profissional mas amigável.`;
+
+// Prompt para usuários normais
+const USER_SYSTEM_PROMPT = `Você é a Lia, assistente virtual da plataforma Luminnus. Você ajuda usuários com:
+- Informações sobre planos e preços
+- Como funciona a integração
+- Dúvidas sobre funcionalidades
+- Suporte básico
+- Orientações sobre upgrades
+
+Seja amigável, clara e objetiva. Use emojis quando apropriado para deixar a conversa mais agradável.`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -27,7 +54,7 @@ serve(async (req) => {
       });
     }
 
-    const { message, conversationId } = await req.json();
+    const { message, conversationId, isAdmin = false } = await req.json();
 
     // Buscar dados do usuário
     const { data: profile } = await supabase
@@ -46,37 +73,81 @@ serve(async (req) => {
     // Preparar contexto para a IA
     const context = {
       userName: profile?.full_name || 'Cliente',
+      userEmail: user.email || '',
       userPlan: profile?.plan_type || 'free',
-      conversationHistory: messages || []
+      conversationHistory: messages || [],
+      isAdmin: isAdmin
     };
 
     console.log('Context:', context);
     console.log('User message:', message);
+    console.log('Is Admin:', isAdmin);
 
-    // Respostas baseadas em palavras-chave
-    const lowerMessage = message.toLowerCase();
-    
+    // Tentar usar OpenAI API se a chave estiver disponível
+    const openaiApiKey = Deno.env.get('OPENAI_API_KEY');
+
     let response = '';
     let suggestions: string[] = [];
 
-    if (lowerMessage.includes('plano') || lowerMessage.includes('preço') || lowerMessage.includes('valor')) {
-      response = `Olá ${context.userName}! Temos 3 planos disponíveis:\n\n🌟 **Start** (€27/mês)\nIdeal para pequenos negócios\n• 1 canal de atendimento\n• Respostas automáticas básicas\n• Integração com 1 ferramenta\n\n💎 **Plus** (€147/mês) - Mais Popular!\nPara empresas em crescimento\n• Múltiplos canais (WhatsApp, Chat, E-mail)\n• IA avançada com aprendizado\n• Integrações ilimitadas\n• Agendamentos automáticos\n\n🚀 **Pro** (€997+/mês)\nSolução enterprise personalizada\n• Tudo ilimitado\n• IA customizada\n• API dedicada\n• Suporte 24/7\n\nSeu plano atual: **${context.userPlan.toUpperCase()}**\n\nQuer saber mais sobre algum plano específico?`;
-      suggestions = ['Detalhes do Start', 'Detalhes do Plus', 'Detalhes do Pro', 'Como fazer upgrade'];
-    } else if (lowerMessage.includes('integr') || lowerMessage.includes('funciona')) {
-      response = `A Lia funciona de forma muito simples!\n\n✅ **Integração Fácil**\n• Conectamos com WhatsApp, Chat, E-mail e mais\n• Sem código necessário\n• Configuração rápida\n\n🤖 **IA Inteligente**\n• Aprende com cada conversa\n• Respostas personalizadas\n• Atendimento 24/7\n\n🔗 **Conecta com suas ferramentas**\n• CRM\n• Agendas\n• E-commerce\n• E muito mais!\n\nQuer saber como integrar com alguma ferramenta específica?`;
-      suggestions = ['Integrar WhatsApp', 'Integrar CRM', 'Ver mais integrações'];
-    } else if (lowerMessage.includes('upgrade') || lowerMessage.includes('mudar') || lowerMessage.includes('trocar')) {
-      response = `Que ótimo que você quer evoluir! 🚀\n\nSeu plano atual é **${context.userPlan.toUpperCase()}**.\n\nPara fazer upgrade:\n1. Acesse a página de Planos\n2. Escolha o plano desejado\n3. Clique em "Assinar"\n4. Pronto! A mudança é imediata\n\n💡 **Vantagens do upgrade:**\n• Mais canais de atendimento\n• IA mais inteligente\n• Mais integrações\n• Suporte prioritário\n\nQual plano te interessa?`;
-      suggestions = ['Ver planos', 'Falar com vendas'];
-    } else if (lowerMessage.includes('lia') || lowerMessage.includes('você') || lowerMessage.includes('fazer')) {
-      response = `Eu sou a Lia, sua assistente virtual! 😊\n\nPosso te ajudar com:\n\n📋 **Informações**\n• Detalhes sobre planos\n• Funcionalidades\n• Integrações disponíveis\n\n💬 **Atendimento**\n• Responder suas dúvidas\n• Orientar sobre upgrades\n• Explicar como funciona\n\n🎯 **Ações Rápidas**\n• Te direcionar para áreas específicas\n• Conectar com time de vendas\n• Agendar demonstrações\n\nComo posso te ajudar hoje?`;
-      suggestions = ['Ver planos', 'Como funciona', 'Falar com vendas'];
-    } else if (lowerMessage.includes('obrigad') || lowerMessage.includes('valeu')) {
-      response = `Por nada! 😊 Fico feliz em ajudar!\n\nSe precisar de mais alguma coisa, é só chamar. Estou sempre aqui para você!\n\nQuer saber mais alguma coisa?`;
-      suggestions = ['Ver planos', 'Falar com vendas', 'Não, obrigado'];
+    if (openaiApiKey) {
+      // Usar OpenAI API
+      try {
+        // Preparar mensagens para OpenAI
+        const openaiMessages = [
+          {
+            role: 'system',
+            content: isAdmin ? ADMIN_SYSTEM_PROMPT : USER_SYSTEM_PROMPT
+          },
+          // Adicionar histórico da conversa
+          ...context.conversationHistory.map((msg: any) => ({
+            role: msg.role,
+            content: msg.content
+          })),
+          // Adicionar mensagem atual
+          {
+            role: 'user',
+            content: message
+          }
+        ];
+
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${openaiApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: openaiMessages,
+            temperature: 0.7,
+            max_tokens: 1000,
+          }),
+        });
+
+        if (openaiResponse.ok) {
+          const data = await openaiResponse.json();
+          response = data.choices[0].message.content;
+
+          // Sugestões baseadas no contexto
+          if (isAdmin) {
+            suggestions = ['Ver estatísticas', 'Gerenciar usuários', 'Configurar integrações', 'Ver planos'];
+          } else {
+            suggestions = ['Ver planos', 'Como funciona', 'Falar com vendas'];
+          }
+        } else {
+          console.error('OpenAI API Error:', await openaiResponse.text());
+          throw new Error('Erro ao chamar OpenAI API');
+        }
+      } catch (error) {
+        console.error('Error calling OpenAI:', error);
+        // Fallback para respostas baseadas em keywords
+        response = getFallbackResponse(message, context);
+        suggestions = getFallbackSuggestions(isAdmin);
+      }
     } else {
-      response = `Olá ${context.userName}! 👋\n\nEstou aqui para te ajudar! Posso responder sobre:\n\n• 💰 Planos e preços\n• 🔧 Como funciona a integração\n• 🤖 O que a Lia pode fazer\n• 📈 Como fazer upgrade\n• 📞 Falar com nossa equipe\n\nSobre o que você gostaria de saber?`;
-      suggestions = ['Ver planos', 'Como funciona', 'Integração', 'Falar com vendas'];
+      // Fallback: Respostas baseadas em keywords
+      response = getFallbackResponse(message, context);
+      suggestions = getFallbackSuggestions(isAdmin);
     }
 
     return new Response(JSON.stringify({
@@ -88,11 +159,54 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ 
-      error: error instanceof Error ? error.message : 'Erro desconhecido' 
+    return new Response(JSON.stringify({
+      error: error instanceof Error ? error.message : 'Erro desconhecido'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
+
+/**
+ * Função auxiliar para respostas fallback (quando OpenAI não está disponível)
+ */
+function getFallbackResponse(message: string, context: any): string {
+  const lowerMessage = message.toLowerCase();
+  const userName = context.userName;
+  const userPlan = context.userPlan;
+  const isAdmin = context.isAdmin;
+
+  if (isAdmin) {
+    // Respostas para admin
+    if (lowerMessage.includes('usuário') || lowerMessage.includes('user')) {
+      return `Como administrador, você pode gerenciar usuários através da seção "Gerenciar Usuários" no painel admin. Lá você pode:\n\n• Ver lista completa de usuários\n• Editar planos dos usuários\n• Remover usuários\n• Ver estatísticas de uso\n\nPrecisa de ajuda com alguma tarefa específica?`;
+    } else if (lowerMessage.includes('configurar') || lowerMessage.includes('config')) {
+      return `Você pode acessar as configurações da LIA em "Configurações da LIA" no menu lateral. Lá você pode:\n\n• Configurar chave da OpenAI API\n• Configurar Supabase\n• Editar o System Prompt\n• Adicionar webhooks\n\nQual configuração você gostaria de ajustar?`;
+    } else if (lowerMessage.includes('plano')) {
+      return `Para gerenciar planos, acesse "Planos e Permissões". Você pode:\n\n• Editar detalhes dos planos (Start, Plus, Pro)\n• Definir preços e limites\n• Ativar/desativar planos\n• Ver estatísticas de assinaturas\n\nPrecisa modificar algum plano?`;
+    } else {
+      return `Olá! Sou a LIA, sua assistente administrativa. Posso te ajudar com:\n\n• Gerenciar usuários e planos\n• Configurar integrações\n• Ajustar configurações técnicas\n• Ver estatísticas e métricas\n• Configurar automações\n\nComo posso ajudar você hoje?`;
+    }
+  } else {
+    // Respostas para usuário normal
+    if (lowerMessage.includes('plano') || lowerMessage.includes('preço') || lowerMessage.includes('valor')) {
+      return `Olá ${userName}! Temos 3 planos disponíveis:\n\n🌟 **Start** (€27/mês)\n• 1 canal de atendimento\n• Respostas automáticas básicas\n\n💎 **Plus** (€147/mês)\n• Múltiplos canais\n• IA avançada\n• Integrações ilimitadas\n\n🚀 **Pro** (€997+/mês)\n• Tudo ilimitado\n• Suporte 24/7\n\nSeu plano atual: **${userPlan.toUpperCase()}**`;
+    } else if (lowerMessage.includes('integr') || lowerMessage.includes('funciona')) {
+      return `A Lia funciona de forma muito simples!\n\n✅ Integração com WhatsApp, Chat, E-mail\n🤖 IA Inteligente 24/7\n🔗 Conecta com suas ferramentas\n\nQuer saber mais sobre alguma integração específica?`;
+    } else {
+      return `Olá ${userName}! 👋\n\nPosso te ajudar com:\n• Planos e preços\n• Como funciona a integração\n• Upgrades\n• Falar com nossa equipe\n\nSobre o que você gostaria de saber?`;
+    }
+  }
+}
+
+/**
+ * Função auxiliar para sugestões fallback
+ */
+function getFallbackSuggestions(isAdmin: boolean): string[] {
+  if (isAdmin) {
+    return ['Ver estatísticas', 'Gerenciar usuários', 'Configurações', 'Ver planos'];
+  } else {
+    return ['Ver planos', 'Como funciona', 'Integração', 'Falar com vendas'];
+  }
+}

@@ -9,7 +9,8 @@ import {
   Code,
   LogOut,
   Menu,
-  X
+  X,
+  Bot
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -23,6 +24,7 @@ interface AdminSidebarProps {
 
 const menuItems = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
+  { id: "lia-chat", label: "Assistente LIA", icon: Bot },
   { id: "users", label: "Gerenciar Usuários", icon: Users },
   { id: "lia-config", label: "Configurações da LIA", icon: Settings },
   { id: "tools", label: "Ferramentas e Testes", icon: Wrench },
