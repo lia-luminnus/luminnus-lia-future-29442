@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, LogOut, Settings, UserCircle } from 'lucide-react';
+import { User, LogOut, Settings, UserCircle, Shield } from 'lucide-react';
+
+const ADMIN_EMAIL = "luminnus.lia.ai@gmail.com";
 
 /**
  * COMPONENTE: AccountMenu
@@ -97,14 +99,23 @@ const AccountMenu = () => {
               <span>Minha Conta</span>
             </Link>
 
-            {/* ÁREA DO CLIENTE */}
+            {/* ÁREA DO CLIENTE / PAINEL ADMIN */}
             <Link
-              to="/dashboard"
+              to={user?.email === ADMIN_EMAIL ? "/admin-dashboard" : "/dashboard"}
               onClick={handleMenuClick}
               className="flex items-center gap-3 px-4 py-3 text-white hover:bg-white/10 transition-colors duration-200"
             >
-              <User className="w-5 h-5 text-[#00C2FF]" />
-              <span>Área do Cliente</span>
+              {user?.email === ADMIN_EMAIL ? (
+                <>
+                  <Shield className="w-5 h-5 text-[#00C2FF]" />
+                  <span>Painel Admin</span>
+                </>
+              ) : (
+                <>
+                  <User className="w-5 h-5 text-[#00C2FF]" />
+                  <span>Área do Cliente</span>
+                </>
+              )}
             </Link>
 
             {/* DIVISOR */}
