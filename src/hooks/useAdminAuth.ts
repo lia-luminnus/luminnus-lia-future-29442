@@ -11,6 +11,9 @@ export function useAdminAuth() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // Verificação inline do isAdmin
+  const isAdmin = user?.email === "luminnus.lia.ai@gmail.com";
+
   useEffect(() => {
     // Se ainda estiver carregando, não faz nada
     if (loading) return;
@@ -23,8 +26,6 @@ export function useAdminAuth() {
 
     // Se tiver usuário, verifica se é admin
     if (user?.email) {
-      const isAdmin = ADMIN_EMAILS.includes(user.email);
-
       // Redireciona admin para dashboard admin se estiver em outra página após login
       if (isAdmin && location.pathname === "/auth") {
         navigate("/admin-dashboard");
@@ -34,5 +35,11 @@ export function useAdminAuth() {
         navigate("/dashboard");
       }
     }
-  }, [user, loading, navigate, location.pathname]);
+  }, [user, loading, navigate, location.pathname, isAdmin]);
+
+  return {
+    isAdmin,
+    isLoading: loading,
+    adminEmail: user?.email || "",
+  };
 }
