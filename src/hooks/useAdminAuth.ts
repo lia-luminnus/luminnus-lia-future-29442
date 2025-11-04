@@ -1,29 +1,36 @@
-Atualize o código do arquivo `src/hooks/useAdminAuth.ts` com o conteúdo abaixo, garantindo que o e-mail `luminnus.lia.ai@gmail.com` tenha acesso como administrador, e que o sistema redirecione automaticamente para `/admin-dashboard` após o login.
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-Substitua completamente o conteúdo do arquivo por:
-
-```ts
-import { useEffect } from "react";
-import { useRouter } from "next/router";
-import { useUser } from "@supabase/auth-helpers-react";
-
+// ✅ Lista de e-mails autorizados como administradores
 const ADMIN_EMAILS = [
-  "luminnus.lia.ai@gmail.com", // email autorizado como admin
+  "luminnus.lia.ai@gmail.com",
+  "admin@luminnus.com"
 ];
 
-export function useAdminAuth() {
-  const user = useUser();
-  const router = useRouter();
+export const useAdminAuth = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!user) return;
-
-    const isAdmin = ADMIN_EMAILS.includes(user.email ?? "");
-
-    if (isAdmin && router.pathname !== "/admin-dashboard") {
-      router.push("/admin-dashboard");
-    } else if (!isAdmin && router.pathname.startsWith("/admin-dashboard")) {
-      router.push("/dashboard");
+    if (!user) {
+      navigate("/auth");
+      return;
     }
-  }, [user, router]);
-}
+
+    const userIsAdmin = ADMIN_EMAILS.includes(user.email || "");
+    setIsAdmin(userIsAdmin);
+
+    if (!userIsAdmin) {
+      navigate("/dashboard");
+    } else {
+      navigate("/admin-dashboard");
+    }
+
+    setIsLoading(false);
+  }, [user, navigate]);
+
+  return { isAdmin, isLoading };
+};
