@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate, Routes, Route, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPlan } from '@/hooks/useUserPlan';
+import { isAdminEmail } from '@/hooks/useAdminAuth';
 import { Loader2 } from 'lucide-react';
 import DashboardSidebar from '@/components/DashboardSidebar';
 import DashboardUserMenu from '@/components/DashboardUserMenu';
@@ -32,12 +33,15 @@ const Dashboard = () => {
   const location = useLocation();
 
   /**
-   * VERIFICAÇÃO DE AUTENTICAÇÃO
-   * Redireciona para /auth se não estiver logado
+   * VERIFICAÇÃO DE AUTENTICAÇÃO E ROLE
+   * - Redireciona para /auth se não estiver logado
+   * - Redireciona admins para /admin-dashboard
    */
   useEffect(() => {
     if (!loading && !user) {
       navigate('/auth');
+    } else if (user?.email && isAdminEmail(user.email)) {
+      navigate('/admin-dashboard');
     }
   }, [user, loading, navigate]);
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserPlan } from '@/hooks/useUserPlan';
+import { isAdminEmail } from '@/hooks/useAdminAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
@@ -22,15 +23,19 @@ const Auth = () => {
   const navigate = useNavigate();
 
   /**
-   * REDIRECIONAMENTO AUTOMÁTICO BASEADO EM PLANO
+   * REDIRECIONAMENTO AUTOMÁTICO BASEADO EM PLANO E ROLE
    * Se o usuário já estiver logado:
+   * - Se é admin → redireciona para /admin-dashboard
    * - Se tem plano ativo → redireciona para /dashboard
    * - Se tem plano expirado/inativo → mostra aviso
    * - Se não tem plano → redireciona para /
    */
   useEffect(() => {
     if (user && !planLoading) {
-      if (hasActivePlan) {
+      // Verifica se é admin primeiro
+      if (user.email && isAdminEmail(user.email)) {
+        navigate('/admin-dashboard');
+      } else if (hasActivePlan) {
         navigate('/dashboard');
       } else if (userPlan && (userPlan.status === 'expirado' || userPlan.status === 'inativo')) {
         setShowExpiredPlanWarning(true);
