@@ -7,7 +7,7 @@ const ADMIN_EMAILS = [
   "meuemail@dominio.com",
   "admin@luminnus.com",
   // Adicione mais emails autorizados aqui
-];
+];luminnus.lia.ai@gmail.com
 
 /**
  * Hook para verificar se o usuário atual é um administrador
