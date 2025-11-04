@@ -102,7 +102,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
    * FUNÇÃO DE LOGIN
    * Autentica o usuário com email e senha
    * Retorna erro traduzido em português se houver falha
-   * Redireciona automaticamente admins para /admin-dashboard
+   * Redireciona automaticamente:
+   * - Admins para /admin-dashboard
+   * - Usuários com plano ativo para /dashboard
+   * - Usuários sem plano para /
    */
   const signIn = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -114,6 +117,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Verifica se o usuário é admin e redireciona
     if (data?.user?.email && ADMIN_EMAILS.includes(data.user.email)) {
       window.location.href = '/admin-dashboard';
+      return { error: null };
+    }
+
+    // Para usuários comuns, verifica se tem plano ativo
+    if (data?.user) {
+      try {
+        const { data: planData } = await supabase
+          .from('planos')
+          .select('*')
+          .eq('user_id', data.user.id)
+          .eq('status', 'ativo')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        // Se tiver plano ativo, redireciona para /dashboard
+        if (planData) {
+          window.location.href = '/dashboard';
+        } else {
+          // Se não tiver plano, redireciona para a página principal
+          window.location.href = '/';
+        }
+      } catch (err) {
+        console.error('Erro ao verificar plano do usuário:', err);
+        // Em caso de erro, redireciona para a página principal
+        window.location.href = '/';
+      }
     }
 
     return { error: null };

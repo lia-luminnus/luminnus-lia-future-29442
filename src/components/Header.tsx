@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Menu, X, User, LogOut } from "lucide-react";
+import { Menu, X, User, LogOut, Shield } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import AccountMenu from "@/components/AccountMenu";
 import luminmusLogo from "@/assets/luminnus-logo-gradient.png";
+
+const ADMIN_EMAIL = "luminnus.lia.ai@gmail.com";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
@@ -158,12 +160,21 @@ const Header = () => {
               {user ? (
                 <>
                   <Link
-                    to="/dashboard"
+                    to={user.email === ADMIN_EMAIL ? "/admin-dashboard" : "/dashboard"}
                     className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center flex items-center justify-center gap-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    <User className="w-4 h-4" />
-                    Área do Cliente
+                    {user.email === ADMIN_EMAIL ? (
+                      <>
+                        <Shield className="w-4 h-4" />
+                        Painel Admin
+                      </>
+                    ) : (
+                      <>
+                        <User className="w-4 h-4" />
+                        Área do Cliente
+                      </>
+                    )}
                   </Link>
                   <button
                     onClick={handleLogout}
