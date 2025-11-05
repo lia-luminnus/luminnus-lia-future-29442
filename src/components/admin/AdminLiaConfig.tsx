@@ -250,7 +250,7 @@ export const AdminLiaConfig = () => {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="lia-api-url">LIA API URL</Label>
+            <Label htmlFor="lia-api-url">API da LIA (Render)</Label>
             <Input
               id="lia-api-url"
               type="url"
@@ -259,7 +259,7 @@ export const AdminLiaConfig = () => {
               onChange={(e) => handleInputChange("liaApiUrl", e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              URL da API da LIA hospedada no Render. É usada para comunicação direta com o assistente no painel.
+              URL base da API da LIA hospedada no Render. É usada para comunicação direta entre o painel e a assistente.
             </p>
           </div>
         </CardContent>
