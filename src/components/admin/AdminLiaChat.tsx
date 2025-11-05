@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX, Wifi, WifiOff } from 'lucide-react';
+import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { sendMessage, LiaStatus, getStatusMessage } from '@/lib/api/lia';
+import { enviarMensagemLIA, reproduzirVoz } from '@/lib/api/lia';
 
 /**
  * INTERFACE: Mensagem de Chat
@@ -23,7 +23,7 @@ interface ChatMessage {
  * COMPONENTE: AdminLiaChat
  *
  * Chat integrado com a LIA especificamente para administradores
- * Interface estilo ChatGPT com integração API Render (WebSocket + Voz)
+ * Interface estilo ChatGPT com integração API Render via endpoint /chat
  */
 const AdminLiaChat = () => {
   const { user } = useAuth();
@@ -33,8 +33,6 @@ const AdminLiaChat = () => {
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [liaStatus, setLiaStatus] = useState<LiaStatus>(LiaStatus.IDLE);
-  const [statusMessage, setStatusMessage] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -154,7 +152,7 @@ const AdminLiaChat = () => {
 
 
   /**
-   * FUNÇÃO: Enviar mensagem via API Realtime (Render)
+   * FUNÇÃO: Enviar mensagem via API (Render)
    * Usa o módulo /lib/api/lia.ts para integração
    */
   const handleSendMessage = async (e?: React.FormEvent) => {
@@ -175,16 +173,6 @@ const AdminLiaChat = () => {
     };
     setMessages(prev => [...prev, newUserMessage]);
 
-    // Criar mensagem temporária para streaming da LIA
-    const tempAssistantId = `temp-assistant-${Date.now()}`;
-    const tempAssistantMessage: ChatMessage = {
-      id: tempAssistantId,
-      role: 'assistant',
-      content: '',
-      created_at: new Date().toISOString(),
-      isStreaming: true,
-    };
-
     try {
       // Salvar mensagem do usuário no Supabase para histórico
       const { error: userMsgError } = await supabase
@@ -199,66 +187,42 @@ const AdminLiaChat = () => {
         console.error('Erro ao salvar mensagem do usuário:', userMsgError);
       }
 
-      // Adicionar mensagem temporária da LIA (será atualizada com streaming)
-      setMessages(prev => [...prev, tempAssistantMessage]);
+      // Enviar mensagem para a LIA
+      const resposta = await enviarMensagemLIA(userMessage);
 
-      // Variável para armazenar a resposta completa
-      let fullResponse = '';
+      // Extrair texto da resposta (pode estar em diferentes campos)
+      const respostaTexto = resposta.response || resposta.text || resposta.message || 'Desculpe, não consegui gerar uma resposta.';
 
-      // Enviar mensagem usando o módulo lia.ts
-      await sendMessage({
-        message: userMessage,
-        voiceEnabled,
-        onMessage: (message, isDone) => {
-          // Armazenar resposta completa
-          fullResponse = message;
+      // Adicionar resposta da LIA à lista
+      const newAssistantMessage: ChatMessage = {
+        id: `assistant-${Date.now()}`,
+        role: 'assistant',
+        content: respostaTexto,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, newAssistantMessage]);
 
-          // Atualizar mensagem da LIA com o conteúdo recebido
-          setMessages(prev =>
-            prev.map(msg =>
-              msg.id === tempAssistantId
-                ? { ...msg, content: message, isStreaming: !isDone }
-                : msg
-            )
-          );
-        },
-        onStatus: (status, message) => {
-          // Atualizar status da conexão
-          setLiaStatus(status);
-          setStatusMessage(message || getStatusMessage(status));
+      // Salvar resposta da LIA no Supabase
+      const { error: assistantMsgError } = await supabase
+        .from('chat_messages')
+        .insert({
+          conversation_id: conversationId,
+          role: 'assistant',
+          content: respostaTexto,
+        });
 
-          // Mostrar erros como toast
-          if (status === LiaStatus.ERROR) {
-            toast({
-              title: 'Erro',
-              description: message || 'Erro ao se comunicar com a LIA',
-              variant: 'destructive',
-            });
-          }
-        },
-      });
+      if (assistantMsgError) {
+        console.error('Erro ao salvar resposta da LIA:', assistantMsgError);
+      }
 
-      // Salvar resposta completa da LIA no Supabase
-      if (fullResponse) {
-        const { error: assistantMsgError } = await supabase
-          .from('chat_messages')
-          .insert({
-            conversation_id: conversationId,
-            role: 'assistant',
-            content: fullResponse,
-          });
-
-        if (assistantMsgError) {
-          console.error('Erro ao salvar resposta da Lia:', assistantMsgError);
-        }
+      // Reproduzir voz se disponível e habilitado
+      if (voiceEnabled && resposta.audioUrl) {
+        await reproduzirVoz(resposta.audioUrl);
       }
 
       setLoading(false);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
-
-      // Remover mensagem temporária em caso de erro
-      setMessages(prev => prev.filter(msg => msg.id !== tempAssistantId));
 
       setLoading(false);
       toast({
@@ -332,30 +296,11 @@ const AdminLiaChat = () => {
           </div>
           Assistente LIA
           <span className="text-xs font-normal bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-            Realtime + Voz
-          </span>
-          {/* Status Badge */}
-          <span
-            className={`text-xs font-normal px-3 py-1 rounded-full flex items-center gap-1.5 transition-all duration-200 ${
-              liaStatus === LiaStatus.CONNECTED || liaStatus === LiaStatus.IDLE
-                ? 'bg-green-100 text-green-700'
-                : liaStatus === LiaStatus.CONNECTING || liaStatus === LiaStatus.STREAMING
-                ? 'bg-blue-100 text-blue-700'
-                : liaStatus === LiaStatus.ERROR
-                ? 'bg-red-100 text-red-700'
-                : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            {(liaStatus === LiaStatus.CONNECTED || liaStatus === LiaStatus.IDLE) && <Wifi className="w-3 h-3" />}
-            {(liaStatus === LiaStatus.CONNECTING || liaStatus === LiaStatus.STREAMING) && (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            )}
-            {liaStatus === LiaStatus.ERROR && <WifiOff className="w-3 h-3" />}
-            {statusMessage || getStatusMessage(liaStatus)}
+            API Render
           </span>
         </h1>
         <p className="text-gray-600">
-          Chat integrado com a LIA para administradores - Respostas em tempo real via API Render com voz personalizada
+          Chat integrado com a LIA para administradores - Respostas via API Render com voz personalizada
         </p>
       </div>
 
