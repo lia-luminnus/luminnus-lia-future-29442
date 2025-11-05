@@ -165,8 +165,8 @@ const AdminLiaChat = () => {
     const config = secureStorage.load();
     if (!config?.liaApiUrl) {
       toast({
-        title: '⚠️ API da LIA não configurada',
-        description: 'A API da LIA não está configurada. Vá em Configurações da LIA e adicione a URL da API.',
+        title: 'Configuração necessária',
+        description: '⚠️ A API da LIA não está configurada. Vá em Configurações da LIA e adicione a URL da API.',
         variant: 'destructive',
       });
       return;
