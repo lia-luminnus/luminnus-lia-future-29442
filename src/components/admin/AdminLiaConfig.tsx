@@ -16,6 +16,7 @@ interface ConfigData {
   supabaseServiceRoleKey: string;
   systemPrompt: string;
   webhookUrl: string;
+  liaApiUrl: string;
 }
 
 export const AdminLiaConfig = () => {
@@ -29,6 +30,7 @@ export const AdminLiaConfig = () => {
     supabaseServiceRoleKey: "",
     systemPrompt: "",
     webhookUrl: "",
+    liaApiUrl: "",
   });
 
   // Carregar configurações salvas ao montar o componente
@@ -36,12 +38,13 @@ export const AdminLiaConfig = () => {
     const savedConfig = secureStorage.load();
     if (savedConfig) {
       setConfig({
-        openaiApiKey: savedConfig.openaiApiKey || "",
+        openaiApiKey: savedConfig.openaiApiKey || savedConfig.openaiKey || "",
         supabaseUrl: savedConfig.supabaseUrl || "",
-        supabaseAnonKey: savedConfig.supabaseAnonKey || "",
-        supabaseServiceRoleKey: savedConfig.supabaseServiceRoleKey || "",
+        supabaseAnonKey: savedConfig.supabaseAnonKey || savedConfig.supabaseAnonKey || "",
+        supabaseServiceRoleKey: savedConfig.supabaseServiceRoleKey || savedConfig.supabaseServiceKey || "",
         systemPrompt: savedConfig.systemPrompt || "",
         webhookUrl: savedConfig.webhookUrl || "",
+        liaApiUrl: savedConfig.liaApiUrl || "",
       });
     }
   }, []);
@@ -52,7 +55,13 @@ export const AdminLiaConfig = () => {
     try {
       // Salvar no secure storage
       secureStorage.save({
-        ...config,
+        openaiKey: config.openaiApiKey,
+        supabaseUrl: config.supabaseUrl,
+        supabaseAnonKey: config.supabaseAnonKey,
+        supabaseServiceKey: config.supabaseServiceRoleKey,
+        liaApiUrl: config.liaApiUrl,
+        systemPrompt: config.systemPrompt,
+        webhookUrl: config.webhookUrl,
         timestamp: new Date().toISOString(),
       });
 
@@ -226,6 +235,31 @@ export const AdminLiaConfig = () => {
             />
             <p className="text-xs text-muted-foreground">
               Este texto define a personalidade e comportamento da assistente
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* LIA API Configuration */}
+      <Card>
+        <CardHeader>
+          <CardTitle>API da LIA (Render)</CardTitle>
+          <CardDescription>
+            Configure a URL da API da LIA hospedada no Render
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="lia-api-url">LIA API URL</Label>
+            <Input
+              id="lia-api-url"
+              type="url"
+              placeholder="https://lia-chat-api.onrender.com"
+              value={config.liaApiUrl}
+              onChange={(e) => handleInputChange("liaApiUrl", e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              URL da API da LIA hospedada no Render. É usada para comunicação direta com o assistente no painel.
             </p>
           </div>
         </CardContent>
