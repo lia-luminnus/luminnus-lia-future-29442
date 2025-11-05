@@ -15,18 +15,18 @@ import { secureStorage } from "@/lib/secureStorage";
 const LIA_API_URL_DEFAULT = "https://lia-chat-api.onrender.com";
 
 /**
- * FUNÇÃO: Obter URL da API configurada
+ * FUNÇÃO: Obter URL da API da LIA configurada
  * Busca a URL configurada no secureStorage ou retorna a URL padrão
  * @returns URL da API da LIA
  */
-export function obterUrlApi(): string {
+export function obterUrlApiLIA(): string {
   const config = secureStorage.load();
   return config?.liaApiUrl || LIA_API_URL_DEFAULT;
 }
 
 /**
  * URL base da API da LIA no Render
- * @deprecated Use obterUrlApi() para obter a URL configurada dinamicamente
+ * @deprecated Use obterUrlApiLIA() para obter a URL configurada dinamicamente
  */
 export const LIA_API_URL = LIA_API_URL_DEFAULT;
 
@@ -48,7 +48,7 @@ export interface LiaResponse {
  */
 export async function enviarMensagemLIA(mensagem: string): Promise<LiaResponse> {
   try {
-    const apiUrl = obterUrlApi();
+    const apiUrl = obterUrlApiLIA();
     const response = await fetch(`${apiUrl}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -73,7 +73,7 @@ export async function enviarMensagemLIA(mensagem: string): Promise<LiaResponse> 
  */
 export async function verificarStatusAPI(): Promise<boolean> {
   try {
-    const apiUrl = obterUrlApi();
+    const apiUrl = obterUrlApiLIA();
     const response = await fetch(`${apiUrl}/health`, {
       method: 'GET',
       signal: AbortSignal.timeout(5000), // Timeout de 5 segundos
