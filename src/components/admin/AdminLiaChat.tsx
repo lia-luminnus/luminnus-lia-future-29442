@@ -6,7 +6,7 @@ import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX } from 'lu
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { enviarMensagemLIA, reproduzirVoz, obterUrlApi } from '@/lib/api/lia';
+import { enviarMensagemLIA, reproduzirVoz, obterUrlApiLIA } from '@/lib/api/lia';
 import { secureStorage } from '@/lib/secureStorage';
 
 /**
