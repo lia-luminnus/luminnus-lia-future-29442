@@ -151,6 +151,14 @@ export default {
           "50%": {
             backgroundPosition: "100% 50%"
           }
+        },
+        "orbit": {
+          "0%": {
+            transform: "rotate(0deg) translateX(150px) rotate(0deg)"
+          },
+          "100%": {
+            transform: "rotate(360deg) translateX(150px) rotate(-360deg)"
+          }
         }
       },
       animation: {
@@ -162,7 +170,8 @@ export default {
         "pulse-glow": "pulse-glow 3s ease-in-out infinite",
         "float": "float 4s ease-in-out infinite",
         "particle": "particle 8s ease-in-out infinite",
-        "gradient-shift": "gradient-shift 5s ease infinite"
+        "gradient-shift": "gradient-shift 5s ease infinite",
+        "orbit": "orbit 8s linear infinite"
       },
       fontFamily: {
         sans: ['Poppins', 'Inter', 'sans-serif'],
