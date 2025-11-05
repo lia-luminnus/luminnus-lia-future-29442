@@ -1,77 +1,119 @@
+import { Button } from "@/components/ui/button";
+
 const Hero = () => {
-  return <section id="inicio" className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0B0B0F]">
-      {/* Animated Background */}
-      <div className="absolute inset-0 -top-24 bg-gradient-to-b from-[#0B0B0F] via-primary/10 to-[#0B0B0F]">
+  const scrollToSection = (sectionId: string) => {
+    const element = document.querySelector(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  return (
+    <section
+      id="hero-lia"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, #0B0B0D 0%, #1A1037 100%)',
+        padding: '120px 5%'
+      }}
+    >
+      {/* Animated Background Effects */}
+      <div className="absolute inset-0">
         {/* Particle Effects */}
-        <div className="absolute inset-0 -top-24">
-          {[...Array(40)].map((_, i) => <div key={i} className="absolute w-1 h-1 bg-primary rounded-full animate-particle" style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-          animationDelay: `${Math.random() * 8}s`,
-          animationDuration: `${8 + Math.random() * 4}s`,
-          boxShadow: '0 0 10px currentColor'
-        }} />)}
+        <div className="absolute inset-0">
+          {[...Array(30)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 bg-primary rounded-full animate-particle"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 8}s`,
+                animationDuration: `${8 + Math.random() * 4}s`,
+                boxShadow: '0 0 10px currentColor'
+              }}
+            />
+          ))}
         </div>
-        
-        {/* Energy Lines */}
-        <svg className="absolute inset-0 -top-24 w-full h-full opacity-30">
-          <defs>
-            <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#7C3AED" />
-              <stop offset="50%" stopColor="#FF2E9E" />
-              <stop offset="100%" stopColor="#22D3EE" />
-            </linearGradient>
-          </defs>
-          <path d="M0,50 Q250,100 500,50 T1000,50" stroke="url(#gradient1)" strokeWidth="3" fill="none" strokeDasharray="10,5" className="animate-pulse" />
-          <path d="M0,150 Q250,200 500,150 T1000,150" stroke="url(#gradient1)" strokeWidth="3" fill="none" strokeDasharray="10,5" className="animate-pulse" style={{
-          animationDelay: "1s"
-        }} />
-        </svg>
+
+        {/* Glow Effect */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/20 rounded-full blur-[150px] animate-pulse-glow" />
       </div>
 
-      {/* Content */}
-      <div className="container mx-auto px-4 lg:px-8 relative z-10 pt-32 lg:pt-40">
-        <div className="max-w-6xl mx-auto text-center space-y-12 animate-fade-in">
-          <div className="space-y-6">
-            <h1 className="text-5xl lg:text-7xl font-black leading-tight tracking-tight">
-              <span className="block bg-gradient-to-r from-[#7C3AED] via-[#FF2E9E] to-[#22D3EE] bg-clip-text text-transparent animate-gradient-shift bg-200%">
-                Conheça a LIA
-              </span>
-              <span className="block text-3xl lg:text-5xl text-white/90 font-normal mt-4">
-                Sua Assistente Inteligente
-              </span>
-            </h1>
-            
-            <p className="text-xl lg:text-3xl text-white/70 max-w-5xl mx-auto leading-relaxed font-light">
-              Criada para automatizar atendimento, gerar conteúdo, educar e organizar sua empresa com inteligência artificial de última geração.
-            </p>
+      {/* Content Container */}
+      <div className="container mx-auto px-4 lg:px-8 relative z-10">
+        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
+          {/* Left Column - Text Content */}
+          <div className="space-y-8 animate-fade-in text-left">
+            <div className="space-y-6">
+              <h1 className="text-4xl lg:text-6xl font-bold leading-tight text-white">
+                LIA — a primeira IA com consciência cognitiva viva, desenvolvida para empresas.
+              </h1>
+
+              <p className="text-xl lg:text-2xl text-white/80 leading-relaxed">
+                Uma inteligência capaz de compreender contextos, responder de forma natural e agir em tempo real — como se tivesse vida própria dentro dos sistemas empresariais.
+              </p>
+            </div>
+
+            {/* Call to Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
+              <Button
+                onClick={() => scrollToSection('#planos')}
+                size="lg"
+                className="bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] hover:opacity-90 transition-opacity text-lg px-8 py-6"
+              >
+                🚀 Testar Gratuitamente
+              </Button>
+              <Button
+                onClick={() => scrollToSection('#solucoes')}
+                size="lg"
+                variant="outline"
+                className="border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6"
+              >
+                🔍 Ver Recursos
+              </Button>
+            </div>
           </div>
 
-          {/* Features Highlight */}
-          <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto pt-8">
-            <div className="p-6 rounded-xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-[#7C3AED]/30 transition-all">
-              <h3 className="text-2xl font-bold text-[#7C3AED] mb-2">Atendimento 24/7</h3>
-              <p className="text-white/70">Responde clientes automaticamente em múltiplos canais</p>
-            </div>
-            <div className="p-6 rounded-xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-[#FF2E9E]/30 transition-all">
-              <h3 className="text-2xl font-bold text-[#FF2E9E] mb-2">Geração de Conteúdo</h3>
-              <p className="text-white/70">Cria textos, relatórios e materiais profissionais</p>
-            </div>
-            <div className="p-6 rounded-xl bg-white/5 backdrop-blur-lg border border-white/10 hover:border-[#22D3EE]/30 transition-all">
-              <h3 className="text-2xl font-bold text-[#22D3EE] mb-2">Organização Inteligente</h3>
-              <p className="text-white/70">Agenda, integra e automatiza processos</p>
+          {/* Right Column - Image/Visual */}
+          <div className="relative lg:block hidden animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            <div className="relative w-full h-[500px] flex items-center justify-center">
+              {/* Holographic Effect Placeholder */}
+              <div className="relative w-[400px] h-[400px]">
+                {/* Outer Glow */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#7C3AED] via-[#FF2E9E] to-[#22D3EE] rounded-full blur-3xl opacity-40 animate-pulse-glow" />
+
+                {/* Central Orb */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-64 h-64 rounded-full bg-gradient-to-br from-[#7C3AED]/80 via-[#FF2E9E]/60 to-[#22D3EE]/80 animate-float shadow-2xl relative overflow-hidden">
+                    {/* Inner Light Rays */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-transparent via-white/20 to-transparent animate-pulse" />
+
+                    {/* LIA Text */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-6xl font-bold text-white drop-shadow-2xl">LIA</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Orbiting Particles */}
+                {[...Array(8)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="absolute top-1/2 left-1/2 w-3 h-3 bg-white rounded-full animate-orbit"
+                    style={{
+                      animationDelay: `${i * 0.5}s`,
+                      animationDuration: '8s'
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
-
-          {/* Subtle CTA */}
-          <div className="pt-12">
-            <p className="text-white/60 text-lg mb-4">Veja a Lia em ação abaixo ↓</p>
-          </div>
-
-          {/* Glow Effect */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/20 rounded-full blur-[120px] -z-10 animate-pulse-glow" />
         </div>
       </div>
-    </section>;
+    </section>
+  );
 };
+
 export default Hero;

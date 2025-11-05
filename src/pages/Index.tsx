@@ -1,5 +1,8 @@
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
+import AboutLuminnus from "@/components/AboutLuminnus";
+import LiaStatistics from "@/components/LiaStatistics";
+import LiaPositioning from "@/components/LiaPositioning";
 import LiaAtendimento from "@/components/LiaAtendimento";
 import LiaSimulator from "@/components/LiaSimulator";
 import Solutions from "@/components/Solutions";
@@ -12,6 +15,9 @@ const Index = () => {
     <div className="min-h-screen bg-[#0B0B0F]">
       <Header />
       <Hero />
+      <AboutLuminnus />
+      <LiaStatistics />
+      <LiaPositioning />
       <LiaAtendimento />
       <LiaSimulator />
       <Solutions />
