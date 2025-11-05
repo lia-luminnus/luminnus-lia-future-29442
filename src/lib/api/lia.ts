@@ -263,6 +263,88 @@ export function getStatusMessage(status: LiaStatus): string {
 }
 
 /**
+ * Interface de resposta da API POST /chat
+ */
+export interface LiaChatResponse {
+  text: string;
+  voiceUrl?: string;
+  success: boolean;
+  error?: string;
+}
+
+/**
+ * FUNÇÃO: Enviar mensagem via POST /chat (alternativa REST simples)
+ * Útil para casos onde não é necessário streaming em tempo real
+ *
+ * @param mensagem - Texto da mensagem do usuário
+ * @returns Resposta da LIA com texto e URL de voz (se disponível)
+ */
+export async function enviarMensagemLIA(mensagem: string): Promise<LiaChatResponse> {
+  try {
+    const response = await fetch(`${LIA_API_URL}/chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: mensagem }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erro HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const data = await response.json();
+
+    // Retornar resposta formatada
+    return {
+      text: data.response || data.text || data.message || '',
+      voiceUrl: data.voiceUrl || data.voice_url || data.audio,
+      success: true,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Erro ao comunicar com a LIA';
+    console.error('Erro ao enviar mensagem:', error);
+
+    return {
+      text: '',
+      voiceUrl: undefined,
+      success: false,
+      error: errorMessage,
+    };
+  }
+}
+
+/**
+ * FUNÇÃO: Reproduzir áudio a partir de uma URL
+ *
+ * @param audioUrl - URL do arquivo de áudio
+ * @param onStatus - Callback opcional para feedback de status
+ */
+export async function reproduzirAudio(audioUrl: string, onStatus?: StatusCallback): Promise<void> {
+  try {
+    const audio = new Audio(audioUrl);
+
+    audio.onplay = () => {
+      onStatus?.(LiaStatus.STREAMING, 'Reproduzindo voz da LIA...');
+    };
+
+    audio.onended = () => {
+      onStatus?.(LiaStatus.IDLE, 'Voz reproduzida com sucesso');
+    };
+
+    audio.onerror = (error) => {
+      console.error('Erro ao reproduzir áudio:', error);
+      onStatus?.(LiaStatus.ERROR, 'Erro ao reproduzir áudio');
+    };
+
+    await audio.play();
+  } catch (error) {
+    console.error('Erro ao iniciar reprodução de áudio:', error);
+    onStatus?.(LiaStatus.ERROR, 'Erro ao reproduzir áudio');
+  }
+}
+
+/**
  * FUNÇÃO: Limpar recursos (cleanup)
  * Útil para quando o componente for desmontado
  */
