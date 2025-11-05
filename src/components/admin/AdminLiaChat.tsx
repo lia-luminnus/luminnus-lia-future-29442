@@ -2,10 +2,15 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Send, Loader2, User, Sparkles, Trash2 } from 'lucide-react';
+import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+
+/**
+ * URL da API Realtime da LIA hospedada no Render
+ */
+const LIA_API_URL = "https://lia-chat-api.onrender.com";
 
 /**
  * INTERFACE: Mensagem de Chat
@@ -21,7 +26,7 @@ interface ChatMessage {
  * COMPONENTE: AdminLiaChat
  *
  * Chat integrado com a LIA especificamente para administradores
- * Interface estilo ChatGPT com integração OpenAI
+ * Interface estilo ChatGPT com integração API Render (WebSocket + Voz)
  */
 const AdminLiaChat = () => {
   const { user } = useAuth();
@@ -30,8 +35,11 @@ const AdminLiaChat = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   /**
    * EFEITO: Scroll automático para última mensagem
@@ -50,6 +58,23 @@ const AdminLiaChat = () => {
   useEffect(() => {
     loadOrCreateConversation();
   }, [user]);
+
+  /**
+   * EFEITO: Cleanup - Fechar WebSocket e áudio ao desmontar
+   */
+  useEffect(() => {
+    return () => {
+      // Fechar WebSocket se estiver aberto
+      if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        wsRef.current.close();
+      }
+      // Parar áudio se estiver tocando
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
 
   /**
    * EFEITO: Redimensionar textarea automaticamente
@@ -104,7 +129,7 @@ const AdminLiaChat = () => {
         const welcomeMessage: ChatMessage = {
           id: 'welcome',
           role: 'assistant',
-          content: 'Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
+          content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
           created_at: new Date().toISOString(),
         };
         setMessages([welcomeMessage]);
@@ -137,7 +162,7 @@ const AdminLiaChat = () => {
         const welcomeMessage: ChatMessage = {
           id: 'welcome',
           role: 'assistant',
-          content: 'Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
+          content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
           created_at: new Date().toISOString(),
         };
         setMessages([welcomeMessage]);
@@ -148,7 +173,24 @@ const AdminLiaChat = () => {
   };
 
   /**
-   * FUNÇÃO: Enviar mensagem
+   * FUNÇÃO: Reproduzir voz da LIA
+   */
+  const playVoice = async () => {
+    if (!voiceEnabled) return;
+
+    try {
+      // Criar novo elemento de áudio para reproduzir voz da LIA
+      const audio = new Audio(`${LIA_API_URL}/voice`);
+      audioRef.current = audio;
+      await audio.play();
+    } catch (error) {
+      console.error('Erro ao reproduzir voz da LIA:', error);
+      // Não mostra toast para não ser intrusivo
+    }
+  };
+
+  /**
+   * FUNÇÃO: Enviar mensagem via API Realtime (Render)
    */
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -169,7 +211,7 @@ const AdminLiaChat = () => {
     setMessages(prev => [...prev, newUserMessage]);
 
     try {
-      // Salvar mensagem do usuário no Supabase
+      // Salvar mensagem do usuário no Supabase para histórico
       const { error: userMsgError } = await supabase
         .from('chat_messages')
         .insert({
@@ -182,65 +224,118 @@ const AdminLiaChat = () => {
         console.error('Erro ao salvar mensagem do usuário:', userMsgError);
       }
 
-      // Chamar Supabase Edge Function da Lia com flag isAdmin
-      const { data: { session } } = await supabase.auth.getSession();
+      // Criar sessão realtime com a API do Render
+      const sessionResponse = await fetch(`${LIA_API_URL}/session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-      if (!session) {
-        throw new Error('Sessão não encontrada');
+      if (!sessionResponse.ok) {
+        throw new Error('Erro ao criar sessão com a LIA');
       }
 
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/lia-chat`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            message: userMessage,
-            conversationId: conversationId,
-            isAdmin: true, // Flag para indicar que é admin
-          }),
-        }
-      );
+      const sessionData = await sessionResponse.json();
 
-      if (!response.ok) {
-        throw new Error('Erro ao obter resposta da Lia');
+      if (!sessionData?.client_secret?.value) {
+        throw new Error('Sessão inválida retornada pela API');
       }
 
-      const data = await response.json();
+      // Conectar via WebSocket
+      const ws = new WebSocket(sessionData.client_secret.value);
+      wsRef.current = ws;
 
-      // Adicionar resposta da Lia à lista
-      const assistantMessage: ChatMessage = {
-        id: `temp-assistant-${Date.now()}`,
-        role: 'assistant',
-        content: data.response || 'Desculpe, não consegui processar sua mensagem.',
-        created_at: new Date().toISOString(),
+      // Handler: Conexão aberta
+      ws.onopen = () => {
+        console.log('WebSocket conectado à LIA');
+        // Enviar mensagem do usuário
+        ws.send(JSON.stringify({
+          type: 'input_text',
+          text: userMessage
+        }));
       };
-      setMessages(prev => [...prev, assistantMessage]);
 
-      // Salvar resposta da Lia no Supabase
-      const { error: assistantMsgError } = await supabase
-        .from('chat_messages')
-        .insert({
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: assistantMessage.content,
+      // Handler: Mensagens recebidas
+      ws.onmessage = async (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+
+          // Processar resposta de texto
+          if (msg.type === 'response_text' && msg.text) {
+            const assistantMessage: ChatMessage = {
+              id: `temp-assistant-${Date.now()}`,
+              role: 'assistant',
+              content: msg.text,
+              created_at: new Date().toISOString(),
+            };
+
+            setMessages(prev => [...prev, assistantMessage]);
+            setLoading(false);
+
+            // Salvar resposta da Lia no Supabase
+            const { error: assistantMsgError } = await supabase
+              .from('chat_messages')
+              .insert({
+                conversation_id: conversationId,
+                role: 'assistant',
+                content: msg.text,
+              });
+
+            if (assistantMsgError) {
+              console.error('Erro ao salvar resposta da Lia:', assistantMsgError);
+            }
+
+            // Reproduzir voz da LIA
+            await playVoice();
+
+            // Fechar conexão WebSocket após receber resposta
+            ws.close();
+          }
+        } catch (error) {
+          console.error('Erro ao processar mensagem do WebSocket:', error);
+        }
+      };
+
+      // Handler: Erro no WebSocket
+      ws.onerror = (error) => {
+        console.error('Erro no WebSocket:', error);
+        setLoading(false);
+        toast({
+          title: 'Erro de conexão',
+          description: 'Não foi possível conectar com a LIA.',
+          variant: 'destructive',
         });
+        ws.close();
+      };
 
-      if (assistantMsgError) {
-        console.error('Erro ao salvar resposta da Lia:', assistantMsgError);
-      }
+      // Handler: Conexão fechada
+      ws.onclose = () => {
+        console.log('WebSocket desconectado');
+        setLoading(false);
+      };
+
+      // Timeout de segurança (30 segundos)
+      setTimeout(() => {
+        if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+          ws.close();
+          setLoading(false);
+          toast({
+            title: 'Timeout',
+            description: 'A LIA demorou muito para responder.',
+            variant: 'destructive',
+          });
+        }
+      }, 30000);
+
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+      setLoading(false);
       toast({
         title: 'Erro',
         description: 'Não foi possível enviar a mensagem. Tente novamente.',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -271,7 +366,7 @@ const AdminLiaChat = () => {
       const welcomeMessage: ChatMessage = {
         id: 'welcome',
         role: 'assistant',
-        content: 'Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
+        content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
         created_at: new Date().toISOString(),
       };
       setMessages([welcomeMessage]);
@@ -306,9 +401,12 @@ const AdminLiaChat = () => {
             <Bot className="w-6 h-6 text-white" />
           </div>
           Assistente LIA
+          <span className="text-xs font-normal bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+            Realtime + Voz
+          </span>
         </h1>
         <p className="text-gray-600">
-          Chat integrado com a LIA para administradores - Configure e gerencie sua plataforma com comandos naturais
+          Chat integrado com a LIA para administradores - Respostas em tempo real via WebSocket com voz personalizada
         </p>
       </div>
 
@@ -386,6 +484,28 @@ const AdminLiaChat = () => {
             >
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
               Limpar
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setVoiceEnabled(!voiceEnabled)}
+              className={`text-xs transition-all duration-200 rounded-full px-3 py-1.5 h-auto ${
+                voiceEnabled
+                  ? 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              {voiceEnabled ? (
+                <>
+                  <Volume2 className="w-3.5 h-3.5 mr-1.5" />
+                  Voz Ativa
+                </>
+              ) : (
+                <>
+                  <VolumeX className="w-3.5 h-3.5 mr-1.5" />
+                  Voz Desativada
+                </>
+              )}
             </Button>
             <Button
               variant="ghost"
