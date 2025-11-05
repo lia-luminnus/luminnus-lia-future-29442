@@ -3,10 +3,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { enviarMensagemLIA, reproduzirVoz, obterUrlApiLIA } from '@/lib/api/lia';
+import { enviarMensagemLIA, reproduzirVoz } from '@/lib/api/lia';
 import { secureStorage } from '@/lib/secureStorage';
 
 /**
@@ -14,10 +12,9 @@ import { secureStorage } from '@/lib/secureStorage';
  */
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant' | 'system';
+  role: 'user' | 'assistant';
   content: string;
   created_at: string;
-  isStreaming?: boolean;
 }
 
 /**
@@ -27,12 +24,17 @@ interface ChatMessage {
  * Interface estilo ChatGPT com integração API Render via endpoint /chat
  */
 const AdminLiaChat = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: 'welcome',
+      role: 'assistant',
+      content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
+      created_at: new Date().toISOString(),
+    }
+  ]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [conversationId, setConversationId] = useState<string | null>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -49,13 +51,6 @@ const AdminLiaChat = () => {
   }, [messages]);
 
   /**
-   * EFEITO: Carregar ou criar conversa ao montar componente
-   */
-  useEffect(() => {
-    loadOrCreateConversation();
-  }, [user]);
-
-  /**
    * EFEITO: Redimensionar textarea automaticamente
    */
   useEffect(() => {
@@ -65,92 +60,6 @@ const AdminLiaChat = () => {
     }
   }, [inputMessage]);
 
-  /**
-   * FUNÇÃO: Carregar ou criar conversa
-   */
-  const loadOrCreateConversation = async () => {
-    if (!user) return;
-
-    try {
-      // Tentar buscar uma conversa de admin existente
-      const { data: conversations, error: fetchError } = await supabase
-        .from('chat_conversations')
-        .select('id')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (fetchError) {
-        console.error('Erro ao buscar conversa:', fetchError);
-        return;
-      }
-
-      if (conversations && conversations.length > 0) {
-        // Usar conversa existente
-        setConversationId(conversations[0].id);
-        await loadMessages(conversations[0].id);
-      } else {
-        // Criar nova conversa
-        const { data: newConversation, error: createError } = await supabase
-          .from('chat_conversations')
-          .insert({ user_id: user.id })
-          .select('id')
-          .single();
-
-        if (createError) {
-          console.error('Erro ao criar conversa:', createError);
-          return;
-        }
-
-        setConversationId(newConversation.id);
-
-        // Adicionar mensagem de boas-vindas da LIA
-        const welcomeMessage: ChatMessage = {
-          id: 'welcome',
-          role: 'assistant',
-          content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
-          created_at: new Date().toISOString(),
-        };
-        setMessages([welcomeMessage]);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar conversa:', error);
-    }
-  };
-
-  /**
-   * FUNÇÃO: Carregar mensagens da conversa
-   */
-  const loadMessages = async (convId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('chat_messages')
-        .select('*')
-        .eq('conversation_id', convId)
-        .order('created_at', { ascending: true });
-
-      if (error) {
-        console.error('Erro ao carregar mensagens:', error);
-        return;
-      }
-
-      if (data && data.length > 0) {
-        setMessages(data);
-      } else {
-        // Se não houver mensagens, adicionar mensagem de boas-vindas
-        const welcomeMessage: ChatMessage = {
-          id: 'welcome',
-          role: 'assistant',
-          content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
-          created_at: new Date().toISOString(),
-        };
-        setMessages([welcomeMessage]);
-      }
-    } catch (error) {
-      console.error('Erro ao carregar mensagens:', error);
-    }
-  };
-
 
   /**
    * FUNÇÃO: Enviar mensagem via API (Render)
@@ -159,7 +68,7 @@ const AdminLiaChat = () => {
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    if (!inputMessage.trim() || !conversationId || !user) return;
+    if (!inputMessage.trim()) return;
 
     // Verificar se a URL da API está configurada
     const config = secureStorage.load();
@@ -178,7 +87,7 @@ const AdminLiaChat = () => {
 
     // Adicionar mensagem do usuário à lista
     const newUserMessage: ChatMessage = {
-      id: `temp-user-${Date.now()}`,
+      id: `user-${Date.now()}`,
       role: 'user',
       content: userMessage,
       created_at: new Date().toISOString(),
@@ -186,19 +95,6 @@ const AdminLiaChat = () => {
     setMessages(prev => [...prev, newUserMessage]);
 
     try {
-      // Salvar mensagem do usuário no Supabase para histórico
-      const { error: userMsgError } = await supabase
-        .from('chat_messages')
-        .insert({
-          conversation_id: conversationId,
-          role: 'user',
-          content: userMessage,
-        });
-
-      if (userMsgError) {
-        console.error('Erro ao salvar mensagem do usuário:', userMsgError);
-      }
-
       // Enviar mensagem para a LIA
       const resposta = await enviarMensagemLIA(userMessage);
 
@@ -214,19 +110,6 @@ const AdminLiaChat = () => {
       };
       setMessages(prev => [...prev, newAssistantMessage]);
 
-      // Salvar resposta da LIA no Supabase
-      const { error: assistantMsgError } = await supabase
-        .from('chat_messages')
-        .insert({
-          conversation_id: conversationId,
-          role: 'assistant',
-          content: respostaTexto,
-        });
-
-      if (assistantMsgError) {
-        console.error('Erro ao salvar resposta da LIA:', assistantMsgError);
-      }
-
       // Reproduzir voz se disponível e habilitado
       if (voiceEnabled && resposta.audioUrl) {
         await reproduzirVoz(resposta.audioUrl);
@@ -235,6 +118,15 @@ const AdminLiaChat = () => {
       setLoading(false);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
+
+      // Adicionar mensagem de erro
+      const errorMessage: ChatMessage = {
+        id: `error-${Date.now()}`,
+        role: 'assistant',
+        content: `❌ Erro: ${error instanceof Error ? error.message : 'Não foi possível enviar a mensagem'}`,
+        created_at: new Date().toISOString(),
+      };
+      setMessages(prev => [...prev, errorMessage]);
 
       setLoading(false);
       toast({
@@ -256,39 +148,20 @@ const AdminLiaChat = () => {
   /**
    * FUNÇÃO: Limpar conversa
    */
-  const handleClearChat = async () => {
-    if (!conversationId) return;
+  const handleClearChat = () => {
+    // Resetar estado local
+    const welcomeMessage: ChatMessage = {
+      id: 'welcome',
+      role: 'assistant',
+      content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
+      created_at: new Date().toISOString(),
+    };
+    setMessages([welcomeMessage]);
 
-    try {
-      // Deletar todas as mensagens da conversa
-      const { error } = await supabase
-        .from('chat_messages')
-        .delete()
-        .eq('conversation_id', conversationId);
-
-      if (error) throw error;
-
-      // Resetar estado local
-      const welcomeMessage: ChatMessage = {
-        id: 'welcome',
-        role: 'assistant',
-        content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
-        created_at: new Date().toISOString(),
-      };
-      setMessages([welcomeMessage]);
-
-      toast({
-        title: 'Chat limpo',
-        description: 'O histórico de conversa foi removido.',
-      });
-    } catch (error) {
-      console.error('Erro ao limpar chat:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível limpar o chat.',
-        variant: 'destructive',
-      });
-    }
+    toast({
+      title: 'Chat limpo',
+      description: 'O histórico de conversa foi removido.',
+    });
   };
 
   /**
