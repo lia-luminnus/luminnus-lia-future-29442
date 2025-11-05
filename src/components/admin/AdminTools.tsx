@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Send, Loader2, Terminal, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { enviarMensagemLIA } from "@/lib/api/lia";
+import { secureStorage } from "@/lib/secureStorage";
 
 interface TestMessage {
   id: string;
@@ -32,6 +33,17 @@ export const AdminTools = () => {
       return;
     }
 
+    // Verificar se a URL da API está configurada
+    const config = secureStorage.load();
+    if (!config?.liaApiUrl) {
+      toast({
+        title: "Configuração necessária",
+        description: "⚠️ A API da LIA não está configurada. Vá em Configurações da LIA e adicione a URL da API.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsSending(true);
 
     // Adiciona mensagem do usuário
@@ -45,21 +57,17 @@ export const AdminTools = () => {
     setMessages((prev) => [...prev, userMessage]);
 
     try {
-      // Chama a Edge Function da LIA (substitua pela sua função real)
-      const { data, error } = await supabase.functions.invoke("lia-chat", {
-        body: {
-          message: testMessage,
-          isTest: true,
-        },
-      });
+      // Envia mensagem para a API da LIA (Render)
+      const resposta = await enviarMensagemLIA(testMessage);
 
-      if (error) throw error;
+      // Extrair texto da resposta (pode estar em diferentes campos)
+      const respostaTexto = resposta.response || resposta.text || resposta.message || "Sem resposta";
 
       // Adiciona resposta da assistente
       const assistantMessage: TestMessage = {
         id: (Date.now() + 1).toString(),
         type: "assistant",
-        content: data?.response || "Sem resposta",
+        content: respostaTexto,
         timestamp: new Date(),
       };
 
