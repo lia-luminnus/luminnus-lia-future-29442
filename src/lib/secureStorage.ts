@@ -29,6 +29,7 @@ export interface AdminConfig {
   supabaseUrl?: string;
   supabaseAnonKey?: string;
   supabaseServiceKey?: string;
+  liaApiUrl?: string;
   otherApiKeys?: Record<string, string>;
   lastUpdated?: string;
 }

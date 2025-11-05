@@ -6,7 +6,8 @@ import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX } from 'lu
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { enviarMensagemLIA, reproduzirVoz } from '@/lib/api/lia';
+import { enviarMensagemLIA, reproduzirVoz, obterUrlApi } from '@/lib/api/lia';
+import { secureStorage } from '@/lib/secureStorage';
 
 /**
  * INTERFACE: Mensagem de Chat
@@ -159,6 +160,17 @@ const AdminLiaChat = () => {
     e?.preventDefault();
 
     if (!inputMessage.trim() || !conversationId || !user) return;
+
+    // Verificar se a URL da API está configurada
+    const config = secureStorage.load();
+    if (!config?.liaApiUrl) {
+      toast({
+        title: '⚠️ API da LIA não configurada',
+        description: 'A API da LIA não está configurada. Vá em Configurações da LIA e adicione a URL da API.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     const userMessage = inputMessage.trim();
     setInputMessage('');
