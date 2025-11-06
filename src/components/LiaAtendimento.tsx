@@ -1,25 +1,28 @@
 import { Bot, MessageSquare, Calendar, Database, Clock, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import liaImage from "@/assets/lia-assistant-new.png";
-
 const LiaAtendimento = () => {
-  const features = [
-    { icon: MessageSquare, text: "Atende por WhatsApp, chat, voz ou e-mail" },
-    { icon: Zap, text: "Responde FAQs e faz onboarding interativo" },
-    { icon: Calendar, text: "Agenda compromissos com Google Calendar" },
-    { icon: Database, text: "Integra com CRMs (HubSpot, RD Station, Pipedrive)" },
-    { icon: Clock, text: "Follow-ups automáticos inteligentes" },
-    { icon: Bot, text: "Atua 24h com linguagem natural e profissional" }
-  ];
-
-  const suggestedQuestions = [
-    "Como a Lia pode ajudar meu negócio?",
-    "Quais integrações a Lia possui?",
-    "A Lia funciona 24 horas?"
-  ];
-
-  return (
-    <section id="lia" className="py-20 lg:py-32 relative overflow-hidden bg-gradient-to-b from-[#0B0B0F] to-[#1A1A24]">
+  const features = [{
+    icon: MessageSquare,
+    text: "Atende por WhatsApp, chat, voz ou e-mail"
+  }, {
+    icon: Zap,
+    text: "Responde FAQs e faz onboarding interativo"
+  }, {
+    icon: Calendar,
+    text: "Agenda compromissos com Google Calendar"
+  }, {
+    icon: Database,
+    text: "Integra com CRMs (HubSpot, RD Station, Pipedrive)"
+  }, {
+    icon: Clock,
+    text: "Follow-ups automáticos inteligentes"
+  }, {
+    icon: Bot,
+    text: "Atua 24h com linguagem natural e profissional"
+  }];
+  const suggestedQuestions = ["Como a Lia pode ajudar meu negócio?", "Quais integrações a Lia possui?", "A Lia funciona 24 horas?"];
+  return <section id="lia" className="py-20 lg:py-32 relative overflow-hidden bg-gradient-to-b from-[#0B0B0F] to-[#1A1A24]">
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         
         {/* Título da Seção */}
@@ -27,9 +30,7 @@ const LiaAtendimento = () => {
           <h2 className="text-4xl lg:text-6xl font-bold text-white">
             LIA Atendimento
           </h2>
-          <p className="text-xl text-white/70">
-            Sua assistente inteligente disponível 24 horas
-          </p>
+          <p className="text-xl text-white/70">Sua empresa disponível 24 horas</p>
         </div>
 
         {/* Layout de 2 Colunas: Imagem da Lia + Chat */}
@@ -38,11 +39,7 @@ const LiaAtendimento = () => {
           {/* Coluna Esquerda: Imagem da Lia */}
           <div className="flex items-center justify-center lg:justify-end">
             <div className="relative">
-              <img 
-                src={liaImage} 
-                alt="Lia - Assistente Virtual Inteligente"
-                className="w-full max-w-md rounded-2xl shadow-[0_0_80px_rgba(124,58,237,0.4)] hover:shadow-[0_0_100px_rgba(124,58,237,0.7)] hover:scale-105 transition-all duration-500 cursor-pointer"
-              />
+              <img src={liaImage} alt="Lia - Assistente Virtual Inteligente" className="w-full max-w-md rounded-2xl shadow-[0_0_80px_rgba(124,58,237,0.4)] hover:shadow-[0_0_100px_rgba(124,58,237,0.7)] hover:scale-105 transition-all duration-500 cursor-pointer" />
               <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-br from-[#7C3AED] to-[#FF2E9E] rounded-full blur-3xl opacity-50 animate-pulse-glow" />
             </div>
           </div>
@@ -65,14 +62,9 @@ const LiaAtendimento = () => {
             {/* Perguntas Sugeridas */}
             <div className="space-y-3 mb-6">
               <p className="text-white/70 text-sm font-semibold mb-3">Perguntas sugeridas:</p>
-              {suggestedQuestions.map((question, index) => (
-                <button 
-                  key={index}
-                  className="w-full text-left p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[#7C3AED]/50 hover:bg-white/10 transition-all text-white/80"
-                >
+              {suggestedQuestions.map((question, index) => <button key={index} className="w-full text-left p-4 rounded-xl bg-white/5 border border-white/10 hover:border-[#7C3AED]/50 hover:bg-white/10 transition-all text-white/80">
                   {question}
-                </button>
-              ))}
+                </button>)}
             </div>
 
             {/* Resposta da Lia com CTA */}
@@ -91,10 +83,7 @@ const LiaAtendimento = () => {
                 </div>
               </div>
               
-              <Button 
-                onClick={() => window.location.href = '/planos'}
-                className="w-full bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] transition-all border-0 text-lg h-12"
-              >
+              <Button onClick={() => window.location.href = '/planos'} className="w-full bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] hover:shadow-[0_0_30px_rgba(124,58,237,0.6)] transition-all border-0 text-lg h-12">
                 Ver Planos Recomendados 🚀
               </Button>
             </div>
@@ -104,21 +93,14 @@ const LiaAtendimento = () => {
         {/* Features Grid abaixo (mantido mas mais compacto) */}
         <div className="grid md:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {features.map((feature, index) => {
-            const Icon = feature.icon;
-            return (
-              <div 
-                key={index} 
-                className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#7C3AED]/30 transition-all"
-              >
+          const Icon = feature.icon;
+          return <div key={index} className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-[#7C3AED]/30 transition-all">
                 <Icon className="w-5 h-5 text-[#22D3EE] mb-2" />
                 <p className="text-white/80 text-sm">{feature.text}</p>
-              </div>
-            );
-          })}
+              </div>;
+        })}
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default LiaAtendimento;
