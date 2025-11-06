@@ -99,7 +99,10 @@ const AdminLiaChat = () => {
       const resposta = await enviarMensagemLIA(userMessage);
 
       // Extrair texto da resposta (pode estar em diferentes campos)
-      const respostaTexto = resposta.response || resposta.text || resposta.message || 'Desculpe, não consegui gerar uma resposta.';
+      // A API do Render retorna no campo 'reply'
+      const respostaTexto = resposta.reply || resposta.response || resposta.text || resposta.message || 'Desculpe, não consegui gerar uma resposta.';
+      
+      console.log('[AdminLiaChat] Resposta da LIA:', respostaTexto);
 
       // Adicionar resposta da LIA à lista
       const newAssistantMessage: ChatMessage = {
