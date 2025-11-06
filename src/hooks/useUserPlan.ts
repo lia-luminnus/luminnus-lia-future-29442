@@ -69,7 +69,7 @@ export const useUserPlan = () => {
         console.error('Erro ao buscar plano do usuário:', error);
         setUserPlan(null);
       } else {
-        setUserPlan(data);
+        setUserPlan(data as UserPlan);
       }
     } catch (error) {
       console.error('Erro ao buscar plano do usuário:', error);

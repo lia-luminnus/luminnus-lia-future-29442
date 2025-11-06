@@ -14,218 +14,236 @@ export type Database = {
   }
   public: {
     Tables: {
-      planos: {
+      agendamentos: {
         Row: {
-          id: string
-          user_id: string
-          plano_nome: 'Start' | 'Plus' | 'Pro'
-          status: 'ativo' | 'inativo' | 'expirado' | 'cancelado'
-          data_inicio: string
-          data_fim: string | null
           created_at: string
+          data: string
+          descricao: string | null
+          hora: string
+          id: string
+          status: string | null
+          titulo: string
           updated_at: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          plano_nome: 'Start' | 'Plus' | 'Pro'
-          status?: 'ativo' | 'inativo' | 'expirado' | 'cancelado'
-          data_inicio?: string
-          data_fim?: string | null
           created_at?: string
+          data: string
+          descricao?: string | null
+          hora: string
+          id?: string
+          status?: string | null
+          titulo: string
           updated_at?: string
+          user_id: string
         }
         Update: {
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          hora?: string
           id?: string
+          status?: string | null
+          titulo?: string
+          updated_at?: string
           user_id?: string
-          plano_nome?: 'Start' | 'Plus' | 'Pro'
-          status?: 'ativo' | 'inativo' | 'expirado' | 'cancelado'
-          data_inicio?: string
-          data_fim?: string | null
-          created_at?: string
-          updated_at?: string
         }
-      }
-      profiles: {
-        Row: {
-          id: string
-          full_name: string | null
-          plan_type: 'start' | 'plus' | 'pro' | 'free'
-          company_name: string | null
-          whatsapp_numero: string | null
-          whatsapp_status: 'conectado' | 'desconectado' | 'pendente'
-          whatsapp_qr_code: string | null
-          whatsapp_connected_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id: string
-          full_name?: string | null
-          plan_type?: 'start' | 'plus' | 'pro' | 'free'
-          company_name?: string | null
-          whatsapp_numero?: string | null
-          whatsapp_status?: 'conectado' | 'desconectado' | 'pendente'
-          whatsapp_qr_code?: string | null
-          whatsapp_connected_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          full_name?: string | null
-          plan_type?: 'start' | 'plus' | 'pro' | 'free'
-          company_name?: string | null
-          whatsapp_numero?: string | null
-          whatsapp_status?: 'conectado' | 'desconectado' | 'pendente'
-          whatsapp_qr_code?: string | null
-          whatsapp_connected_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
+        Relationships: []
       }
       chat_conversations: {
         Row: {
+          created_at: string | null
           id: string
           user_id: string
-          created_at: string
         }
         Insert: {
+          created_at?: string | null
           id?: string
           user_id: string
-          created_at?: string
         }
         Update: {
+          created_at?: string | null
           id?: string
           user_id?: string
-          created_at?: string
         }
+        Relationships: []
       }
       chat_messages: {
         Row: {
-          id: string
-          conversation_id: string
-          role: 'user' | 'assistant'
           content: string
-          created_at: string
+          conversation_id: string
+          created_at: string | null
+          id: string
+          role: string
         }
         Insert: {
-          id?: string
-          conversation_id: string
-          role: 'user' | 'assistant'
           content: string
-          created_at?: string
+          conversation_id: string
+          created_at?: string | null
+          id?: string
+          role: string
         }
         Update: {
-          id?: string
-          conversation_id?: string
-          role?: 'user' | 'assistant'
           content?: string
-          created_at?: string
-        }
-      }
-      agendamentos: {
-        Row: {
-          id: string
-          user_id: string
-          titulo: string
-          data: string
-          hora: string
-          descricao: string | null
-          status: 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
-          criado_em: string
-          updated_at: string
-        }
-        Insert: {
+          conversation_id?: string
+          created_at?: string | null
           id?: string
-          user_id: string
-          titulo: string
-          data: string
-          hora: string
-          descricao?: string | null
-          status?: 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
-          criado_em?: string
-          updated_at?: string
+          role?: string
         }
-        Update: {
-          id?: string
-          user_id?: string
-          titulo?: string
-          data?: string
-          hora?: string
-          descricao?: string | null
-          status?: 'pendente' | 'confirmado' | 'cancelado' | 'concluido'
-          criado_em?: string
-          updated_at?: string
-        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      whatsapp_messages: {
+      planos: {
         Row: {
-          id: string
-          user_id: string
-          direction: 'inbound' | 'outbound'
-          phone_number: string
-          message_content: string
-          status: 'sent' | 'delivered' | 'read' | 'failed'
           created_at: string
+          data_fim: string | null
+          data_inicio: string
+          id: string
+          plano_nome: string
+          status: string | null
+          updated_at: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          direction: 'inbound' | 'outbound'
-          phone_number: string
-          message_content: string
-          status?: 'sent' | 'delivered' | 'read' | 'failed'
           created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          plano_nome: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          direction?: 'inbound' | 'outbound'
-          phone_number?: string
-          message_content?: string
-          status?: 'sent' | 'delivered' | 'read' | 'failed'
           created_at?: string
+          data_fim?: string | null
+          data_inicio?: string
+          id?: string
+          plano_nome?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
         }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          company_name: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          plan_type: string | null
+          updated_at: string | null
+          whatsapp_connected_at: string | null
+          whatsapp_numero: string | null
+          whatsapp_qr_code: string | null
+          whatsapp_status: string | null
+        }
+        Insert: {
+          company_name?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id: string
+          plan_type?: string | null
+          updated_at?: string | null
+          whatsapp_connected_at?: string | null
+          whatsapp_numero?: string | null
+          whatsapp_qr_code?: string | null
+          whatsapp_status?: string | null
+        }
+        Update: {
+          company_name?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          plan_type?: string | null
+          updated_at?: string | null
+          whatsapp_connected_at?: string | null
+          whatsapp_numero?: string | null
+          whatsapp_qr_code?: string | null
+          whatsapp_status?: string | null
+        }
+        Relationships: []
       }
       usage_limits: {
         Row: {
-          id: string
-          user_id: string
-          periodo_mes: string
-          conversas_count: number
-          mensagens_count: number
           agendamentos_count: number
+          conversas_count: number
           created_at: string
+          id: string
+          mensagens_count: number
+          periodo_mes: string
           updated_at: string
+          user_id: string
         }
         Insert: {
-          id?: string
-          user_id: string
-          periodo_mes?: string
-          conversas_count?: number
-          mensagens_count?: number
           agendamentos_count?: number
+          conversas_count?: number
           created_at?: string
+          id?: string
+          mensagens_count?: number
+          periodo_mes?: string
           updated_at?: string
+          user_id: string
         }
         Update: {
-          id?: string
-          user_id?: string
-          periodo_mes?: string
-          conversas_count?: number
-          mensagens_count?: number
           agendamentos_count?: number
+          conversas_count?: number
           created_at?: string
+          id?: string
+          mensagens_count?: number
+          periodo_mes?: string
           updated_at?: string
+          user_id?: string
         }
+        Relationships: []
+      }
+      whatsapp_messages: {
+        Row: {
+          created_at: string
+          direction: string
+          id: string
+          message_content: string
+          phone_number: string
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          id?: string
+          message_content: string
+          phone_number: string
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          id?: string
+          message_content?: string
+          phone_number?: string
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_usage_limit: {
+        Args: { p_type: string; p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

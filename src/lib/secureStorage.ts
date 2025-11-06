@@ -26,10 +26,14 @@ const decodeData = (data: string): string => {
 
 export interface AdminConfig {
   openaiKey?: string;
+  openaiApiKey?: string; // Alias para openaiKey
   supabaseUrl?: string;
   supabaseAnonKey?: string;
   supabaseServiceKey?: string;
+  supabaseServiceRoleKey?: string; // Alias para supabaseServiceKey
   liaApiUrl?: string;
+  systemPrompt?: string;
+  webhookUrl?: string;
   otherApiKeys?: Record<string, string>;
   lastUpdated?: string;
 }

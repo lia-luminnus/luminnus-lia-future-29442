@@ -23,7 +23,8 @@ interface Agendamento {
   hora: string;
   descricao: string | null;
   status: 'pendente' | 'confirmado' | 'cancelado' | 'concluido';
-  criado_em: string;
+  created_at: string;
+  updated_at: string;
 }
 
 /**
@@ -45,7 +46,7 @@ const DashboardAgenda = () => {
     data: '',
     hora: '',
     descricao: '',
-    status: 'pendente' as const,
+    status: 'pendente' as 'pendente' | 'confirmado' | 'cancelado' | 'concluido',
   });
 
   /**
@@ -72,7 +73,7 @@ const DashboardAgenda = () => {
 
       if (error) throw error;
 
-      setAgendamentos(data || []);
+      setAgendamentos((data || []) as Agendamento[]);
     } catch (error) {
       console.error('Erro ao carregar agendamentos:', error);
       toast({

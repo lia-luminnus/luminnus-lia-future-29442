@@ -35,6 +35,7 @@ export const LIA_API_URL = LIA_API_URL_DEFAULT;
  */
 export interface LiaResponse {
   response?: string;
+  reply?: string;
   text?: string;
   message?: string;
   error?: string;

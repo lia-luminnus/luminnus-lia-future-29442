@@ -56,13 +56,14 @@ export const AdminLiaConfig = () => {
       // Salvar no secure storage
       secureStorage.save({
         openaiKey: config.openaiApiKey,
+        openaiApiKey: config.openaiApiKey,
         supabaseUrl: config.supabaseUrl,
         supabaseAnonKey: config.supabaseAnonKey,
         supabaseServiceKey: config.supabaseServiceRoleKey,
+        supabaseServiceRoleKey: config.supabaseServiceRoleKey,
         liaApiUrl: config.liaApiUrl,
         systemPrompt: config.systemPrompt,
         webhookUrl: config.webhookUrl,
-        timestamp: new Date().toISOString(),
       });
 
       // Aqui você também pode salvar em uma tabela do Supabase

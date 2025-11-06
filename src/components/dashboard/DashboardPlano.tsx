@@ -23,7 +23,7 @@ const DashboardPlano = () => {
 
   // Busca informações do plano
   const planInfo = hasActivePlan && userPlan
-    ? plans.find(p => p.name === userPlan.plan_name)
+    ? plans.find(p => p.name === userPlan.plano_nome)
     : null;
 
   return (
@@ -47,7 +47,7 @@ const DashboardPlano = () => {
                 <div>
                   <CardTitle className="text-white text-2xl flex items-center gap-3">
                     <Crown className="w-7 h-7 text-yellow-400" />
-                    Plano {userPlan.plan_name}
+                    Plano {userPlan.plano_nome}
                   </CardTitle>
                   <CardDescription className="text-white/60 mt-2 text-lg">
                     {planInfo.description}
@@ -131,7 +131,7 @@ const DashboardPlano = () => {
           </div>
 
           {/* UPGRADE */}
-          {userPlan.plan_name !== 'Pro' && (
+          {userPlan.plano_nome !== 'Pro' && (
             <Card className="bg-gradient-to-r from-yellow-500/10 to-orange-500/10 backdrop-blur-lg border border-yellow-500/20">
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">

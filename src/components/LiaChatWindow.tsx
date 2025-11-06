@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { enviarMensagemLIA } from '@/lib/api/lia';
 import liaAvatar from '@/assets/lia-assistant-new.png';
 
 interface Message {
@@ -81,19 +82,12 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
     });
 
     try {
-      // Chamar Edge Function
-      const { data, error } = await supabase.functions.invoke('lia-chat', {
-        body: {
-          message: text,
-          conversationId
-        }
-      });
-
-      if (error) throw error;
+      // Chamar API da Render
+      const data = await enviarMensagemLIA(text);
 
       const assistantMessage: Message = {
         role: 'assistant',
-        content: data.response
+        content: data.response || data.text || data.reply || 'Sem resposta'
       };
 
       setMessages(prev => [...prev, assistantMessage]);
@@ -102,7 +96,7 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
       await supabase.from('chat_messages').insert({
         conversation_id: conversationId,
         role: 'assistant',
-        content: data.response
+        content: assistantMessage.content
       });
 
     } catch (error) {

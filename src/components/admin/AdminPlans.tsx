@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Save, Edit, Check } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { plansData } from "@/data/plansData";
 
 interface PlanConfig {
   id: string;

@@ -124,7 +124,7 @@ const MyAccount = () => {
    */
   const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'Usuário';
   const userEmail = user.email || '';
-  const planName = userPlan?.plan_name || 'Nenhum';
+  const planName = userPlan?.plano_nome || 'Nenhum';
   const planStatus = userPlan?.status || 'inativo';
 
   // Tradução do status para exibição

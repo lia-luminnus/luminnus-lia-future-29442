@@ -193,7 +193,7 @@ export const useUserPlanLimits = () => {
 
     try {
       // Incrementar no banco de dados
-      const { error } = await supabase.rpc('increment_usage', {
+      const { error } = await supabase.rpc('increment_usage_limit', {
         p_user_id: user.id,
         p_type: feature,
       });

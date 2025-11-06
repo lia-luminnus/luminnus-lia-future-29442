@@ -125,7 +125,7 @@ const DashboardChat = () => {
       }
 
       if (data && data.length > 0) {
-        setMessages(data);
+        setMessages(data as ChatMessage[]);
       } else {
         // Se não houver mensagens, adicionar mensagem de boas-vindas
         const welcomeMessage: ChatMessage = {
