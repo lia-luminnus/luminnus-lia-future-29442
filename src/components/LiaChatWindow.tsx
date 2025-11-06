@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bot, User, Send, X } from 'lucide-react';
+import { Bot, User, Send, X, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { enviarMensagemLIA } from '@/lib/api/lia';
+import { speakText, stopSpeaking } from '@/lib/textToSpeech';
 import liaAvatar from '@/assets/lia-assistant-new.png';
 
 interface Message {
@@ -22,6 +23,8 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isSpeakingNow, setIsSpeakingNow] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -66,6 +69,13 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Cleanup: parar fala ao desmontar
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
+
   const sendMessage = async (text: string) => {
     if (!text.trim() || !conversationId) return;
 
@@ -91,6 +101,17 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
+
+      // Reproduzir voz se habilitado
+      if (voiceEnabled) {
+        setIsSpeakingNow(true);
+        speakText(assistantMessage.content, {
+          rate: 1.0,
+          pitch: 1.0,
+          volume: 1.0,
+          onEnd: () => setIsSpeakingNow(false)
+        });
+      }
 
       // Salvar resposta da IA
       await supabase.from('chat_messages').insert({
@@ -123,15 +144,37 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
           <img src={liaAvatar} alt="Lia" className="w-10 h-10 rounded-full" />
           <div>
             <h3 className="font-semibold text-white">Lia</h3>
-            <p className="text-xs text-white/80">Assistente Virtual</p>
+            <p className="text-xs text-white/80">
+              {isSpeakingNow ? 'Falando...' : 'Assistente Virtual'}
+            </p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-white/80 hover:text-white transition-colors"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (isSpeakingNow) {
+                stopSpeaking();
+                setIsSpeakingNow(false);
+              } else {
+                setVoiceEnabled(!voiceEnabled);
+              }
+            }}
+            className="text-white/80 hover:text-white transition-colors"
+            title={voiceEnabled ? 'Desativar voz' : 'Ativar voz'}
+          >
+            {voiceEnabled ? (
+              <Volume2 className={`w-5 h-5 ${isSpeakingNow ? 'animate-pulse' : ''}`} />
+            ) : (
+              <VolumeX className="w-5 h-5" />
+            )}
+          </button>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Messages */}

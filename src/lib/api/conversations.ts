@@ -129,7 +129,10 @@ export async function getConversation(
 
     return {
       ...conversation,
-      messages: messages || [],
+      messages: (messages || []).map(msg => ({
+        ...msg,
+        role: msg.role as 'user' | 'assistant'
+      })),
     };
   } catch (error) {
     console.error('[Conversations] Erro ao obter conversa:', error);
@@ -168,7 +171,10 @@ export async function saveMessage(
     }
 
     console.log('[Conversations] Mensagem salva:', role);
-    return data;
+    return {
+      ...data,
+      role: data.role as 'user' | 'assistant'
+    };
   } catch (error) {
     console.error('[Conversations] Erro ao salvar mensagem:', error);
     throw error;
@@ -188,7 +194,7 @@ export async function updateConversationTitle(
   try {
     const { data, error } = await supabase
       .from('chat_conversations')
-      .update({ title })
+      .update({ title } as any)
       .eq('id', conversationId)
       .select()
       .single();
@@ -320,7 +326,10 @@ export async function loadMessages(
     }
 
     console.log('[Conversations] Mensagens carregadas:', data?.length || 0);
-    return data || [];
+    return (data || []).map(msg => ({
+      ...msg,
+      role: msg.role as 'user' | 'assistant'
+    }));
   } catch (error) {
     console.error('[Conversations] Erro ao carregar mensagens:', error);
     throw error;

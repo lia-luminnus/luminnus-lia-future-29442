@@ -6,6 +6,7 @@ import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX } from 'lu
 import { useToast } from '@/hooks/use-toast';
 import { enviarMensagemLIA, reproduzirVoz } from '@/lib/api/lia';
 import { secureStorage } from '@/lib/secureStorage';
+import { speakText, stopSpeaking } from '@/lib/textToSpeech';
 
 /**
  * INTERFACE: Mensagem de Chat
@@ -36,6 +37,7 @@ const AdminLiaChat = () => {
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [isSpeakingNow, setIsSpeakingNow] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -49,6 +51,13 @@ const AdminLiaChat = () => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Cleanup: parar fala ao desmontar
+  useEffect(() => {
+    return () => {
+      stopSpeaking();
+    };
+  }, []);
 
   /**
    * EFEITO: Redimensionar textarea automaticamente
@@ -113,9 +122,15 @@ const AdminLiaChat = () => {
       };
       setMessages(prev => [...prev, newAssistantMessage]);
 
-      // Reproduzir voz se disponível e habilitado
-      if (voiceEnabled && resposta.audioUrl) {
-        await reproduzirVoz(resposta.audioUrl);
+      // Reproduzir voz se habilitado
+      if (voiceEnabled) {
+        setIsSpeakingNow(true);
+        speakText(respostaTexto, {
+          rate: 1.0,
+          pitch: 1.0,
+          volume: 1.0,
+          onEnd: () => setIsSpeakingNow(false)
+        });
       }
 
       setLoading(false);
@@ -267,28 +282,35 @@ const AdminLiaChat = () => {
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
               Limpar
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setVoiceEnabled(!voiceEnabled)}
-              className={`text-xs transition-all duration-200 rounded-full px-3 py-1.5 h-auto ${
-                voiceEnabled
-                  ? 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              {voiceEnabled ? (
-                <>
-                  <Volume2 className="w-3.5 h-3.5 mr-1.5" />
-                  Voz Ativa
-                </>
-              ) : (
-                <>
-                  <VolumeX className="w-3.5 h-3.5 mr-1.5" />
-                  Voz Desativada
-                </>
-              )}
-            </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (isSpeakingNow) {
+                stopSpeaking();
+                setIsSpeakingNow(false);
+              } else {
+                setVoiceEnabled(!voiceEnabled);
+              }
+            }}
+            className={`text-xs transition-all duration-200 rounded-full px-3 py-1.5 h-auto ${
+              voiceEnabled
+                ? 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+            }`}
+          >
+            {voiceEnabled ? (
+              <>
+                <Volume2 className={`w-3.5 h-3.5 mr-1.5 ${isSpeakingNow ? 'animate-pulse' : ''}`} />
+                {isSpeakingNow ? 'Falando...' : 'Voz Ativa'}
+              </>
+            ) : (
+              <>
+                <VolumeX className="w-3.5 h-3.5 mr-1.5" />
+                Voz Desativada
+              </>
+            )}
+          </Button>
             <Button
               variant="ghost"
               size="sm"
