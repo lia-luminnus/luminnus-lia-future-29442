@@ -1,246 +1,193 @@
-import { useState, useRef, useEffect } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Bot, Send, Loader2, User, Sparkles, Trash2, Mic, MicOff } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
-import { enviarMensagemLIA } from '@/lib/api/lia';
-import { secureStorage } from '@/lib/secureStorage';
-import { startRealtimeSession, stopRealtimeSession } from '@/lib/api/lia-realtime';
+import { useState, useRef, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Bot, Send, Loader2, User, Sparkles, Trash2, Mic, MicOff } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { enviarMensagemLIA } from "@/lib/api/lia";
+import { secureStorage } from "@/lib/secureStorage";
+import { startRealtimeSession, stopRealtimeSession } from "@/lib/api/lia-realtime";
 
 /**
  * INTERFACE: Mensagem de Chat
  */
 interface ChatMessage {
   id: string;
-  role: 'user' | 'assistant';
+  role: "user" | "assistant";
   content: string;
   created_at: string;
 }
 
 /**
  * COMPONENTE: AdminLiaChat
- *
- * Chat integrado com a LIA especificamente para administradores
- * Interface estilo ChatGPT com integração API Render via endpoint /chat
  */
 const AdminLiaChat = () => {
   const { toast } = useToast();
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
-      id: 'welcome',
-      role: 'assistant',
-      content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
+      id: "welcome",
+      role: "assistant",
+      content:
+        "👋 Olá! Sou a LIA, sua assistente virtual da Luminnus. Respondo em tempo real e com voz personalizada. Como posso ajudar você hoje?",
       created_at: new Date().toISOString(),
-    }
+    },
   ]);
-  const [inputMessage, setInputMessage] = useState('');
+  const [inputMessage, setInputMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [micAtivo, setMicAtivo] = useState(false);
-  const [transcricaoTemp, setTranscricaoTemp] = useState('');
+  const [transcricaoTemp, setTranscricaoTemp] = useState("");
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  /**
-   * EFEITO: Scroll automático para última mensagem
-   */
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  // Scroll automático
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  useEffect(() => scrollToBottom(), [messages]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  // Cleanup: parar sessão ao desmontar
+  // Encerrar sessão ao desmontar
   useEffect(() => {
     return () => {
-      if (micAtivo) {
-        stopRealtimeSession();
-      }
+      if (micAtivo) stopRealtimeSession();
     };
   }, [micAtivo]);
 
+  /**
+   * 🔊 Alternar microfone / sessão Realtime
+   */
   const toggleMicrofone = async () => {
     try {
       if (micAtivo) {
         await stopRealtimeSession();
         setMicAtivo(false);
         setIsRealtimeActive(false);
-        setTranscricaoTemp('');
-        toast({
-          title: 'Microfone desativado',
-          description: 'Sessão de voz encerrada',
-        });
-      } else {
-        await startRealtimeSession({
-          onConnected: () => {
-            setIsRealtimeActive(true);
-            toast({
-              title: 'Conectado!',
-              description: 'Você pode falar agora',
-            });
-          },
-          onDisconnected: () => {
-            setIsRealtimeActive(false);
-            setMicAtivo(false);
-          },
-          onTranscript: (text, isFinal) => {
-            if (isFinal) {
-              const newUserMessage: ChatMessage = {
-                id: `user-${Date.now()}`,
-                role: 'user',
-                content: text,
-                created_at: new Date().toISOString(),
-              };
-              setMessages(prev => [...prev, newUserMessage]);
-              setTranscricaoTemp('');
-            } else {
-              setTranscricaoTemp(text);
-            }
-          },
-          onError: (error) => {
-            toast({
-              title: 'Erro',
-              description: error,
-              variant: 'destructive',
-            });
-            setMicAtivo(false);
-            setIsRealtimeActive(false);
-          },
-        });
-        setMicAtivo(true);
+        setTranscricaoTemp("");
+        toast({ title: "Microfone desativado", description: "Sessão de voz encerrada" });
+        return;
       }
+
+      await startRealtimeSession({
+        backendUrl: "https://lia-chat-api.onrender.com",
+        onConnected: () => {
+          setIsRealtimeActive(true);
+          setMicAtivo(true);
+          toast({ title: "🎙️ Conectado à LIA", description: "Pode falar agora." });
+        },
+        onDisconnected: () => {
+          setIsRealtimeActive(false);
+          setMicAtivo(false);
+        },
+        onTranscript: (text, isFinal) => {
+          if (isFinal) {
+            const newUserMessage: ChatMessage = {
+              id: `user-${Date.now()}`,
+              role: "user",
+              content: text,
+              created_at: new Date().toISOString(),
+            };
+            setMessages((prev) => [...prev, newUserMessage]);
+            setTranscricaoTemp("");
+          } else {
+            setTranscricaoTemp(text);
+          }
+        },
+        onError: (error) => {
+          console.error("[Realtime Error]", error);
+          toast({ title: "Erro Realtime", description: String(error), variant: "destructive" });
+          setMicAtivo(false);
+          setIsRealtimeActive(false);
+        },
+      });
     } catch (error) {
-      console.error('[AdminChat] Erro ao alternar microfone:', error);
+      console.error("[AdminChat] Erro ao ativar microfone:", error);
       toast({
-        title: 'Erro',
-        description: 'Não foi possível ativar o microfone',
-        variant: 'destructive',
+        title: "Erro",
+        description: "Não foi possível ativar o microfone",
+        variant: "destructive",
       });
       setMicAtivo(false);
     }
   };
 
-  /**
-   * EFEITO: Redimensionar textarea automaticamente
-   */
+  // Ajuste dinâmico do textarea
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 150) + 'px';
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 150) + "px";
     }
   }, [inputMessage]);
 
-
   /**
-   * FUNÇÃO: Enviar mensagem via API (Render)
-   * Usa o módulo /lib/api/lia.ts para integração
+   * 💬 Enviar mensagem via API Render
    */
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
-
     if (!inputMessage.trim()) return;
 
-    // Verificar se a URL da API está configurada
     const config = secureStorage.load();
     if (!config?.liaApiUrl) {
       toast({
-        title: 'Configuração necessária',
-        description: '⚠️ A API da LIA não está configurada. Vá em Configurações da LIA e adicione a URL da API.',
-        variant: 'destructive',
+        title: "Configuração necessária",
+        description: "⚠️ A API da LIA não está configurada. Vá em Configurações e adicione a URL da API.",
+        variant: "destructive",
       });
       return;
     }
 
     const userMessage = inputMessage.trim();
-    setInputMessage('');
+    setInputMessage("");
     setLoading(true);
 
-    // Adicionar mensagem do usuário à lista
     const newUserMessage: ChatMessage = {
       id: `user-${Date.now()}`,
-      role: 'user',
+      role: "user",
       content: userMessage,
       created_at: new Date().toISOString(),
     };
-    setMessages(prev => [...prev, newUserMessage]);
+    setMessages((prev) => [...prev, newUserMessage]);
 
     try {
-      // Enviar mensagem para a LIA
       const resposta = await enviarMensagemLIA(userMessage);
+      const respostaTexto =
+        resposta.reply || resposta.response || resposta.text || "Desculpe, não consegui responder agora.";
 
-      // Extrair texto da resposta (pode estar em diferentes campos)
-      // A API do Render retorna no campo 'reply'
-      const respostaTexto = resposta.reply || resposta.response || resposta.text || resposta.message || 'Desculpe, não consegui gerar uma resposta.';
-      
-      console.log('[AdminLiaChat] Resposta da LIA:', respostaTexto);
-
-      // Adicionar resposta da LIA à lista
       const newAssistantMessage: ChatMessage = {
         id: `assistant-${Date.now()}`,
-        role: 'assistant',
+        role: "assistant",
         content: respostaTexto,
         created_at: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, newAssistantMessage]);
-
-      setLoading(false);
+      setMessages((prev) => [...prev, newAssistantMessage]);
     } catch (error) {
-      console.error('Erro ao enviar mensagem:', error);
-
-      // Adicionar mensagem de erro
+      console.error("[Chat Error]", error);
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
-        role: 'assistant',
-        content: `❌ Erro: ${error instanceof Error ? error.message : 'Não foi possível enviar a mensagem'}`,
+        role: "assistant",
+        content: `❌ Erro: ${error instanceof Error ? error.message : "Falha ao enviar mensagem"}`,
         created_at: new Date().toISOString(),
       };
-      setMessages(prev => [...prev, errorMessage]);
-
+      setMessages((prev) => [...prev, errorMessage]);
+      toast({ title: "Erro", description: String(error), variant: "destructive" });
+    } finally {
       setLoading(false);
-      toast({
-        title: 'Erro',
-        description: error instanceof Error ? error.message : 'Não foi possível enviar a mensagem',
-        variant: 'destructive',
-      });
     }
   };
 
-  /**
-   * FUNÇÃO: Formatar timestamp
-   */
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-  };
+  const formatTime = (t: string) => new Date(t).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
-  /**
-   * FUNÇÃO: Limpar conversa
-   */
   const handleClearChat = () => {
-    // Resetar estado local
-    const welcomeMessage: ChatMessage = {
-      id: 'welcome',
-      role: 'assistant',
-      content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
-      created_at: new Date().toISOString(),
-    };
-    setMessages([welcomeMessage]);
-
-    toast({
-      title: 'Chat limpo',
-      description: 'O histórico de conversa foi removido.',
-    });
+    setMessages([
+      {
+        id: "welcome",
+        role: "assistant",
+        content: "👋 Olá! Sou a LIA, sua assistente virtual da Luminnus. Como posso ajudar você hoje?",
+        created_at: new Date().toISOString(),
+      },
+    ]);
+    toast({ title: "Chat limpo", description: "O histórico foi removido." });
   };
 
-  /**
-   * FUNÇÃO: Sugestão rápida
-   */
-  const handleQuickSuggestion = () => {
-    setInputMessage('Como você pode me ajudar?');
-  };
+  const handleQuickSuggestion = () => setInputMessage("Como você pode me ajudar?");
 
   return (
     <div className="space-y-6">
@@ -251,173 +198,125 @@ const AdminLiaChat = () => {
             <Bot className="w-6 h-6 text-white" />
           </div>
           Assistente LIA
-          <span className="text-xs font-normal bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
-            API Render
-          </span>
+          <span className="text-xs font-normal bg-purple-100 text-purple-700 px-2 py-1 rounded-full">API Render</span>
         </h1>
-        <p className="text-gray-600">
-          Chat integrado com a LIA para administradores - Respostas via API Render com voz personalizada
-        </p>
+        <p className="text-gray-600">Chat com integração Realtime (voz + texto)</p>
       </div>
 
-      {/* CHAT INTERFACE */}
+      {/* CHAT */}
       <div className="flex flex-col h-[calc(100vh-280px)] relative">
-        {/* ÁREA DE MENSAGENS */}
         <Card className="flex-1 bg-white border border-gray-200 overflow-hidden shadow-lg">
           <CardContent className="h-full overflow-y-auto p-6 space-y-6">
-            {messages.map((message, index) => (
+            {messages.map((msg, i) => (
               <div
-                key={message.id || index}
-                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                key={msg.id || i}
+                className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
               >
-                {/* Avatar da Lia */}
-                {message.role === 'assistant' && (
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                {msg.role === "assistant" && (
+                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
                     <Bot className="w-5 h-5 text-white" />
                   </div>
                 )}
-
-                {/* Bolha de mensagem */}
-                <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                <div className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                   <div
                     className={`max-w-[75%] rounded-2xl px-5 py-3 shadow-md ${
-                      message.role === 'user'
-                        ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white'
-                        : 'bg-gray-100 text-gray-900 border border-gray-200'
+                      msg.role === "user"
+                        ? "bg-gradient-to-br from-purple-600 to-purple-700 text-white"
+                        : "bg-gray-100 text-gray-900 border border-gray-200"
                     }`}
                   >
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                   </div>
-                  <span className={`text-xs mt-1.5 px-2 ${message.role === 'user' ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {formatTime(message.created_at)}
-                  </span>
+                  <span className="text-xs mt-1.5 px-2 text-gray-400">{formatTime(msg.created_at)}</span>
                 </div>
-
-                {/* Avatar do Usuário */}
-                {message.role === 'user' && (
+                {msg.role === "user" && (
                   <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center shadow-lg shadow-purple-500/30">
                     <User className="w-5 h-5 text-white" />
                   </div>
                 )}
               </div>
             ))}
-
-            {/* Loading indicator */}
             {loading && (
-              <div className="flex gap-3 justify-start animate-in fade-in duration-200">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+              <div className="flex gap-3 justify-start">
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
                   <Bot className="w-5 h-5 text-white" />
                 </div>
-                <div className="bg-gray-100 text-gray-900 border border-gray-200 rounded-2xl px-5 py-3 shadow-md">
-                  <div className="flex gap-1.5">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                  </div>
+                <div className="bg-gray-100 rounded-2xl px-5 py-3 shadow-md flex gap-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-150"></div>
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-300"></div>
                 </div>
               </div>
             )}
-
             <div ref={messagesEndRef} />
           </CardContent>
         </Card>
 
-        {/* ÁREA DE INPUT - Estilo ChatGPT */}
+        {/* INPUT */}
         <div className="mt-4 space-y-3">
-          {/* Transcrição temporária */}
           {transcricaoTemp && (
             <div className="px-4 py-2 bg-blue-50 border-t border-blue-200 mb-2">
               <p className="text-xs text-blue-600 italic flex items-center gap-2">
-                <Mic className="w-3 h-3 animate-pulse" />
-                Ouvindo: {transcricaoTemp}
+                <Mic className="w-3 h-3 animate-pulse" /> Ouvindo: {transcricaoTemp}
               </p>
             </div>
           )}
-
-          {/* Opções Interativas */}
           <div className="flex items-center justify-center gap-2 px-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearChat}
-              className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 rounded-full px-3 py-1.5 h-auto"
-            >
-              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Limpar
+            <Button variant="ghost" size="sm" onClick={handleClearChat}>
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" /> Limpar
             </Button>
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleMicrofone}
-              className={`text-xs transition-all duration-200 rounded-full px-3 py-1.5 h-auto ${
-                micAtivo
-                  ? 'text-red-600 hover:text-red-700 hover:bg-red-50 animate-pulse'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              className={`transition-all duration-200 ${
+                micAtivo ? "text-red-600 animate-pulse" : "text-gray-600 hover:text-gray-900"
               }`}
             >
               {micAtivo ? (
                 <>
-                  <Mic className="w-3.5 h-3.5 mr-1.5" />
-                  Ouvindo...
+                  <Mic className="w-3.5 h-3.5 mr-1.5" /> Ouvindo...
                 </>
               ) : (
                 <>
-                  <MicOff className="w-3.5 h-3.5 mr-1.5" />
-                  Microfone
+                  <MicOff className="w-3.5 h-3.5 mr-1.5" /> Microfone
                 </>
               )}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleQuickSuggestion}
-              className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 rounded-full px-3 py-1.5 h-auto"
-            >
-              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-              Sugestões
+            <Button variant="ghost" size="sm" onClick={handleQuickSuggestion}>
+              <Sparkles className="w-3.5 h-3.5 mr-1.5" /> Sugestões
             </Button>
           </div>
 
-          {/* Input Container */}
           <div className="max-w-4xl mx-auto w-full px-4">
             <form onSubmit={handleSendMessage} className="relative">
-              <div className="relative bg-white border-2 border-gray-200 rounded-3xl shadow-lg focus-within:border-purple-500 focus-within:shadow-purple-200 transition-all duration-200">
+              <div className="relative bg-white border-2 border-gray-200 rounded-3xl shadow-lg focus-within:border-purple-500 transition-all">
                 <Textarea
                   ref={textareaRef}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
+                    if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault();
                       handleSendMessage();
                     }
                   }}
-                  placeholder="Digite sua mensagem para a LIA..."
+                  placeholder="Digite sua mensagem..."
                   disabled={loading}
                   rows={1}
-                  className="resize-none bg-transparent border-0 text-gray-900 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 pr-14 py-4 px-6 text-[15px] leading-relaxed max-h-[150px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-                  style={{ minHeight: '56px' }}
+                  className="resize-none bg-transparent border-0 text-gray-900 placeholder:text-gray-400 focus:ring-0 px-6 py-4"
                 />
                 <Button
                   type="submit"
                   disabled={loading || !inputMessage.trim()}
                   size="icon"
-                  className="absolute right-2 bottom-2 h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 hover:opacity-90 disabled:opacity-40 transition-all duration-200 shadow-lg shadow-purple-500/30"
+                  className="absolute right-2 bottom-2 h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 shadow-lg"
                 >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
+                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-4 h-4" />}
                 </Button>
               </div>
             </form>
           </div>
-
-          {/* Hint text */}
-          <p className="text-center text-xs text-gray-500 px-4">
-            Pressione <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 border border-gray-300">Enter</kbd> para enviar, <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 border border-gray-300">Shift + Enter</kbd> para quebrar linha
-          </p>
         </div>
       </div>
     </div>
