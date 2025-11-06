@@ -1,348 +1,340 @@
 /**
- * Módulo de integração de voz em tempo real com a LIA
- * Implementa funcionalidades de reconhecimento de fala (ouvir) e síntese de voz (falar)
- *
- * Funcionalidades:
- * - Speech Recognition (Web Speech API) para capturar voz do usuário
- * - Speech Synthesis (Web Speech API) para LIA responder com voz
- * - Gerenciamento de sessão de voz em tempo real
+ * Módulo de integração de voz em tempo real com LIA via WebRTC
+ * Usa OpenAI Realtime API através do servidor Render
  */
 
-// Tipos e interfaces
-interface VoiceConfig {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
+interface RealtimeCallbacks {
+  onConnected?: () => void;
+  onDisconnected?: () => void;
+  onAudioReceived?: (audio: ArrayBuffer) => void;
+  onTranscript?: (text: string, isFinal: boolean) => void;
+  onError?: (error: string) => void;
 }
 
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList;
-  resultIndex: number;
-}
+// Estado da sessão
+let peerConnection: RTCPeerConnection | null = null;
+let dataChannel: RTCDataChannel | null = null;
+let audioElement: HTMLAudioElement | null = null;
+let mediaStream: MediaStream | null = null;
+let isConnected = false;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
+const RECONNECT_DELAY = 5000;
 
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string;
-  message: string;
-}
+let callbacks: RealtimeCallbacks = {};
 
-// Extend Window interface para suportar webkitSpeechRecognition
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+/**
+ * Cria fila de áudio para reprodução sequencial
+ */
+class AudioQueue {
+  private queue: Uint8Array[] = [];
+  private isPlaying = false;
+  private audioContext: AudioContext;
+
+  constructor() {
+    this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+      sampleRate: 24000,
+    });
+  }
+
+  async addToQueue(audioData: Uint8Array) {
+    this.queue.push(audioData);
+    if (!this.isPlaying) {
+      await this.playNext();
+    }
+  }
+
+  private async playNext() {
+    if (this.queue.length === 0) {
+      this.isPlaying = false;
+      return;
+    }
+
+    this.isPlaying = true;
+    const audioData = this.queue.shift()!;
+
+    try {
+      // Converter PCM16 para AudioBuffer
+      const int16Array = new Int16Array(audioData.buffer);
+      const float32Array = new Float32Array(int16Array.length);
+      
+      for (let i = 0; i < int16Array.length; i++) {
+        float32Array[i] = int16Array[i] / 0x8000;
+      }
+
+      const audioBuffer = this.audioContext.createBuffer(1, float32Array.length, 24000);
+      audioBuffer.getChannelData(0).set(float32Array);
+
+      const source = this.audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(this.audioContext.destination);
+
+      source.onended = () => this.playNext();
+      source.start(0);
+    } catch (error) {
+      console.error('[AudioQueue] Erro ao reproduzir:', error);
+      this.playNext();
+    }
+  }
+
+  clear() {
+    this.queue = [];
+    this.isPlaying = false;
   }
 }
 
-// Estado da sessão de voz
-let recognition: any = null;
-let isListening = false;
-let isSpeaking = false;
-let onTranscriptCallback: ((text: string) => void) | null = null;
-let onFinalTranscriptCallback: ((text: string) => void) | null = null;
-let onErrorCallback: ((error: string) => void) | null = null;
+let audioQueue: AudioQueue | null = null;
 
 /**
- * Verifica se o navegador suporta Speech Recognition
- */
-export function isSpeechRecognitionSupported(): boolean {
-  return 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
-}
-
-/**
- * Verifica se o navegador suporta Speech Synthesis
- */
-export function isSpeechSynthesisSupported(): boolean {
-  return 'speechSynthesis' in window;
-}
-
-/**
- * Inicializa o reconhecimento de voz
- */
-function initializeSpeechRecognition(config: VoiceConfig) {
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-  if (!SpeechRecognition) {
-    throw new Error('Speech Recognition não é suportado neste navegador');
-  }
-
-  recognition = new SpeechRecognition();
-  recognition.lang = config.lang;
-  recognition.continuous = config.continuous;
-  recognition.interimResults = config.interimResults;
-
-  // Handler para resultados parciais e finais
-  recognition.onresult = (event: SpeechRecognitionEvent) => {
-    let interimTranscript = '';
-    let finalTranscript = '';
-
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      const transcript = event.results[i][0].transcript;
-
-      if (event.results[i].isFinal) {
-        finalTranscript += transcript + ' ';
-      } else {
-        interimTranscript += transcript;
-      }
-    }
-
-    // Callback para transcrição parcial
-    if (interimTranscript && onTranscriptCallback) {
-      onTranscriptCallback(interimTranscript);
-    }
-
-    // Callback para transcrição final
-    if (finalTranscript && onFinalTranscriptCallback) {
-      onFinalTranscriptCallback(finalTranscript.trim());
-    }
-  };
-
-  // Handler para erros
-  recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-    console.error('[Voice] Erro no reconhecimento:', event.error);
-
-    let errorMessage = 'Erro ao reconhecer voz';
-
-    switch (event.error) {
-      case 'no-speech':
-        errorMessage = 'Nenhuma fala detectada';
-        break;
-      case 'audio-capture':
-        errorMessage = 'Microfone não encontrado';
-        break;
-      case 'not-allowed':
-        errorMessage = 'Permissão de microfone negada';
-        break;
-      case 'network':
-        errorMessage = 'Erro de rede';
-        break;
-    }
-
-    if (onErrorCallback) {
-      onErrorCallback(errorMessage);
-    }
-
-    isListening = false;
-  };
-
-  // Handler para fim do reconhecimento
-  recognition.onend = () => {
-    console.log('[Voice] Reconhecimento finalizado');
-    if (isListening && config.continuous) {
-      // Reinicia automaticamente se estiver em modo contínuo
-      try {
-        recognition.start();
-      } catch (error) {
-        console.error('[Voice] Erro ao reiniciar reconhecimento:', error);
-        isListening = false;
-      }
-    } else {
-      isListening = false;
-    }
-  };
-}
-
-/**
- * Inicia uma sessão de reconhecimento de voz
- * @param callbacks - Callbacks para transcrição e erros
- * @param config - Configurações opcionais
+ * Inicia sessão de voz em tempo real
  */
 export async function startRealtimeSession(
-  callbacks?: {
-    onTranscript?: (text: string) => void;
-    onFinalTranscript?: (text: string) => void;
-    onError?: (error: string) => void;
-  },
-  config?: Partial<VoiceConfig>
+  userCallbacks?: RealtimeCallbacks
 ): Promise<void> {
-  if (!isSpeechRecognitionSupported()) {
-    throw new Error('Reconhecimento de voz não é suportado neste navegador');
-  }
-
-  if (isListening) {
-    console.warn('[Voice] Sessão de voz já está ativa');
-    return;
-  }
-
-  // Solicitar permissão de microfone
-  try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(track => track.stop()); // Para o stream, só precisamos da permissão
-  } catch (error) {
-    throw new Error('Permissão de microfone negada');
-  }
-
-  // Configurar callbacks
-  onTranscriptCallback = callbacks?.onTranscript || null;
-  onFinalTranscriptCallback = callbacks?.onFinalTranscript || null;
-  onErrorCallback = callbacks?.onError || null;
-
-  // Configurações padrão
-  const voiceConfig: VoiceConfig = {
-    lang: config?.lang || 'pt-BR',
-    continuous: config?.continuous !== undefined ? config.continuous : true,
-    interimResults: config?.interimResults !== undefined ? config.interimResults : true,
-  };
-
-  // Inicializar e começar reconhecimento
-  initializeSpeechRecognition(voiceConfig);
+  console.log('[Realtime] Iniciando sessão...');
+  
+  callbacks = userCallbacks || {};
 
   try {
-    recognition.start();
-    isListening = true;
-    console.log('[Voice] Sessão de voz iniciada');
+    // 1. Obter client_secret do servidor Render
+    console.log('[Realtime] Solicitando token de sessão...');
+    const sessionResponse = await fetch('https://lia-chat-api.onrender.com/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!sessionResponse.ok) {
+      throw new Error(`Erro ao criar sessão: ${sessionResponse.status}`);
+    }
+
+    const { client_secret } = await sessionResponse.json();
+    console.log('[Realtime] Token obtido com sucesso');
+
+    // 2. Criar AudioContext e fila de áudio
+    audioQueue = new AudioQueue();
+
+    // 3. Obter acesso ao microfone
+    console.log('[Realtime] Solicitando acesso ao microfone...');
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        sampleRate: 24000,
+        channelCount: 1,
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true,
+      },
+    });
+    console.log('[Realtime] Microfone ativado');
+
+    // 4. Criar PeerConnection
+    peerConnection = new RTCPeerConnection();
+
+    // 5. Adicionar track de áudio
+    const audioTrack = mediaStream.getAudioTracks()[0];
+    peerConnection.addTrack(audioTrack, mediaStream);
+    console.log('[Realtime] Track de áudio adicionado');
+
+    // 6. Configurar recepção de áudio remoto
+    peerConnection.ontrack = (event) => {
+      console.log('[Realtime] Recebendo track de áudio remoto');
+      if (!audioElement) {
+        audioElement = new Audio();
+        audioElement.autoplay = true;
+      }
+      audioElement.srcObject = event.streams[0];
+    };
+
+    // 7. Criar Data Channel para mensagens
+    dataChannel = peerConnection.createDataChannel('oai-events');
+    
+    dataChannel.onopen = () => {
+      console.log('[Realtime] Data Channel aberto');
+      isConnected = true;
+      reconnectAttempts = 0;
+      callbacks.onConnected?.();
+
+      // Configurar sessão após data channel abrir
+      const sessionUpdate = {
+        type: 'session.update',
+        session: {
+          modalities: ['text', 'audio'],
+          instructions: 'Você é a LIA, uma assistente virtual da Luminnus. Seja clara, simpática e objetiva.',
+          voice: 'alloy',
+          input_audio_format: 'pcm16',
+          output_audio_format: 'pcm16',
+          input_audio_transcription: {
+            model: 'whisper-1',
+          },
+          turn_detection: {
+            type: 'server_vad',
+            threshold: 0.5,
+            prefix_padding_ms: 300,
+            silence_duration_ms: 1000,
+          },
+          temperature: 0.8,
+        },
+      };
+      dataChannel?.send(JSON.stringify(sessionUpdate));
+      console.log('[Realtime] Configuração de sessão enviada');
+    };
+
+    dataChannel.onclose = () => {
+      console.log('[Realtime] Data Channel fechado');
+      isConnected = false;
+      callbacks.onDisconnected?.();
+      
+      // Tentar reconectar
+      if (reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+        reconnectAttempts++;
+        console.log(`[Realtime] Tentando reconectar (${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS})...`);
+        setTimeout(() => startRealtimeSession(callbacks), RECONNECT_DELAY);
+      }
+    };
+
+    dataChannel.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data);
+        console.log('[Realtime] Mensagem recebida:', message.type);
+
+        // Áudio delta (chunks de áudio)
+        if (message.type === 'response.audio.delta') {
+          const audioData = atob(message.delta);
+          const bytes = new Uint8Array(audioData.length);
+          for (let i = 0; i < audioData.length; i++) {
+            bytes[i] = audioData.charCodeAt(i);
+          }
+          audioQueue?.addToQueue(bytes);
+          callbacks.onAudioReceived?.(bytes.buffer);
+        }
+
+        // Transcrição
+        if (message.type === 'conversation.item.input_audio_transcription.completed') {
+          callbacks.onTranscript?.(message.transcript, true);
+        }
+        
+        if (message.type === 'input_audio_buffer.speech_started') {
+          callbacks.onTranscript?.('Ouvindo...', false);
+        }
+
+        // Session update confirmado
+        if (message.type === 'session.updated') {
+          console.log('[Realtime] Sessão configurada');
+        }
+
+      } catch (error) {
+        console.error('[Realtime] Erro ao processar mensagem:', error);
+      }
+    };
+
+    // 8. Criar oferta SDP
+    const offer = await peerConnection.createOffer();
+    await peerConnection.setLocalDescription(offer);
+    console.log('[Realtime] Oferta SDP criada');
+
+    // 9. Enviar oferta para OpenAI Realtime API
+    const sdpResponse = await fetch(
+      `https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${client_secret}`,
+          'Content-Type': 'application/sdp',
+        },
+        body: offer.sdp,
+      }
+    );
+
+    if (!sdpResponse.ok) {
+      throw new Error(`Erro ao conectar WebRTC: ${sdpResponse.status}`);
+    }
+
+    const answerSdp = await sdpResponse.text();
+    console.log('[Realtime] SDP de resposta recebido');
+
+    // 10. Aplicar resposta SDP
+    await peerConnection.setRemoteDescription({
+      type: 'answer',
+      sdp: answerSdp,
+    });
+    console.log('[Realtime] Conexão WebRTC estabelecida!');
+
   } catch (error) {
-    console.error('[Voice] Erro ao iniciar reconhecimento:', error);
-    throw new Error('Erro ao iniciar reconhecimento de voz');
+    console.error('[Realtime] Erro ao iniciar sessão:', error);
+    callbacks.onError?.(error instanceof Error ? error.message : 'Erro desconhecido');
+    await stopRealtimeSession();
+    throw error;
   }
 }
 
 /**
- * Para a sessão de reconhecimento de voz
+ * Para a sessão de voz
  */
 export async function stopRealtimeSession(): Promise<void> {
-  if (!isListening || !recognition) {
-    console.warn('[Voice] Nenhuma sessão de voz ativa');
+  console.log('[Realtime] Parando sessão...');
+
+  isConnected = false;
+
+  if (dataChannel) {
+    dataChannel.close();
+    dataChannel = null;
+  }
+
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+
+  if (mediaStream) {
+    mediaStream.getTracks().forEach(track => track.stop());
+    mediaStream = null;
+  }
+
+  if (audioElement) {
+    audioElement.pause();
+    audioElement.srcObject = null;
+    audioElement = null;
+  }
+
+  if (audioQueue) {
+    audioQueue.clear();
+    audioQueue = null;
+  }
+
+  console.log('[Realtime] Sessão encerrada');
+  callbacks.onDisconnected?.();
+}
+
+/**
+ * Envia texto para a LIA (modo híbrido)
+ */
+export function sendUserText(text: string): void {
+  if (!dataChannel || !isConnected) {
+    console.warn('[Realtime] Data channel não está conectado');
     return;
   }
 
-  try {
-    recognition.stop();
-    isListening = false;
-    console.log('[Voice] Sessão de voz parada');
-  } catch (error) {
-    console.error('[Voice] Erro ao parar reconhecimento:', error);
-    throw new Error('Erro ao parar reconhecimento de voz');
-  }
+  const message = {
+    type: 'conversation.item.create',
+    item: {
+      type: 'message',
+      role: 'user',
+      content: [
+        {
+          type: 'input_text',
+          text,
+        },
+      ],
+    },
+  };
+
+  dataChannel.send(JSON.stringify(message));
+  dataChannel.send(JSON.stringify({ type: 'response.create' }));
+  console.log('[Realtime] Texto enviado:', text);
 }
 
 /**
- * Verifica se está ouvindo
+ * Verifica se está conectado
  */
-export function isVoiceListening(): boolean {
-  return isListening;
-}
-
-/**
- * Verifica se está falando
- */
-export function isVoiceSpeaking(): boolean {
-  return isSpeaking;
-}
-
-/**
- * Fala um texto usando Speech Synthesis
- * @param text - Texto para ser falado
- * @param options - Opções de voz (idioma, velocidade, pitch, volume)
- */
-export async function speakText(
-  text: string,
-  options?: {
-    lang?: string;
-    rate?: number;
-    pitch?: number;
-    volume?: number;
-    voice?: SpeechSynthesisVoice;
-  }
-): Promise<void> {
-  if (!isSpeechSynthesisSupported()) {
-    console.warn('[Voice] Speech Synthesis não é suportado neste navegador');
-    return;
-  }
-
-  // Cancela qualquer fala em andamento
-  window.speechSynthesis.cancel();
-
-  return new Promise((resolve, reject) => {
-    const utterance = new SpeechSynthesisUtterance(text);
-
-    // Configurações
-    utterance.lang = options?.lang || 'pt-BR';
-    utterance.rate = options?.rate || 1.0;
-    utterance.pitch = options?.pitch || 1.0;
-    utterance.volume = options?.volume || 1.0;
-
-    // Se uma voz específica foi fornecida
-    if (options?.voice) {
-      utterance.voice = options.voice;
-    } else {
-      // Tenta encontrar uma voz em português brasileiro
-      const voices = window.speechSynthesis.getVoices();
-      const ptBRVoice = voices.find(voice =>
-        voice.lang === 'pt-BR' || voice.lang.startsWith('pt-BR')
-      );
-      if (ptBRVoice) {
-        utterance.voice = ptBRVoice;
-      }
-    }
-
-    // Handlers
-    utterance.onstart = () => {
-      isSpeaking = true;
-      console.log('[Voice] Começou a falar');
-    };
-
-    utterance.onend = () => {
-      isSpeaking = false;
-      console.log('[Voice] Terminou de falar');
-      resolve();
-    };
-
-    utterance.onerror = (event) => {
-      isSpeaking = false;
-      console.error('[Voice] Erro ao falar:', event);
-      reject(new Error('Erro ao sintetizar voz'));
-    };
-
-    // Iniciar fala
-    window.speechSynthesis.speak(utterance);
-  });
-}
-
-/**
- * Para a fala em andamento
- */
-export function stopSpeaking(): void {
-  if (isSpeechSynthesisSupported()) {
-    window.speechSynthesis.cancel();
-    isSpeaking = false;
-    console.log('[Voice] Fala interrompida');
-  }
-}
-
-/**
- * Obtém as vozes disponíveis
- */
-export function getAvailableVoices(): SpeechSynthesisVoice[] {
-  if (!isSpeechSynthesisSupported()) {
-    return [];
-  }
-
-  return window.speechSynthesis.getVoices();
-}
-
-/**
- * Obtém vozes em português
- */
-export function getPortugueseVoices(): SpeechSynthesisVoice[] {
-  const voices = getAvailableVoices();
-  return voices.filter(voice =>
-    voice.lang.startsWith('pt') || voice.lang === 'pt-BR' || voice.lang === 'pt-PT'
-  );
-}
-
-/**
- * Carrega as vozes (necessário em alguns navegadores)
- */
-export function loadVoices(): Promise<SpeechSynthesisVoice[]> {
-  return new Promise((resolve) => {
-    const voices = window.speechSynthesis.getVoices();
-
-    if (voices.length > 0) {
-      resolve(voices);
-    } else {
-      window.speechSynthesis.onvoiceschanged = () => {
-        resolve(window.speechSynthesis.getVoices());
-      };
-    }
-  });
+export function isRealtimeConnected(): boolean {
+  return isConnected;
 }

@@ -26,6 +26,50 @@ app.get("/health", (req, res) => {
   res.status(200).json({ status: "ok", message: "API está online" });
 });
 
+// Endpoint para obter token efêmero para WebRTC
+app.post("/session", async (req, res) => {
+  try {
+    console.log("[Realtime] Solicitando ephemeral token...");
+
+    const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-realtime-preview-2024-12-17",
+        voice: "alloy",
+        instructions: "Você é a LIA, uma assistente virtual inteligente e prestativa da plataforma Luminnus. Responda de forma clara, simpática e objetiva.",
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[Realtime] Erro ao obter token:", response.status, errorText);
+      return res.status(response.status).json({ 
+        error: "Erro ao criar sessão de voz",
+        details: errorText
+      });
+    }
+
+    const data = await response.json();
+    console.log("[Realtime] Token efêmero criado com sucesso");
+
+    // Retornar apenas o client_secret
+    res.json({ 
+      client_secret: data.client_secret.value,
+      expires_at: data.expires_at
+    });
+  } catch (error) {
+    console.error("[Realtime] Erro:", error);
+    res.status(500).json({ 
+      error: "Erro ao criar sessão",
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 app.post("/chat", async (req, res) => {
   try {
     console.log("[API] Nova requisição /chat recebida");

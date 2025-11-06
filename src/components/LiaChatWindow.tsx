@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bot, User, Send, X, Volume2, VolumeX } from 'lucide-react';
+import { Bot, User, Send, X, Mic, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { enviarMensagemLIA } from '@/lib/api/lia';
-import { speakText, stopSpeaking } from '@/lib/textToSpeech';
+import { startRealtimeSession, stopRealtimeSession } from '@/lib/api/lia-realtime';
 import liaAvatar from '@/assets/lia-assistant-new.png';
 
 interface Message {
@@ -23,8 +23,9 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [conversationId, setConversationId] = useState<string | null>(null);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [isSpeakingNow, setIsSpeakingNow] = useState(false);
+  const [micAtivo, setMicAtivo] = useState(false);
+  const [transcricaoTemp, setTranscricaoTemp] = useState('');
+  const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -69,12 +70,72 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Cleanup: parar fala ao desmontar
+  // Cleanup: parar sessão ao desmontar
   useEffect(() => {
     return () => {
-      stopSpeaking();
+      if (micAtivo) {
+        stopRealtimeSession();
+      }
     };
-  }, []);
+  }, [micAtivo]);
+
+  const toggleMicrofone = async () => {
+    try {
+      if (micAtivo) {
+        await stopRealtimeSession();
+        setMicAtivo(false);
+        setIsRealtimeActive(false);
+        setTranscricaoTemp('');
+        toast({
+          title: 'Microfone desativado',
+          description: 'Sessão de voz encerrada',
+        });
+      } else {
+        await startRealtimeSession({
+          onConnected: () => {
+            setIsRealtimeActive(true);
+            toast({
+              title: 'Conectado!',
+              description: 'Você pode falar agora',
+            });
+          },
+          onDisconnected: () => {
+            setIsRealtimeActive(false);
+            setMicAtivo(false);
+          },
+          onTranscript: (text, isFinal) => {
+            if (isFinal) {
+              setMessages(prev => [...prev, {
+                role: 'user',
+                content: text,
+              }]);
+              setTranscricaoTemp('');
+            } else {
+              setTranscricaoTemp(text);
+            }
+          },
+          onError: (error) => {
+            toast({
+              title: 'Erro',
+              description: error,
+              variant: 'destructive',
+            });
+            setMicAtivo(false);
+            setIsRealtimeActive(false);
+          },
+        });
+        setMicAtivo(true);
+      }
+    } catch (error) {
+      console.error('[Chat] Erro ao alternar microfone:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível ativar o microfone',
+        variant: 'destructive',
+      });
+      setMicAtivo(false);
+    }
+  };
 
   const sendMessage = async (text: string) => {
     if (!text.trim() || !conversationId) return;
@@ -101,17 +162,6 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
       };
 
       setMessages(prev => [...prev, assistantMessage]);
-
-      // Reproduzir voz se habilitado
-      if (voiceEnabled) {
-        setIsSpeakingNow(true);
-        speakText(assistantMessage.content, {
-          rate: 1.0,
-          pitch: 1.0,
-          volume: 1.0,
-          onEnd: () => setIsSpeakingNow(false)
-        });
-      }
 
       // Salvar resposta da IA
       await supabase.from('chat_messages').insert({
@@ -140,32 +190,29 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
     <div className="fixed bottom-24 right-6 z-50 w-[380px] h-[600px] bg-[#0B0B0F] border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-fade-in">
       {/* Header */}
       <div className="bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] p-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3">
           <img src={liaAvatar} alt="Lia" className="w-10 h-10 rounded-full" />
           <div>
             <h3 className="font-semibold text-white">Lia</h3>
             <p className="text-xs text-white/80">
-              {isSpeakingNow ? 'Falando...' : 'Assistente Virtual'}
+              {isRealtimeActive ? 'Voz ativa' : 'Assistente Virtual'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => {
-              if (isSpeakingNow) {
-                stopSpeaking();
-                setIsSpeakingNow(false);
-              } else {
-                setVoiceEnabled(!voiceEnabled);
-              }
-            }}
-            className="text-white/80 hover:text-white transition-colors"
-            title={voiceEnabled ? 'Desativar voz' : 'Ativar voz'}
+            onClick={toggleMicrofone}
+            className={`transition-colors ${
+              micAtivo 
+                ? 'text-red-400 hover:text-red-300 animate-pulse' 
+                : 'text-white/80 hover:text-white'
+            }`}
+            title={micAtivo ? 'Desativar microfone' : 'Ativar microfone'}
           >
-            {voiceEnabled ? (
-              <Volume2 className={`w-5 h-5 ${isSpeakingNow ? 'animate-pulse' : ''}`} />
+            {micAtivo ? (
+              <Mic className="w-5 h-5" />
             ) : (
-              <VolumeX className="w-5 h-5" />
+              <MicOff className="w-5 h-5" />
             )}
           </button>
           <button
@@ -227,6 +274,16 @@ const LiaChatWindow = ({ onClose }: LiaChatWindowProps) => {
         
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Transcrição temporária */}
+      {transcricaoTemp && (
+        <div className="px-4 py-2 bg-blue-500/10 border-t border-blue-500/20">
+          <p className="text-xs text-blue-400 italic flex items-center gap-2">
+            <Mic className="w-3 h-3 animate-pulse" />
+            Ouvindo: {transcricaoTemp}
+          </p>
+        </div>
+      )}
 
       {/* Sugestões */}
       {messages.length === 1 && (

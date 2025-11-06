@@ -25,11 +25,7 @@ import {
 import {
   startRealtimeSession,
   stopRealtimeSession,
-  speakText,
-  stopSpeaking,
-  isVoiceListening,
-  isSpeechRecognitionSupported,
-  isSpeechSynthesisSupported,
+  isRealtimeConnected,
 } from "@/lib/api/lia-realtime";
 import {
   createConversation,
@@ -100,7 +96,7 @@ export default function LiaChatWindowAdvanced({ onClose }: LiaChatWindowAdvanced
       if (micAtivo) {
         stopRealtimeSession();
       }
-      stopSpeaking();
+      // stopSpeaking() removido - usar WebRTC para voz
     };
   }, []);
 
@@ -290,10 +286,7 @@ export default function LiaChatWindowAdvanced({ onClose }: LiaChatWindowAdvanced
       // Salva resposta no banco
       await saveMessage(currentConversationId, "assistant", conteudoResposta);
 
-      // Se a voz estiver ativa e auto-speak habilitado, fala a resposta
-      if (autoSpeak) {
-        await speakText(conteudoResposta);
-      }
+      // Auto-speak removido - usar WebRTC para voz bidirecional
     } catch (err) {
       console.error("Erro no envio:", err);
       const mensagemErro = "Desculpe, ocorreu um erro ao processar sua mensagem. Tente novamente.";
@@ -315,15 +308,7 @@ export default function LiaChatWindowAdvanced({ onClose }: LiaChatWindowAdvanced
 
   // Alternar microfone
   const toggleMicrofone = async () => {
-    if (!isSpeechRecognitionSupported()) {
-      toast({
-        title: "Não suportado",
-        description: "Seu navegador não suporta reconhecimento de voz.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    // Verificação removida - usar WebRTC diretamente
     try {
       if (micAtivo) {
         await stopRealtimeSession();
@@ -332,12 +317,13 @@ export default function LiaChatWindowAdvanced({ onClose }: LiaChatWindowAdvanced
       } else {
         await startRealtimeSession(
           {
-            onTranscript: (text) => {
-              setTranscricaoTemp(text);
-            },
-            onFinalTranscript: (text) => {
-              setTexto((prev) => prev + " " + text);
-              setTranscricaoTemp("");
+            onTranscript: (text, isFinal) => {
+              if (isFinal) {
+                setTexto((prev) => prev + " " + text);
+                setTranscricaoTemp("");
+              } else {
+                setTranscricaoTemp(text);
+              }
             },
             onError: (error) => {
               console.error("Erro de voz:", error);
@@ -348,11 +334,6 @@ export default function LiaChatWindowAdvanced({ onClose }: LiaChatWindowAdvanced
               });
               setMicAtivo(false);
             },
-          },
-          {
-            lang: "pt-BR",
-            continuous: true,
-            interimResults: true,
           }
         );
         setMicAtivo(true);
@@ -372,28 +353,13 @@ export default function LiaChatWindowAdvanced({ onClose }: LiaChatWindowAdvanced
   // Alternar auto-speak
   const toggleAutoSpeak = () => {
     setAutoSpeak((prev) => !prev);
-    if (!autoSpeak && !isSpeechSynthesisSupported()) {
-      toast({
-        title: "Não suportado",
-        description: "Seu navegador não suporta síntese de voz.",
-        variant: "destructive",
-      });
-      setAutoSpeak(false);
-    }
+    // Verificação removida - usar WebRTC para voz
   };
 
   // Falar mensagem específica
   const handleSpeakMessage = async (content: string) => {
-    try {
-      await speakText(content);
-    } catch (error) {
-      console.error("Erro ao falar:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível sintetizar a voz.",
-        variant: "destructive",
-      });
-    }
+    // Função removida - usar WebRTC para voz bidirecional
+    console.log('Speak message:', content);
   };
 
   return (

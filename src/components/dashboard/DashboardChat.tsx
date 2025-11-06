@@ -16,10 +16,7 @@ import { enviarMensagemLIA, LiaResponse } from '@/lib/api/lia';
 import {
   startRealtimeSession,
   stopRealtimeSession,
-  speakText,
-  stopSpeaking,
-  isSpeechRecognitionSupported,
-  isSpeechSynthesisSupported,
+  isRealtimeConnected,
 } from '@/lib/api/lia-realtime';
 import {
   createConversation,
@@ -124,7 +121,7 @@ const DashboardChat = () => {
       if (micAtivo) {
         stopRealtimeSession();
       }
-      stopSpeaking();
+      // stopSpeaking() removido - usar WebRTC para voz
     };
   }, []);
 
@@ -362,10 +359,7 @@ const DashboardChat = () => {
       // Salva resposta no banco
       await saveMessage(currentConversationId, 'assistant', conteudoResposta);
 
-      // Se auto-speak estiver ativo, fala a resposta
-      if (autoSpeak) {
-        await speakText(conteudoResposta);
-      }
+      // Auto-speak removido - usar WebRTC para voz bidirecional
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
       toast({
@@ -382,15 +376,7 @@ const DashboardChat = () => {
    * FUNÇÃO: Alternar microfone
    */
   const toggleMicrofone = async () => {
-    if (!isSpeechRecognitionSupported()) {
-      toast({
-        title: 'Não suportado',
-        description: 'Seu navegador não suporta reconhecimento de voz.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    // Verificação removida - usar WebRTC diretamente
     try {
       if (micAtivo) {
         await stopRealtimeSession();
@@ -399,12 +385,13 @@ const DashboardChat = () => {
       } else {
         await startRealtimeSession(
           {
-            onTranscript: (text) => {
-              setTranscricaoTemp(text);
-            },
-            onFinalTranscript: (text) => {
-              setInputMessage((prev) => (prev + ' ' + text).trim());
-              setTranscricaoTemp('');
+            onTranscript: (text, isFinal) => {
+              if (isFinal) {
+                setInputMessage((prev) => (prev + ' ' + text).trim());
+                setTranscricaoTemp('');
+              } else {
+                setTranscricaoTemp(text);
+              }
             },
             onError: (error) => {
               console.error('Erro de voz:', error);
@@ -415,11 +402,6 @@ const DashboardChat = () => {
               });
               setMicAtivo(false);
             },
-          },
-          {
-            lang: 'pt-BR',
-            continuous: true,
-            interimResults: true,
           }
         );
         setMicAtivo(true);
@@ -439,14 +421,7 @@ const DashboardChat = () => {
    * FUNÇÃO: Alternar auto-speak
    */
   const toggleAutoSpeak = () => {
-    if (!autoSpeak && !isSpeechSynthesisSupported()) {
-      toast({
-        title: 'Não suportado',
-        description: 'Seu navegador não suporta síntese de voz.',
-        variant: 'destructive',
-      });
-      return;
-    }
+    // Verificação removida - usar WebRTC para voz
     setAutoSpeak((prev) => !prev);
   };
 
@@ -454,16 +429,8 @@ const DashboardChat = () => {
    * FUNÇÃO: Falar mensagem específica
    */
   const handleSpeakMessage = async (content: string) => {
-    try {
-      await speakText(content);
-    } catch (error) {
-      console.error('Erro ao falar:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível sintetizar a voz.',
-        variant: 'destructive',
-      });
-    }
+    // Função removida - usar WebRTC para voz bidirecional
+    console.log('Speak message:', content);
   };
 
   /**

@@ -2,11 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Send, Loader2, User, Sparkles, Trash2, Volume2, VolumeX } from 'lucide-react';
+import { Bot, Send, Loader2, User, Sparkles, Trash2, Mic, MicOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { enviarMensagemLIA, reproduzirVoz } from '@/lib/api/lia';
+import { enviarMensagemLIA } from '@/lib/api/lia';
 import { secureStorage } from '@/lib/secureStorage';
-import { speakText, stopSpeaking } from '@/lib/textToSpeech';
+import { startRealtimeSession, stopRealtimeSession } from '@/lib/api/lia-realtime';
 
 /**
  * INTERFACE: Mensagem de Chat
@@ -36,8 +36,9 @@ const AdminLiaChat = () => {
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [voiceEnabled, setVoiceEnabled] = useState(true);
-  const [isSpeakingNow, setIsSpeakingNow] = useState(false);
+  const [micAtivo, setMicAtivo] = useState(false);
+  const [transcricaoTemp, setTranscricaoTemp] = useState('');
+  const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -52,12 +53,75 @@ const AdminLiaChat = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Cleanup: parar fala ao desmontar
+  // Cleanup: parar sessão ao desmontar
   useEffect(() => {
     return () => {
-      stopSpeaking();
+      if (micAtivo) {
+        stopRealtimeSession();
+      }
     };
-  }, []);
+  }, [micAtivo]);
+
+  const toggleMicrofone = async () => {
+    try {
+      if (micAtivo) {
+        await stopRealtimeSession();
+        setMicAtivo(false);
+        setIsRealtimeActive(false);
+        setTranscricaoTemp('');
+        toast({
+          title: 'Microfone desativado',
+          description: 'Sessão de voz encerrada',
+        });
+      } else {
+        await startRealtimeSession({
+          onConnected: () => {
+            setIsRealtimeActive(true);
+            toast({
+              title: 'Conectado!',
+              description: 'Você pode falar agora',
+            });
+          },
+          onDisconnected: () => {
+            setIsRealtimeActive(false);
+            setMicAtivo(false);
+          },
+          onTranscript: (text, isFinal) => {
+            if (isFinal) {
+              const newUserMessage: ChatMessage = {
+                id: `user-${Date.now()}`,
+                role: 'user',
+                content: text,
+                created_at: new Date().toISOString(),
+              };
+              setMessages(prev => [...prev, newUserMessage]);
+              setTranscricaoTemp('');
+            } else {
+              setTranscricaoTemp(text);
+            }
+          },
+          onError: (error) => {
+            toast({
+              title: 'Erro',
+              description: error,
+              variant: 'destructive',
+            });
+            setMicAtivo(false);
+            setIsRealtimeActive(false);
+          },
+        });
+        setMicAtivo(true);
+      }
+    } catch (error) {
+      console.error('[AdminChat] Erro ao alternar microfone:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível ativar o microfone',
+        variant: 'destructive',
+      });
+      setMicAtivo(false);
+    }
+  };
 
   /**
    * EFEITO: Redimensionar textarea automaticamente
@@ -121,17 +185,6 @@ const AdminLiaChat = () => {
         created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, newAssistantMessage]);
-
-      // Reproduzir voz se habilitado
-      if (voiceEnabled) {
-        setIsSpeakingNow(true);
-        speakText(respostaTexto, {
-          rate: 1.0,
-          pitch: 1.0,
-          volume: 1.0,
-          onEnd: () => setIsSpeakingNow(false)
-        });
-      }
 
       setLoading(false);
     } catch (error) {
@@ -271,6 +324,16 @@ const AdminLiaChat = () => {
 
         {/* ÁREA DE INPUT - Estilo ChatGPT */}
         <div className="mt-4 space-y-3">
+          {/* Transcrição temporária */}
+          {transcricaoTemp && (
+            <div className="px-4 py-2 bg-blue-50 border-t border-blue-200 mb-2">
+              <p className="text-xs text-blue-600 italic flex items-center gap-2">
+                <Mic className="w-3 h-3 animate-pulse" />
+                Ouvindo: {transcricaoTemp}
+              </p>
+            </div>
+          )}
+
           {/* Opções Interativas */}
           <div className="flex items-center justify-center gap-2 px-4">
             <Button
@@ -282,35 +345,28 @@ const AdminLiaChat = () => {
               <Trash2 className="w-3.5 h-3.5 mr-1.5" />
               Limpar
             </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              if (isSpeakingNow) {
-                stopSpeaking();
-                setIsSpeakingNow(false);
-              } else {
-                setVoiceEnabled(!voiceEnabled);
-              }
-            }}
-            className={`text-xs transition-all duration-200 rounded-full px-3 py-1.5 h-auto ${
-              voiceEnabled
-                ? 'text-purple-600 hover:text-purple-700 hover:bg-purple-50'
-                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-            }`}
-          >
-            {voiceEnabled ? (
-              <>
-                <Volume2 className={`w-3.5 h-3.5 mr-1.5 ${isSpeakingNow ? 'animate-pulse' : ''}`} />
-                {isSpeakingNow ? 'Falando...' : 'Voz Ativa'}
-              </>
-            ) : (
-              <>
-                <VolumeX className="w-3.5 h-3.5 mr-1.5" />
-                Voz Desativada
-              </>
-            )}
-          </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleMicrofone}
+              className={`text-xs transition-all duration-200 rounded-full px-3 py-1.5 h-auto ${
+                micAtivo
+                  ? 'text-red-600 hover:text-red-700 hover:bg-red-50 animate-pulse'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              {micAtivo ? (
+                <>
+                  <Mic className="w-3.5 h-3.5 mr-1.5" />
+                  Ouvindo...
+                </>
+              ) : (
+                <>
+                  <MicOff className="w-3.5 h-3.5 mr-1.5" />
+                  Microfone
+                </>
+              )}
+            </Button>
             <Button
               variant="ghost"
               size="sm"
