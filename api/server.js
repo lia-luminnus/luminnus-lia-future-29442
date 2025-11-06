@@ -47,7 +47,7 @@ app.post("/session", async (req, res) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error("[Realtime] Erro ao obter token:", response.status, errorText);
-      return res.status(response.status).json({ 
+      return res.status(response.status).json({
         error: "Erro ao criar sessão de voz",
         details: errorText
       });
@@ -57,14 +57,66 @@ app.post("/session", async (req, res) => {
     console.log("[Realtime] Token efêmero criado com sucesso");
 
     // Retornar apenas o client_secret
-    res.json({ 
+    res.json({
       client_secret: data.client_secret.value,
       expires_at: data.expires_at
     });
   } catch (error) {
     console.error("[Realtime] Erro:", error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Erro ao criar sessão",
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+// Endpoint proxy para WebRTC Realtime (SDP offer/answer)
+app.post("/proxy-realtime", async (req, res) => {
+  try {
+    console.log("[Proxy Realtime] Recebendo requisição SDP...");
+
+    const { sdp, client_secret } = req.body;
+
+    if (!sdp || !client_secret) {
+      console.error("[Proxy Realtime] SDP ou client_secret ausente");
+      return res.status(400).json({
+        error: "SDP e client_secret são obrigatórios"
+      });
+    }
+
+    console.log("[Proxy Realtime] Enviando SDP para OpenAI...");
+
+    const response = await fetch(
+      "https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${client_secret}`,
+          "Content-Type": "application/sdp",
+        },
+        body: sdp,
+      }
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("[Proxy Realtime] Erro da OpenAI:", response.status, errorText);
+      return res.status(response.status).json({
+        error: "Erro ao conectar WebRTC com OpenAI",
+        details: errorText
+      });
+    }
+
+    const answerSdp = await response.text();
+    console.log("[Proxy Realtime] SDP answer recebido com sucesso");
+
+    // Retornar o SDP answer como texto
+    res.setHeader('Content-Type', 'application/sdp');
+    res.send(answerSdp);
+  } catch (error) {
+    console.error("[Proxy Realtime] Erro:", error);
+    res.status(500).json({
+      error: "Erro interno ao processar WebRTC",
       details: error instanceof Error ? error.message : String(error)
     });
   }

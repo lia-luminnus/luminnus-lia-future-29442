@@ -231,25 +231,29 @@ export async function startRealtimeSession(
     await peerConnection.setLocalDescription(offer);
     console.log('[Realtime] Oferta SDP criada');
 
-    // 9. Enviar oferta para OpenAI Realtime API
+    // 9. Enviar oferta para o proxy backend no Render
+    console.log('[Realtime] Enviando SDP via proxy backend...');
     const sdpResponse = await fetch(
-      `https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview-2024-12-17`,
+      'https://lia-chat-api.onrender.com/proxy-realtime',
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${client_secret}`,
-          'Content-Type': 'application/sdp',
+          'Content-Type': 'application/json',
         },
-        body: offer.sdp,
+        body: JSON.stringify({
+          sdp: offer.sdp,
+          client_secret: client_secret,
+        }),
       }
     );
 
     if (!sdpResponse.ok) {
-      throw new Error(`Erro ao conectar WebRTC: ${sdpResponse.status}`);
+      const errorData = await sdpResponse.json().catch(() => ({ error: 'Erro desconhecido' }));
+      throw new Error(`Erro ao conectar WebRTC: ${sdpResponse.status} - ${errorData.error || errorData.details || ''}`);
     }
 
     const answerSdp = await sdpResponse.text();
-    console.log('[Realtime] SDP de resposta recebido');
+    console.log('[Realtime] SDP de resposta recebido via proxy');
 
     // 10. Aplicar resposta SDP
     await peerConnection.setRemoteDescription({
