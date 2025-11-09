@@ -2,11 +2,16 @@ import { useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Send, Loader2, User, Sparkles, Trash2, Mic, MicOff } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Badge } from '@/components/ui/badge';
+import { Bot, Send, Loader2, User, Sparkles, Trash2, Mic, MicOff, Plus, Search, MessageSquare, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { enviarMensagemLIA } from '@/lib/api/lia';
 import { secureStorage } from '@/lib/secureStorage';
 import { startRealtimeSession, stopRealtimeSession } from '@/lib/api/lia-realtime';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
  * INTERFACE: Mensagem de Chat
@@ -19,21 +24,39 @@ interface ChatMessage {
 }
 
 /**
+ * INTERFACE: Conversa
+ */
+interface Conversation {
+  id: string;
+  title: string;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+}
+
+/**
  * COMPONENTE: AdminLiaChat
  *
- * Chat integrado com a LIA especificamente para administradores
- * Interface estilo ChatGPT com integração API Render via endpoint /chat
+ * Chat integrado com a LIA para administradores
+ * Com histórico de conversas lateral e interface moderna
  */
 const AdminLiaChat = () => {
   const { toast } = useToast();
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
-      created_at: new Date().toISOString(),
-    }
-  ]);
+  const { user } = useAuth();
+
+  // Estado de conversas
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Estado de mensagens
+  const [messages, setMessages] = useState<ChatMessage[]>([{
+    id: 'welcome',
+    role: 'assistant',
+    content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus. Estou aqui para ajudá-lo a configurar e gerenciar todo o sistema. Como posso ajudar você hoje?',
+    created_at: new Date().toISOString(),
+  }]);
+
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [micAtivo, setMicAtivo] = useState(false);
@@ -41,6 +64,13 @@ const AdminLiaChat = () => {
   const [isRealtimeActive, setIsRealtimeActive] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /**
+   * EFEITO: Carregar conversas ao montar componente
+   */
+  useEffect(() => {
+    loadConversations();
+  }, []);
 
   /**
    * EFEITO: Scroll automático para última mensagem
@@ -61,6 +91,158 @@ const AdminLiaChat = () => {
       }
     };
   }, [micAtivo]);
+
+  /**
+   * FUNÇÃO: Carregar conversas do Supabase
+   */
+  const loadConversations = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_conversations')
+        .select('*')
+        .order('updated_at', { ascending: false });
+
+      if (error) {
+        console.error('Erro ao carregar conversas:', error);
+        return;
+      }
+
+      if (data) {
+        setConversations(data.map(conv => ({
+          id: conv.id,
+          title: conv.title || 'Nova Conversa',
+          created_at: conv.created_at,
+          updated_at: conv.updated_at,
+          message_count: conv.message_count || 0,
+        })));
+      }
+    } catch (error) {
+      console.error('Erro ao carregar conversas:', error);
+    }
+  };
+
+  /**
+   * FUNÇÃO: Criar nova conversa
+   */
+  const createNewConversation = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_conversations')
+        .insert({
+          title: `Conversa ${new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`,
+          message_count: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setConversations(prev => [
+          {
+            id: data.id,
+            title: data.title,
+            created_at: data.created_at,
+            updated_at: data.updated_at,
+            message_count: 0
+          },
+          ...prev
+        ]);
+        setCurrentConversationId(data.id);
+        setMessages([{
+          id: 'welcome',
+          role: 'assistant',
+          content: '👋 Olá! Sou a LIA. Como posso ajudar você hoje?',
+          created_at: new Date().toISOString(),
+        }]);
+
+        toast({
+          title: 'Nova conversa criada',
+          description: 'Você pode começar a conversar agora.',
+        });
+      }
+    } catch (error) {
+      console.error('Erro ao criar conversa:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível criar uma nova conversa.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  /**
+   * FUNÇÃO: Carregar mensagens de uma conversa
+   */
+  const loadConversationMessages = async (conversationId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('admin_chat_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        setMessages(data.map(msg => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant',
+          content: msg.content,
+          created_at: msg.created_at,
+        })));
+      } else {
+        setMessages([{
+          id: 'welcome',
+          role: 'assistant',
+          content: '👋 Olá! Sou a LIA. Como posso ajudar você hoje?',
+          created_at: new Date().toISOString(),
+        }]);
+      }
+
+      setCurrentConversationId(conversationId);
+    } catch (error) {
+      console.error('Erro ao carregar mensagens:', error);
+    }
+  };
+
+  /**
+   * FUNÇÃO: Salvar mensagem no Supabase
+   */
+  const saveMessage = async (conversationId: string, role: 'user' | 'assistant', content: string) => {
+    try {
+      const { error } = await supabase
+        .from('admin_chat_messages')
+        .insert({
+          conversation_id: conversationId,
+          role,
+          content,
+          created_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+
+      // Atualizar contagem de mensagens e data de atualização da conversa
+      await supabase
+        .from('admin_conversations')
+        .update({
+          message_count: messages.length + 1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', conversationId);
+
+      // Atualizar lista de conversas localmente
+      setConversations(prev => prev.map(conv =>
+        conv.id === conversationId
+          ? { ...conv, message_count: conv.message_count + 1, updated_at: new Date().toISOString() }
+          : conv
+      ));
+    } catch (error) {
+      console.error('Erro ao salvar mensagem:', error);
+    }
+  };
 
   const toggleMicrofone = async () => {
     try {
@@ -95,6 +277,11 @@ const AdminLiaChat = () => {
                 created_at: new Date().toISOString(),
               };
               setMessages(prev => [...prev, newUserMessage]);
+
+              if (currentConversationId) {
+                saveMessage(currentConversationId, 'user', text);
+              }
+
               setTranscricaoTemp('');
             } else {
               setTranscricaoTemp(text);
@@ -133,15 +320,23 @@ const AdminLiaChat = () => {
     }
   }, [inputMessage]);
 
-
   /**
-   * FUNÇÃO: Enviar mensagem via API (Render)
-   * Usa o módulo /lib/api/lia.ts para integração
+   * FUNÇÃO: Enviar mensagem via API
    */
   const handleSendMessage = async (e?: React.FormEvent) => {
     e?.preventDefault();
 
     if (!inputMessage.trim()) return;
+
+    // Verificar se há uma conversa ativa
+    if (!currentConversationId) {
+      toast({
+        title: 'Nenhuma conversa ativa',
+        description: 'Crie uma nova conversa primeiro.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     // Verificar se a URL da API está configurada
     const config = secureStorage.load();
@@ -167,15 +362,14 @@ const AdminLiaChat = () => {
     };
     setMessages(prev => [...prev, newUserMessage]);
 
+    // Salvar mensagem do usuário
+    await saveMessage(currentConversationId, 'user', userMessage);
+
     try {
       // Enviar mensagem para a LIA
       const resposta = await enviarMensagemLIA(userMessage);
 
-      // Extrair texto da resposta (pode estar em diferentes campos)
-      // A API do Render retorna no campo 'reply'
       const respostaTexto = resposta.reply || resposta.response || resposta.text || resposta.message || 'Desculpe, não consegui gerar uma resposta.';
-      
-      console.log('[AdminLiaChat] Resposta da LIA:', respostaTexto);
 
       // Adicionar resposta da LIA à lista
       const newAssistantMessage: ChatMessage = {
@@ -186,11 +380,13 @@ const AdminLiaChat = () => {
       };
       setMessages(prev => [...prev, newAssistantMessage]);
 
+      // Salvar resposta da LIA
+      await saveMessage(currentConversationId, 'assistant', respostaTexto);
+
       setLoading(false);
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
 
-      // Adicionar mensagem de erro
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'assistant',
@@ -216,208 +412,369 @@ const AdminLiaChat = () => {
     return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   };
 
-  /**
-   * FUNÇÃO: Limpar conversa
-   */
-  const handleClearChat = () => {
-    // Resetar estado local
-    const welcomeMessage: ChatMessage = {
-      id: 'welcome',
-      role: 'assistant',
-      content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus com respostas em tempo real e voz personalizada. Estou aqui para ajudá-lo a configurar, criar e gerenciar todo o sistema. Como posso ajudar você hoje?',
-      created_at: new Date().toISOString(),
-    };
-    setMessages([welcomeMessage]);
+  const formatDate = (timestamp: string) => {
+    const date = new Date(timestamp);
+    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+  };
 
-    toast({
-      title: 'Chat limpo',
-      description: 'O histórico de conversa foi removido.',
-    });
+  /**
+   * FUNÇÃO: Limpar conversa atual
+   */
+  const handleClearChat = async () => {
+    if (!currentConversationId) return;
+
+    try {
+      // Deletar mensagens da conversa
+      await supabase
+        .from('admin_chat_messages')
+        .delete()
+        .eq('conversation_id', currentConversationId);
+
+      // Resetar mensagens localmente
+      const welcomeMessage: ChatMessage = {
+        id: 'welcome',
+        role: 'assistant',
+        content: '👋 Olá! Sou a LIA. Como posso ajudar você hoje?',
+        created_at: new Date().toISOString(),
+      };
+      setMessages([welcomeMessage]);
+
+      // Atualizar contagem de mensagens
+      await supabase
+        .from('admin_conversations')
+        .update({ message_count: 0 })
+        .eq('id', currentConversationId);
+
+      toast({
+        title: 'Chat limpo',
+        description: 'O histórico de conversa foi removido.',
+      });
+    } catch (error) {
+      console.error('Erro ao limpar chat:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível limpar o chat.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  /**
+   * FUNÇÃO: Deletar conversa
+   */
+  const deleteConversation = async (conversationId: string) => {
+    try {
+      // Deletar mensagens
+      await supabase
+        .from('admin_chat_messages')
+        .delete()
+        .eq('conversation_id', conversationId);
+
+      // Deletar conversa
+      await supabase
+        .from('admin_conversations')
+        .delete()
+        .eq('id', conversationId);
+
+      // Atualizar lista local
+      setConversations(prev => prev.filter(c => c.id !== conversationId));
+
+      // Se a conversa deletada era a atual, limpar
+      if (currentConversationId === conversationId) {
+        setCurrentConversationId(null);
+        setMessages([{
+          id: 'welcome',
+          role: 'assistant',
+          content: '👋 Olá! Sou a LIA. Crie ou selecione uma conversa para começar.',
+          created_at: new Date().toISOString(),
+        }]);
+      }
+
+      toast({
+        title: 'Conversa deletada',
+        description: 'A conversa foi removida permanentemente.',
+      });
+    } catch (error) {
+      console.error('Erro ao deletar conversa:', error);
+      toast({
+        title: 'Erro',
+        description: 'Não foi possível deletar a conversa.',
+        variant: 'destructive',
+      });
+    }
   };
 
   /**
    * FUNÇÃO: Sugestão rápida
    */
   const handleQuickSuggestion = () => {
-    setInputMessage('Como você pode me ajudar?');
+    setInputMessage('Como você pode me ajudar a gerenciar os planos?');
   };
+
+  // Filtrar conversas pela busca
+  const filteredConversations = conversations.filter(conv =>
+    conv.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
       {/* HEADER */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-900 bg-clip-text text-transparent mb-2 flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center">
             <Bot className="w-6 h-6 text-white" />
           </div>
-          Assistente LIA
-          <span className="text-xs font-normal bg-purple-100 text-purple-700 px-2 py-1 rounded-full">
+          Assistente LIA - Chat Administrativo
+          <Badge className="bg-purple-100 text-purple-700 border-purple-300">
             API Render
-          </span>
+          </Badge>
         </h1>
         <p className="text-gray-600">
-          Chat integrado com a LIA para administradores - Respostas via API Render com voz personalizada
+          Chat integrado com a LIA para administradores com histórico de conversas e voz personalizada
         </p>
       </div>
 
-      {/* CHAT INTERFACE */}
-      <div className="flex flex-col h-[calc(100vh-280px)] relative">
-        {/* ÁREA DE MENSAGENS */}
-        <Card className="flex-1 bg-white border border-gray-200 overflow-hidden shadow-lg">
-          <CardContent className="h-full overflow-y-auto p-6 space-y-6">
-            {messages.map((message, index) => (
-              <div
-                key={message.id || index}
-                className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+      {/* MAIN INTERFACE */}
+      <div className="flex gap-4 h-[calc(100vh-280px)]">
+        {/* SIDEBAR - Histórico de Conversas */}
+        <Card className="w-80 flex-shrink-0 bg-white border-2 border-purple-200 shadow-xl">
+          <CardContent className="p-4 h-full flex flex-col">
+            {/* Header do Sidebar */}
+            <div className="space-y-3 mb-4">
+              <Button
+                onClick={createNewConversation}
+                className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:opacity-90 shadow-lg"
               >
-                {/* Avatar da Lia */}
-                {message.role === 'assistant' && (
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                    <Bot className="w-5 h-5 text-white" />
-                  </div>
-                )}
+                <Plus className="mr-2 h-4 w-4" />
+                Nova Conversa
+              </Button>
 
-                {/* Bolha de mensagem */}
-                <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div
-                    className={`max-w-[75%] rounded-2xl px-5 py-3 shadow-md ${
-                      message.role === 'user'
-                        ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white'
-                        : 'bg-gray-100 text-gray-900 border border-gray-200'
-                    }`}
-                  >
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                  </div>
-                  <span className={`text-xs mt-1.5 px-2 ${message.role === 'user' ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {formatTime(message.created_at)}
-                  </span>
-                </div>
+              {/* Busca */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar conversas..."
+                  className="pl-9 h-9 bg-gray-50 border-gray-200"
+                />
+              </div>
+            </div>
 
-                {/* Avatar do Usuário */}
-                {message.role === 'user' && (
-                  <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                    <User className="w-5 h-5 text-white" />
+            {/* Lista de Conversas */}
+            <ScrollArea className="flex-1">
+              <div className="space-y-2">
+                {filteredConversations.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <MessageSquare className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                    <p className="text-sm">Nenhuma conversa encontrada</p>
+                    <p className="text-xs mt-1">Crie uma nova conversa</p>
                   </div>
+                ) : (
+                  filteredConversations.map((conv) => (
+                    <div
+                      key={conv.id}
+                      onClick={() => loadConversationMessages(conv.id)}
+                      className={`p-3 rounded-lg cursor-pointer transition-all group hover:shadow-md ${
+                        currentConversationId === conv.id
+                          ? 'bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-300'
+                          : 'bg-gray-50 hover:bg-gray-100 border border-gray-200'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 truncate">
+                            {conv.title}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Clock className="w-3 h-3 text-gray-400" />
+                            <p className="text-xs text-gray-500">
+                              {formatDate(conv.updated_at)} • {conv.message_count} msgs
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteConversation(conv.id);
+                          }}
+                          className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-600"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-            ))}
-
-            {/* Loading indicator */}
-            {loading && (
-              <div className="flex gap-3 justify-start animate-in fade-in duration-200">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                  <Bot className="w-5 h-5 text-white" />
-                </div>
-                <div className="bg-gray-100 text-gray-900 border border-gray-200 rounded-2xl px-5 py-3 shadow-md">
-                  <div className="flex gap-1.5">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-                    <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
+            </ScrollArea>
           </CardContent>
         </Card>
 
-        {/* ÁREA DE INPUT - Estilo ChatGPT */}
-        <div className="mt-4 space-y-3">
-          {/* Transcrição temporária */}
-          {transcricaoTemp && (
-            <div className="px-4 py-2 bg-blue-50 border-t border-blue-200 mb-2">
-              <p className="text-xs text-blue-600 italic flex items-center gap-2">
-                <Mic className="w-3 h-3 animate-pulse" />
-                Ouvindo: {transcricaoTemp}
-              </p>
-            </div>
-          )}
+        {/* CHAT PRINCIPAL */}
+        <div className="flex-1 flex flex-col">
+          {/* ÁREA DE MENSAGENS */}
+          <Card className="flex-1 bg-white border-2 border-gray-200 overflow-hidden shadow-xl mb-4">
+            <ScrollArea className="h-full p-6">
+              <div className="space-y-6">
+                {messages.map((message, index) => (
+                  <div
+                    key={message.id || index}
+                    className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                  >
+                    {/* Avatar da Lia */}
+                    {message.role === 'assistant' && (
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <Bot className="w-5 h-5 text-white" />
+                      </div>
+                    )}
 
-          {/* Opções Interativas */}
-          <div className="flex items-center justify-center gap-2 px-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleClearChat}
-              className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 rounded-full px-3 py-1.5 h-auto"
-            >
-              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
-              Limpar
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleMicrofone}
-              className={`text-xs transition-all duration-200 rounded-full px-3 py-1.5 h-auto ${
-                micAtivo
-                  ? 'text-red-600 hover:text-red-700 hover:bg-red-50 animate-pulse'
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              {micAtivo ? (
-                <>
-                  <Mic className="w-3.5 h-3.5 mr-1.5" />
-                  Ouvindo...
-                </>
-              ) : (
-                <>
-                  <MicOff className="w-3.5 h-3.5 mr-1.5" />
-                  Microfone
-                </>
-              )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleQuickSuggestion}
-              className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-200 rounded-full px-3 py-1.5 h-auto"
-            >
-              <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-              Sugestões
-            </Button>
-          </div>
+                    {/* Bolha de mensagem */}
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                      <div
+                        className={`max-w-[75%] rounded-2xl px-5 py-3 shadow-md ${
+                          message.role === 'user'
+                            ? 'bg-gradient-to-br from-purple-600 to-purple-700 text-white'
+                            : 'bg-gray-100 text-gray-900 border border-gray-200'
+                        }`}
+                      >
+                        <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      </div>
+                      <span className={`text-xs mt-1.5 px-2 ${message.role === 'user' ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {formatTime(message.created_at)}
+                      </span>
+                    </div>
 
-          {/* Input Container */}
-          <div className="max-w-4xl mx-auto w-full px-4">
-            <form onSubmit={handleSendMessage} className="relative">
-              <div className="relative bg-white border-2 border-gray-200 rounded-3xl shadow-lg focus-within:border-purple-500 focus-within:shadow-purple-200 transition-all duration-200">
-                <Textarea
-                  ref={textareaRef}
-                  value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  placeholder="Digite sua mensagem para a LIA..."
-                  disabled={loading}
-                  rows={1}
-                  className="resize-none bg-transparent border-0 text-gray-900 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 pr-14 py-4 px-6 text-[15px] leading-relaxed max-h-[150px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
-                  style={{ minHeight: '56px' }}
-                />
-                <Button
-                  type="submit"
-                  disabled={loading || !inputMessage.trim()}
-                  size="icon"
-                  className="absolute right-2 bottom-2 h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 hover:opacity-90 disabled:opacity-40 transition-all duration-200 shadow-lg shadow-purple-500/30"
-                >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Send className="w-4 h-4" />
-                  )}
-                </Button>
+                    {/* Avatar do Usuário */}
+                    {message.role === 'user' && (
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-purple-800 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {/* Loading indicator */}
+                {loading && (
+                  <div className="flex gap-3 justify-start animate-in fade-in duration-200">
+                    <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                      <Bot className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="bg-gray-100 text-gray-900 border border-gray-200 rounded-2xl px-5 py-3 shadow-md">
+                      <div className="flex gap-1.5">
+                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
               </div>
-            </form>
-          </div>
+            </ScrollArea>
+          </Card>
 
-          {/* Hint text */}
-          <p className="text-center text-xs text-gray-500 px-4">
-            Pressione <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 border border-gray-300">Enter</kbd> para enviar, <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 border border-gray-300">Shift + Enter</kbd> para quebrar linha
-          </p>
+          {/* ÁREA DE INPUT */}
+          <div className="space-y-3">
+            {/* Transcrição temporária */}
+            {transcricaoTemp && (
+              <div className="px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs text-blue-600 italic flex items-center gap-2">
+                  <Mic className="w-3 h-3 animate-pulse" />
+                  Ouvindo: {transcricaoTemp}
+                </p>
+              </div>
+            )}
+
+            {/* Opções Interativas */}
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearChat}
+                disabled={!currentConversationId}
+                className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all rounded-full px-3 py-1.5 h-auto"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                Limpar
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleMicrofone}
+                className={`text-xs transition-all rounded-full px-3 py-1.5 h-auto ${
+                  micAtivo
+                    ? 'text-red-600 hover:text-red-700 hover:bg-red-50 animate-pulse'
+                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                }`}
+              >
+                {micAtivo ? (
+                  <>
+                    <Mic className="w-3.5 h-3.5 mr-1.5" />
+                    Ouvindo...
+                  </>
+                ) : (
+                  <>
+                    <MicOff className="w-3.5 h-3.5 mr-1.5" />
+                    Microfone
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleQuickSuggestion}
+                className="text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all rounded-full px-3 py-1.5 h-auto"
+              >
+                <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                Sugestões
+              </Button>
+            </div>
+
+            {/* Input Container */}
+            <div className="max-w-full">
+              <form onSubmit={handleSendMessage} className="relative">
+                <div className="relative bg-white border-2 border-gray-200 rounded-3xl shadow-lg focus-within:border-purple-500 focus-within:shadow-purple-200 transition-all duration-200">
+                  <Textarea
+                    ref={textareaRef}
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    placeholder={currentConversationId ? "Digite sua mensagem para a LIA..." : "Crie uma nova conversa primeiro..."}
+                    disabled={loading || !currentConversationId}
+                    rows={1}
+                    className="resize-none bg-transparent border-0 text-gray-900 placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0 pr-14 py-4 px-6 text-[15px] leading-relaxed max-h-[150px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent"
+                    style={{ minHeight: '56px' }}
+                  />
+                  <Button
+                    type="submit"
+                    disabled={loading || !inputMessage.trim() || !currentConversationId}
+                    size="icon"
+                    className="absolute right-2 bottom-2 h-10 w-10 rounded-full bg-gradient-to-r from-purple-600 to-purple-700 hover:opacity-90 disabled:opacity-40 transition-all duration-200 shadow-lg shadow-purple-500/30"
+                  >
+                    {loading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
+
+            {/* Hint text */}
+            <p className="text-center text-xs text-gray-500">
+              Pressione <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 border border-gray-300">Enter</kbd> para enviar, <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-gray-600 border border-gray-300">Shift + Enter</kbd> para quebrar linha
+            </p>
+          </div>
         </div>
       </div>
     </div>
