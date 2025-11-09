@@ -7,6 +7,7 @@ export interface Plan {
   features: string[];
   color: string;
   popular: boolean;
+  discount: number;
   liaQuote: string;
   customCTA?: {
     text: string;
@@ -18,18 +19,23 @@ export const plans: Plan[] = [
   {
     name: "Start",
     price: "€27",
-    annualPrice: "€259",
+    annualPrice: "€291,60",
     period: "/mês",
     description: "Ideal para pequenos negócios e profissionais autônomos",
     features: [
-      "1 canal de atendimento (WhatsApp ou Chat)",
-      "Respostas automáticas básicas",
-      "Integração com 1 ferramenta",
+      "Integração com WhatsApp (1 número)",
+      "Chat online no site (widget simples)",
+      "Integração com e-mail",
+      "Criação de 1 fluxo de automação",
+      "Agendamento simples (Google Agenda)",
+      "Relatórios básicos de atendimento",
+      "Acesso à LIA via painel (respostas simples)",
       "Suporte por e-mail",
-      "Relatórios mensais"
+      "1 usuário"
     ],
     color: "from-[#22D3EE] to-[#0EA5E9]",
     popular: false,
+    discount: 10,
     liaQuote: "O plano Start é perfeito se você está começando! Vou cuidar das perguntas mais frequentes dos seus clientes, trabalhar 24h e liberar seu tempo para focar no crescimento. É como ter um assistente sempre disponível, sem custos de contratação."
   },
   {
@@ -39,17 +45,23 @@ export const plans: Plan[] = [
     period: "/mês",
     description: "Para empresas em crescimento que precisam escalar",
     features: [
-      "Múltiplos canais (WhatsApp, Chat, E-mail)",
-      "IA avançada com aprendizado",
-      "Inclui 10 minutos por dia (amplie com minutos extras)",
-      "Integrações ilimitadas (CRM, Agenda, etc)",
-      "Agendamentos automáticos",
+      "WhatsApp Business (vários números)",
+      "Chat integrado (com histórico)",
+      "E-mail profissional",
+      "Messenger (Facebook), Telegram, Instagram Direct",
+      "Integração com CRM (HubSpot, RD Station, Pipedrive)",
+      "Agenda integrada (Google, Outlook)",
+      "Google Sheets / Excel online",
+      "10 fluxos de automação customizados",
+      "Gatilhos por palavras-chave",
+      "Etiquetas automáticas",
+      "Relatórios detalhados",
       "Suporte prioritário",
-      "Relatórios semanais + Dashboard",
-      "Treinamento personalizado"
+      "Até 3 usuários"
     ],
     color: "from-[#7C3AED] to-[#FF2E9E]",
     popular: true,
+    discount: 20,
     liaQuote: "Esse é o plano que recomendo para quem já tem um fluxo constante de clientes! Com o Plus, posso atender em múltiplos canais, aprender com cada conversa e integrar com todas as suas ferramentas. Vou agendar reuniões, atualizar seu CRM e até gerar relatórios inteligentes. É automação de verdade! 🚀"
   },
   {
@@ -59,19 +71,23 @@ export const plans: Plan[] = [
     period: "/mês",
     description: "Solução enterprise totalmente personalizada",
     features: [
-      "Mensagens ilimitadas",
-      "Todos os canais disponíveis",
-      "Inclui 30 minutos por dia (amplie com minutos extras)",
-      "IA customizada para seu negócio",
-      "Integrações sob medida",
-      "API dedicada",
-      "Suporte 24/7 com SLA",
-      "Gerente de conta dedicado",
-      "Treinamentos contínuos",
-      "Relatórios em tempo real"
+      "Assistente LIA com personalidade customizável",
+      "Construtor visual de fluxos com IA",
+      "Criação de múltiplas instâncias personalizadas da LIA",
+      "Integração com ERP (SAP, Conta Azul, Bling)",
+      "Sistemas financeiros e bancários",
+      "Ferramentas internas da empresa",
+      "Integração por API e Webhooks",
+      "Acesso ilimitado a canais e integrações",
+      "Criação de relatórios financeiros inteligentes",
+      "Gestão de equipe com permissões",
+      "10+ usuários",
+      "Suporte com gestor dedicado",
+      "Implantação assistida"
     ],
     color: "from-[#FF2E9E] to-[#F97316]",
     popular: false,
+    discount: 20,
     liaQuote: "O Pro é para quem quer uma Lia 100% personalizada! Vou me adaptar completamente ao seu negócio, usar sua linguagem, seguir seus processos e integrar com qualquer sistema. Teremos uma equipe dedicada cuidando de tudo e eu vou trabalhar como se fosse parte do time. É o máximo em inteligência artificial empresarial! 💎",
     customCTA: {
       text: "Solicitar proposta personalizada",
