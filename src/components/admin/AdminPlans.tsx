@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, Edit, Check, X, Plus, Sparkles } from "lucide-react";
+import { Save, Edit, Check, X, Plus, Sparkles, RefreshCw, Settings } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { plans as initialPlans, Plan } from "@/data/plansData";
@@ -58,6 +58,7 @@ export const AdminPlans = () => {
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
   const [plans, setPlans] = useState<Plan[]>(initialPlans);
   const [saving, setSaving] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Carregar configurações do Supabase (se existirem)
   useEffect(() => {
@@ -96,6 +97,33 @@ export const AdminPlans = () => {
       }
     } catch (error) {
       console.error('Erro ao carregar planos:', error);
+    }
+  };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await loadPlansFromSupabase();
+      toast({
+        title: "Planos atualizados!",
+        description: "Os dados foram sincronizados com sucesso.",
+        className: "bg-green-50 border-green-200",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar",
+        description: "Não foi possível sincronizar os planos. Tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const scrollToSettings = () => {
+    const settingsSection = document.getElementById('global-settings');
+    if (settingsSection) {
+      settingsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 
@@ -203,6 +231,24 @@ export const AdminPlans = () => {
           <p className="text-muted-foreground mt-2">
             Configure limites, preços e recursos dos planos. As alterações serão refletidas automaticamente na página pública.
           </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            onClick={scrollToSettings}
+            variant="outline"
+            className="flex items-center gap-2 border-purple-300 hover:bg-purple-50 hover:border-purple-400 transition-all"
+          >
+            <Settings className="w-4 h-4" />
+            Configurações
+          </Button>
+          <Button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="flex items-center gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:opacity-90 shadow-lg"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+            {refreshing ? 'Atualizando...' : 'Atualizar Planos'}
+          </Button>
         </div>
       </div>
 
@@ -435,7 +481,7 @@ export const AdminPlans = () => {
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm">
                           <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-                          <span className="text-gray-200">{feature}</span>
+                          <span className="text-gray-900 font-medium">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -483,12 +529,12 @@ export const AdminPlans = () => {
       </div>
 
       {/* Global Settings */}
-      <Card className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white">
+      <Card id="global-settings" className="border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-white scroll-mt-6">
         <CardHeader>
           <CardTitle className="text-xl bg-gradient-to-r from-purple-600 to-purple-900 bg-clip-text text-transparent">
             Configurações Globais de Planos
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-gray-700 font-medium">
             Defina configurações que afetam todos os planos do sistema
           </CardDescription>
         </CardHeader>
@@ -498,8 +544,8 @@ export const AdminPlans = () => {
               <Label htmlFor="trial-days" className="text-sm font-semibold text-gray-900">
                 Período de Teste (dias)
               </Label>
-              <Input id="trial-days" type="number" defaultValue="7" className="h-9 text-gray-900" />
-              <p className="text-xs text-muted-foreground">
+              <Input id="trial-days" type="number" defaultValue="7" className="h-9 text-gray-900 font-medium" />
+              <p className="text-xs text-gray-700 font-medium">
                 Tempo de teste gratuito para novos usuários
               </p>
             </div>
@@ -508,8 +554,8 @@ export const AdminPlans = () => {
               <Label htmlFor="grace-period" className="text-sm font-semibold text-gray-900">
                 Período de Tolerância (dias)
               </Label>
-              <Input id="grace-period" type="number" defaultValue="3" className="h-9 text-gray-900" />
-              <p className="text-xs text-muted-foreground">
+              <Input id="grace-period" type="number" defaultValue="3" className="h-9 text-gray-900 font-medium" />
+              <p className="text-xs text-gray-700 font-medium">
                 Dias após vencimento antes de bloquear
               </p>
             </div>
@@ -518,9 +564,9 @@ export const AdminPlans = () => {
               <Label htmlFor="currency" className="text-sm font-semibold text-gray-900">
                 Moeda Padrão
               </Label>
-              <Input id="currency" defaultValue="EUR" className="h-9 text-gray-900" />
-              <p className="text-xs text-muted-foreground">
-                Moeda exibida nos preços (EUR, USD, BRL)
+              <Input id="currency" defaultValue="EUR" className="h-9 text-gray-900 font-medium" />
+              <p className="text-xs text-gray-700 font-medium">
+                Será exibida nos preços (EUR, USD, BRL)
               </p>
             </div>
           </div>
