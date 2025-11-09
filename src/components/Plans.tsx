@@ -1,3 +1,4 @@
+// Force rebuild - Updated with annual/monthly toggle
 import { Check, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
