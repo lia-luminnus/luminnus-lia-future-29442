@@ -12,7 +12,7 @@ import { plans } from "@/data/plansData";
 
 const Plans = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [isAnnual, setIsAnnual] = useState(false);
+  const [isAnnual, setIsAnnual] = useState(true);
 
   const handleSubscribe = (planName: string) => {
     const plan = plans.find(p => p.name === planName);

@@ -41,14 +41,12 @@ export const plans: Plan[] = [
     features: [
       "Múltiplos canais (WhatsApp, Chat, E-mail)",
       "IA avançada com aprendizado",
+      "Inclui 10 minutos por dia (amplie com minutos extras)",
       "Integrações ilimitadas (CRM, Agenda, etc)",
       "Agendamentos automáticos",
       "Suporte prioritário",
       "Relatórios semanais + Dashboard",
-      "Treinamento personalizado",
-      "Tokens adicionais configuráveis conforme uso",
-      "10 minutos/dia de uso da LIA",
-      "Possibilidade de comprar minutos extras"
+      "Treinamento personalizado"
     ],
     color: "from-[#7C3AED] to-[#FF2E9E]",
     popular: true,
@@ -63,15 +61,14 @@ export const plans: Plan[] = [
     features: [
       "Mensagens ilimitadas",
       "Todos os canais disponíveis",
+      "Inclui 30 minutos por dia (amplie com minutos extras)",
       "IA customizada para seu negócio",
       "Integrações sob medida",
       "API dedicada",
       "Suporte 24/7 com SLA",
       "Gerente de conta dedicado",
       "Treinamentos contínuos",
-      "Relatórios em tempo real",
-      "30 minutos/dia de uso da LIA",
-      "Possibilidade de comprar minutos extras"
+      "Relatórios em tempo real"
     ],
     color: "from-[#FF2E9E] to-[#F97316]",
     popular: false,
