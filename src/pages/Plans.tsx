@@ -66,9 +66,11 @@ const Plans = () => {
             </button>
             <span className={`text-lg font-semibold transition-all ${isAnnual ? 'text-white' : 'text-white/50'}`}>
               Anual
-              <span className="ml-2 px-2 py-1 text-xs bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] rounded-full">
-                -20%
-              </span>
+              {isAnnual && (
+                <span className="ml-2 px-2 py-1 text-xs bg-gradient-to-r from-green-400 to-emerald-500 rounded-full">
+                  Economia até 20%
+                </span>
+              )}
             </span>
           </div>
 
@@ -92,12 +94,23 @@ const Plans = () => {
 
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <div className="space-y-1">
-                    <p className={`text-5xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
-                      {isAnnual ? plan.annualPrice : plan.price}
-                    </p>
-                    <p className="text-sm text-white/50">
-                      {isAnnual ? '/ano' : plan.period}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-center gap-2">
+                      <p className={`text-5xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
+                        {isAnnual ? plan.annualPrice : plan.price}
+                      </p>
+                      {isAnnual && (
+                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                          plan.discount === 10
+                            ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+                            : 'bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E]'
+                        }`}>
+                          -{plan.discount}%
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm text-white/50 font-medium">
+                      {isAnnual ? '/ano' : '/mês'}
                     </p>
                   </div>
                   <p className="text-white/70 text-sm mt-4">{plan.description}</p>
