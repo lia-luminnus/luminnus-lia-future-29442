@@ -435,7 +435,7 @@ export const AdminPlans = () => {
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm">
                           <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-                          <span className="text-gray-700">{feature}</span>
+                          <span className="text-gray-900">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -495,30 +495,30 @@ export const AdminPlans = () => {
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-3">
             <div className="space-y-2">
-              <Label htmlFor="trial-days" className="text-sm font-semibold">
+              <Label htmlFor="trial-days" className="text-sm font-semibold text-gray-900">
                 Período de Teste (dias)
               </Label>
-              <Input id="trial-days" type="number" defaultValue="7" className="h-9" />
+              <Input id="trial-days" type="number" defaultValue="7" className="h-9 text-gray-900" />
               <p className="text-xs text-muted-foreground">
                 Tempo de teste gratuito para novos usuários
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="grace-period" className="text-sm font-semibold">
+              <Label htmlFor="grace-period" className="text-sm font-semibold text-gray-900">
                 Período de Tolerância (dias)
               </Label>
-              <Input id="grace-period" type="number" defaultValue="3" className="h-9" />
+              <Input id="grace-period" type="number" defaultValue="3" className="h-9 text-gray-900" />
               <p className="text-xs text-muted-foreground">
                 Dias após vencimento antes de bloquear
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="currency" className="text-sm font-semibold">
+              <Label htmlFor="currency" className="text-sm font-semibold text-gray-900">
                 Moeda Padrão
               </Label>
-              <Input id="currency" defaultValue="EUR" className="h-9" />
+              <Input id="currency" defaultValue="EUR" className="h-9 text-gray-900" />
               <p className="text-xs text-muted-foreground">
                 Moeda exibida nos preços (EUR, USD, BRL)
               </p>
