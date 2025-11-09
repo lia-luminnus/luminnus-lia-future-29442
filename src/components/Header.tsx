@@ -5,7 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import AccountMenu from "@/components/AccountMenu";
-import luminmusLogo from "@/assets/luminnus-logo-white.png";
+import luminmusLogo from "@/assets/luminnus-logo-gradient.png";
 
 const ADMIN_EMAIL = "luminnus.lia.ai@gmail.com";
 const Header = () => {
@@ -94,7 +94,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
           <button onClick={handleHomeClick} className="flex items-center cursor-pointer bg-transparent border-0 p-0">
-            <img src={luminmusLogo} alt="Luminnus - Inteligência & Soluções" className="h-16 lg:h-20 w-auto object-contain transition-all hover:scale-105 drop-shadow-lg" />
+            <img src={luminmusLogo} alt="Luminnus - Inteligência & Soluções" className="h-32 lg:h-28 w-auto object-contain transition-all hover:scale-110" />
           </button>
 
           {/* Desktop Navigation */}
