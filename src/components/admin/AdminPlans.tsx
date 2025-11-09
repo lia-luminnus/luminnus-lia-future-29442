@@ -435,7 +435,7 @@ export const AdminPlans = () => {
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm">
                           <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-                          <span className="text-gray-900">{feature}</span>
+                          <span className="text-gray-200">{feature}</span>
                         </li>
                       ))}
                     </ul>
