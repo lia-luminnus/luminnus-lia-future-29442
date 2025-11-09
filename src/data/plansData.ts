@@ -9,6 +9,10 @@ export interface Plan {
   popular: boolean;
   discount: number;
   liaQuote: string;
+  // Novos campos para limites do plano
+  maxChannels: string | number;
+  maxConversations: string | number;
+  maxMessages: string | number;
   customCTA?: {
     text: string;
     action: string;
@@ -36,7 +40,10 @@ export const plans: Plan[] = [
     color: "from-[#22D3EE] to-[#0EA5E9]",
     popular: false,
     discount: 10,
-    liaQuote: "O plano Start é perfeito se você está começando! Vou cuidar das perguntas mais frequentes dos seus clientes, trabalhar 24h e liberar seu tempo para focar no crescimento. É como ter um assistente sempre disponível, sem custos de contratação."
+    liaQuote: "O plano Start é perfeito se você está começando! Vou cuidar das perguntas mais frequentes dos seus clientes, trabalhar 24h e liberar seu tempo para focar no crescimento. É como ter um assistente sempre disponível, sem custos de contratação.",
+    maxChannels: 1,
+    maxConversations: 100,
+    maxMessages: 1000
   },
   {
     name: "Plus",
@@ -62,7 +69,10 @@ export const plans: Plan[] = [
     color: "from-[#7C3AED] to-[#FF2E9E]",
     popular: true,
     discount: 20,
-    liaQuote: "Esse é o plano que recomendo para quem já tem um fluxo constante de clientes! Com o Plus, posso atender em múltiplos canais, aprender com cada conversa e integrar com todas as suas ferramentas. Vou agendar reuniões, atualizar seu CRM e até gerar relatórios inteligentes. É automação de verdade! 🚀"
+    liaQuote: "Esse é o plano que recomendo para quem já tem um fluxo constante de clientes! Com o Plus, posso atender em múltiplos canais, aprender com cada conversa e integrar com todas as suas ferramentas. Vou agendar reuniões, atualizar seu CRM e até gerar relatórios inteligentes. É automação de verdade! 🚀",
+    maxChannels: 5,
+    maxConversations: 500,
+    maxMessages: 5000
   },
   {
     name: "Pro",
@@ -89,6 +99,9 @@ export const plans: Plan[] = [
     popular: false,
     discount: 20,
     liaQuote: "O Pro é para quem quer uma Lia 100% personalizada! Vou me adaptar completamente ao seu negócio, usar sua linguagem, seguir seus processos e integrar com qualquer sistema. Teremos uma equipe dedicada cuidando de tudo e eu vou trabalhar como se fosse parte do time. É o máximo em inteligência artificial empresarial! 💎",
+    maxChannels: "Ilimitado",
+    maxConversations: "Ilimitado",
+    maxMessages: "Ilimitado",
     customCTA: {
       text: "Solicitar proposta personalizada",
       action: "https://wa.me/YOUR_WHATSAPP_NUMBER?text=Olá!%20Gostaria%20de%20solicitar%20uma%20proposta%20personalizada%20do%20plano%20Pro"
