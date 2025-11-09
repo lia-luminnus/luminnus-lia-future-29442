@@ -8,6 +8,7 @@ import { plans } from "@/data/plansData";
 
 const Plans = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(true);
 
   const handleSubscribe = (planName: string) => {
     const plan = plans.find(p => p.name === planName);
@@ -46,6 +47,31 @@ const Plans = () => {
             </p>
           </div>
 
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-4 mb-16 animate-fade-in">
+            <span className={`text-lg font-semibold transition-all ${!isAnnual ? 'text-white' : 'text-white/50'}`}>
+              Mensal
+            </span>
+            <button
+              onClick={() => setIsAnnual(!isAnnual)}
+              className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+                isAnnual ? 'bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E]' : 'bg-white/20'
+              }`}
+            >
+              <div
+                className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                  isAnnual ? 'translate-x-7' : 'translate-x-0'
+                }`}
+              />
+            </button>
+            <span className={`text-lg font-semibold transition-all ${isAnnual ? 'text-white' : 'text-white/50'}`}>
+              Anual
+              <span className="ml-2 px-2 py-1 text-xs bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] rounded-full">
+                -20%
+              </span>
+            </span>
+          </div>
+
           {/* Plans Grid */}
           <div id="planos" className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
             {plans.map((plan, index) => (
@@ -66,10 +92,14 @@ const Plans = () => {
 
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
-                  <div className={`text-5xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent mb-2`}>
-                    {plan.price}
+                  <div className="space-y-1">
+                    <p className={`text-5xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
+                      {isAnnual ? plan.annualPrice : plan.price}
+                    </p>
+                    <p className="text-sm text-white/50">
+                      {isAnnual ? '/ano' : plan.period}
+                    </p>
                   </div>
-                  <p className="text-white/50 text-sm">{plan.period}</p>
                   <p className="text-white/70 text-sm mt-4">{plan.description}</p>
                 </div>
 
