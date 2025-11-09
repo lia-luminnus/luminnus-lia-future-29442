@@ -50,12 +50,7 @@ const AdminLiaChat = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Estado de mensagens
-  const [messages, setMessages] = useState<ChatMessage[]>([{
-    id: 'welcome',
-    role: 'assistant',
-    content: '👋 Olá! Sou a LIA, sua assistente virtual da plataforma Luminnus. Estou aqui para ajudá-lo a configurar e gerenciar todo o sistema. Como posso ajudar você hoje?',
-    created_at: new Date().toISOString(),
-  }]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
 
   const [inputMessage, setInputMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -151,12 +146,7 @@ const AdminLiaChat = () => {
           ...prev
         ]);
         setCurrentConversationId(data.id);
-        setMessages([{
-          id: 'welcome',
-          role: 'assistant',
-          content: '👋 Olá! Sou a LIA. Como posso ajudar você hoje?',
-          created_at: new Date().toISOString(),
-        }]);
+        setMessages([]);
 
         toast({
           title: 'Nova conversa criada',
@@ -194,12 +184,7 @@ const AdminLiaChat = () => {
           created_at: msg.created_at,
         })));
       } else {
-        setMessages([{
-          id: 'welcome',
-          role: 'assistant',
-          content: '👋 Olá! Sou a LIA. Como posso ajudar você hoje?',
-          created_at: new Date().toISOString(),
-        }]);
+        setMessages([]);
       }
 
       setCurrentConversationId(conversationId);
@@ -431,13 +416,7 @@ const AdminLiaChat = () => {
         .eq('conversation_id', currentConversationId);
 
       // Resetar mensagens localmente
-      const welcomeMessage: ChatMessage = {
-        id: 'welcome',
-        role: 'assistant',
-        content: '👋 Olá! Sou a LIA. Como posso ajudar você hoje?',
-        created_at: new Date().toISOString(),
-      };
-      setMessages([welcomeMessage]);
+      setMessages([]);
 
       // Atualizar contagem de mensagens
       await supabase
@@ -482,12 +461,7 @@ const AdminLiaChat = () => {
       // Se a conversa deletada era a atual, limpar
       if (currentConversationId === conversationId) {
         setCurrentConversationId(null);
-        setMessages([{
-          id: 'welcome',
-          role: 'assistant',
-          content: '👋 Olá! Sou a LIA. Crie ou selecione uma conversa para começar.',
-          created_at: new Date().toISOString(),
-        }]);
+        setMessages([]);
       }
 
       toast({
