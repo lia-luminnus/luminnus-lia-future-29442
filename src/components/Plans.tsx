@@ -12,6 +12,7 @@ import { plans } from "@/data/plansData";
 
 const Plans = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [isAnnual, setIsAnnual] = useState(false);
 
   const handleSubscribe = (planName: string) => {
     const plan = plans.find(p => p.name === planName);
@@ -32,13 +33,38 @@ const Plans = () => {
       <div className="absolute inset-0 bg-gradient-to-b from-[#0B0B0F] via-[#FF2E9E]/5 to-[#0B0B0F]" />
       
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
-        <div className="text-center space-y-4 mb-16 animate-fade-in">
+        <div className="text-center space-y-4 mb-8 animate-fade-in">
           <h2 className="text-4xl lg:text-6xl font-bold text-white">
             Planos da LIA Atendimento
           </h2>
           <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto">
             Planos para todos os tamanhos de negócio
           </p>
+        </div>
+
+        {/* Billing Toggle */}
+        <div className="flex items-center justify-center gap-4 mb-16 animate-fade-in">
+          <span className={`text-lg font-semibold transition-all ${!isAnnual ? 'text-white' : 'text-white/50'}`}>
+            Mensal
+          </span>
+          <button
+            onClick={() => setIsAnnual(!isAnnual)}
+            className={`relative w-14 h-7 rounded-full transition-all duration-300 ${
+              isAnnual ? 'bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E]' : 'bg-white/20'
+            }`}
+          >
+            <div
+              className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full transition-transform duration-300 ${
+                isAnnual ? 'translate-x-7' : 'translate-x-0'
+              }`}
+            />
+          </button>
+          <span className={`text-lg font-semibold transition-all ${isAnnual ? 'text-white' : 'text-white/50'}`}>
+            Anual
+            <span className="ml-2 px-2 py-1 text-xs bg-gradient-to-r from-[#7C3AED] to-[#FF2E9E] rounded-full">
+              -20%
+            </span>
+          </span>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-12">
@@ -65,9 +91,11 @@ const Plans = () => {
                 <p className="text-sm text-white/60 mb-4">{plan.description}</p>
                 <div className="space-y-1">
                   <p className={`text-4xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
-                    {plan.price}
+                    {isAnnual ? plan.annualPrice : plan.price}
                   </p>
-                  <p className="text-sm text-white/50">{plan.period}</p>
+                  <p className="text-sm text-white/50">
+                    {isAnnual ? '/ano' : plan.period}
+                  </p>
                 </div>
               </div>
 

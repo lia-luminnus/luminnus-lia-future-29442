@@ -1,6 +1,7 @@
 export interface Plan {
   name: string;
   price: string;
+  annualPrice: string;
   period: string;
   description: string;
   features: string[];
@@ -17,6 +18,7 @@ export const plans: Plan[] = [
   {
     name: "Start",
     price: "€27",
+    annualPrice: "€259",
     period: "/mês",
     description: "Ideal para pequenos negócios e profissionais autônomos",
     features: [
@@ -33,6 +35,7 @@ export const plans: Plan[] = [
   {
     name: "Plus",
     price: "€147",
+    annualPrice: "€1.411",
     period: "/mês",
     description: "Para empresas em crescimento que precisam escalar",
     features: [
@@ -43,7 +46,9 @@ export const plans: Plan[] = [
       "Suporte prioritário",
       "Relatórios semanais + Dashboard",
       "Treinamento personalizado",
-      "Tokens adicionais configuráveis conforme uso"
+      "Tokens adicionais configuráveis conforme uso",
+      "10 minutos/dia de uso da LIA",
+      "Possibilidade de comprar minutos extras"
     ],
     color: "from-[#7C3AED] to-[#FF2E9E]",
     popular: true,
@@ -52,6 +57,7 @@ export const plans: Plan[] = [
   {
     name: "Pro",
     price: "A partir de €997",
+    annualPrice: "A partir de €9.564",
     period: "/mês",
     description: "Solução enterprise totalmente personalizada",
     features: [
@@ -63,7 +69,9 @@ export const plans: Plan[] = [
       "Suporte 24/7 com SLA",
       "Gerente de conta dedicado",
       "Treinamentos contínuos",
-      "Relatórios em tempo real"
+      "Relatórios em tempo real",
+      "30 minutos/dia de uso da LIA",
+      "Possibilidade de comprar minutos extras"
     ],
     color: "from-[#FF2E9E] to-[#F97316]",
     popular: false,
