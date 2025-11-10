@@ -30,23 +30,19 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-
-      - name: Clear cache before install
-        run: |
-          rm -rf node_modules
-          rm -rf .vite
-          rm -rf dist
+          cache: 'npm'
 
       - name: Install dependencies
         run: npm ci --force
 
-      - name: Clear Vite cache
-        run: npm run clean:cache
-
-      - name: Build without cache
-        run: npm run build:force
+      - name: Force rebuild with cache clearing
+        run: |
+          chmod +x scripts/force-rebuild.sh
+          ./scripts/force-rebuild.sh build
         env:
           NODE_ENV: production
+          VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
 
       - name: Verify build output
         run: |
@@ -57,6 +53,8 @@ jobs:
           echo "✅ Build concluído com sucesso!"
           echo "📦 Conteúdo do dist:"
           ls -lah dist/
+          echo "📁 Arquivos JavaScript gerados:"
+          find dist -name "*.js" -type f | head -10
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
