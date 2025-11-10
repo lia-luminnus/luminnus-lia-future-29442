@@ -93,7 +93,7 @@ const AdminLiaChat = () => {
   const loadConversations = async () => {
     try {
       const { data, error } = await supabase
-        .from('admin_conversations')
+        .from('admin_conversations' as any)
         .select('*')
         .order('updated_at', { ascending: false });
 
@@ -103,7 +103,7 @@ const AdminLiaChat = () => {
       }
 
       if (data) {
-        setConversations(data.map(conv => ({
+        setConversations((data as any[]).map(conv => ({
           id: conv.id,
           title: conv.title || 'Nova Conversa',
           created_at: conv.created_at,
@@ -122,30 +122,31 @@ const AdminLiaChat = () => {
   const createNewConversation = async () => {
     try {
       const { data, error } = await supabase
-        .from('admin_conversations')
+        .from('admin_conversations' as any)
         .insert({
           title: `Conversa ${new Date().toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`,
           message_count: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .select()
         .single();
 
       if (error) throw error;
 
       if (data) {
+        const conv = data as any;
         setConversations(prev => [
           {
-            id: data.id,
-            title: data.title,
-            created_at: data.created_at,
-            updated_at: data.updated_at,
+            id: conv.id,
+            title: conv.title,
+            created_at: conv.created_at,
+            updated_at: conv.updated_at,
             message_count: 0
           },
           ...prev
         ]);
-        setCurrentConversationId(data.id);
+        setCurrentConversationId(conv.id);
         setMessages([]);
 
         toast({
@@ -169,7 +170,7 @@ const AdminLiaChat = () => {
   const loadConversationMessages = async (conversationId: string) => {
     try {
       const { data, error } = await supabase
-        .from('admin_chat_messages')
+        .from('admin_chat_messages' as any)
         .select('*')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
@@ -177,7 +178,7 @@ const AdminLiaChat = () => {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        setMessages(data.map(msg => ({
+        setMessages((data as any[]).map(msg => ({
           id: msg.id,
           role: msg.role as 'user' | 'assistant',
           content: msg.content,
@@ -199,23 +200,23 @@ const AdminLiaChat = () => {
   const saveMessage = async (conversationId: string, role: 'user' | 'assistant', content: string) => {
     try {
       const { error } = await supabase
-        .from('admin_chat_messages')
+        .from('admin_chat_messages' as any)
         .insert({
           conversation_id: conversationId,
           role,
           content,
           created_at: new Date().toISOString(),
-        });
+        } as any);
 
       if (error) throw error;
 
       // Atualizar contagem de mensagens e data de atualização da conversa
       await supabase
-        .from('admin_conversations')
+        .from('admin_conversations' as any)
         .update({
           message_count: messages.length + 1,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', conversationId);
 
       // Atualizar lista de conversas localmente
@@ -411,7 +412,7 @@ const AdminLiaChat = () => {
     try {
       // Deletar mensagens da conversa
       await supabase
-        .from('admin_chat_messages')
+        .from('admin_chat_messages' as any)
         .delete()
         .eq('conversation_id', currentConversationId);
 
@@ -420,8 +421,8 @@ const AdminLiaChat = () => {
 
       // Atualizar contagem de mensagens
       await supabase
-        .from('admin_conversations')
-        .update({ message_count: 0 })
+        .from('admin_conversations' as any)
+        .update({ message_count: 0 } as any)
         .eq('id', currentConversationId);
 
       toast({
@@ -445,13 +446,13 @@ const AdminLiaChat = () => {
     try {
       // Deletar mensagens
       await supabase
-        .from('admin_chat_messages')
+        .from('admin_chat_messages' as any)
         .delete()
         .eq('conversation_id', conversationId);
 
       // Deletar conversa
       await supabase
-        .from('admin_conversations')
+        .from('admin_conversations' as any)
         .delete()
         .eq('id', conversationId);
 

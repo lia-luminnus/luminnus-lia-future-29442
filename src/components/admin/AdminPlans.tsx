@@ -68,7 +68,7 @@ export const AdminPlans = () => {
   const loadPlansFromSupabase = async () => {
     try {
       const { data, error } = await supabase
-        .from('plan_configs')
+        .from('plan_configs' as any)
         .select('*');
 
       if (error) {
@@ -79,7 +79,7 @@ export const AdminPlans = () => {
       if (data && data.length > 0) {
         // Mesclar dados do Supabase com dados locais
         const updatedPlans = plans.map(plan => {
-          const savedPlan = data.find(d => d.plan_name === plan.name);
+          const savedPlan = (data as any[]).find(d => d.plan_name === plan.name);
           if (savedPlan) {
             return {
               ...plan,
@@ -146,7 +146,7 @@ export const AdminPlans = () => {
           max_messages: plan.maxMessages,
           features: plan.features,
           updated_at: new Date().toISOString(),
-        }, {
+        } as any, {
           onConflict: 'plan_name'
         });
 
