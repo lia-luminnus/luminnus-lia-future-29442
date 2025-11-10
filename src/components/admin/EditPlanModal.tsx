@@ -2,6 +2,9 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+
+// Versão para garantir renderização atualizada: v2.0.0-2025-11-10
+const MODAL_VERSION = "2.0.0-2025-11-10";
 import {
   Dialog,
   DialogContent,
@@ -362,7 +365,7 @@ export const EditPlanModal = ({ plan, isOpen, onClose, onSave }: EditPlanModalPr
                   <FormLabel>Recursos Selecionados ({currentFeatures.length})</FormLabel>
                   <div className="border rounded-lg p-3 min-h-[100px] max-h-[200px] overflow-y-auto bg-gray-50">
                     {currentFeatures.length === 0 ? (
-                      <p className="text-sm text-gray-500 text-center py-4">
+                      <p className="text-sm text-gray-700 font-medium text-center py-4">
                         Nenhum recurso selecionado
                       </p>
                     ) : (

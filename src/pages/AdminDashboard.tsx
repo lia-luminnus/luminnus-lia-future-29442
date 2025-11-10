@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminOverview } from "@/components/admin/AdminOverview";
@@ -11,7 +11,17 @@ import { AdminTechnical } from "@/components/admin/AdminTechnical";
 import AdminLiaChat from "@/components/admin/AdminLiaChat";
 import { Loader2 } from "lucide-react";
 
+// Versão para forçar rebuild completo: v2.0.0-2025-11-10
+const DASHBOARD_VERSION = "2.0.0-2025-11-10";
+
 const AdminDashboard = () => {
+  const [renderKey, setRenderKey] = useState(Date.now());
+
+  // Força re-renderização ao montar o componente
+  useEffect(() => {
+    setRenderKey(Date.now());
+    console.log(`AdminDashboard montado - Versão: ${DASHBOARD_VERSION}`);
+  }, []);
   const { isAdmin, isLoading, adminEmail } = useAdminAuth();
   const [activeSection, setActiveSection] = useState("overview");
 
@@ -66,7 +76,7 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div key={renderKey} className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
       <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
