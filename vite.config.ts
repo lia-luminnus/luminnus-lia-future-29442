@@ -3,6 +3,9 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 
+// Gera timestamp único para cache busting
+const timestamp = Date.now();
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
@@ -28,10 +31,14 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       cache: false,
       output: {
-        // Adiciona hash aos arquivos para invalidar cache do navegador
-        entryFileNames: 'assets/[name].[hash].js',
-        chunkFileNames: 'assets/[name].[hash].js',
-        assetFileNames: 'assets/[name].[hash].[ext]'
+        // Adiciona hash E timestamp aos arquivos para invalidar cache do navegador
+        entryFileNames: `assets/[name].[hash].${timestamp}.js`,
+        chunkFileNames: `assets/[name].[hash].${timestamp}.js`,
+        assetFileNames: `assets/[name].[hash].${timestamp}.[ext]`,
+        // Adiciona banner com timestamp em todos os arquivos JS
+        banner: `/* Build: ${new Date().toISOString()} | Cache-bust: ${timestamp} */`,
+        // Força regeneração de chunks
+        manualChunks: undefined,
       }
     },
     // Garante que todos os módulos sejam reconstruídos
@@ -41,7 +48,11 @@ export default defineConfig(({ mode }) => ({
     // Remove cache de módulos
     commonjsOptions: {
       transformMixedEsModules: true
-    }
+    },
+    // Força rebuild de todos os assets
+    cssCodeSplit: true,
+    // Adiciona timestamp aos CSS também
+    assetsInlineLimit: 0,
   },
   // Desabilita otimização de dependências em cache
   optimizeDeps: {
@@ -56,5 +67,10 @@ export default defineConfig(({ mode }) => ({
   // Desabilita cache de ESBuild
   esbuild: {
     keepNames: false,
+  },
+  // Define variáveis globais para cache busting no código
+  define: {
+    __BUILD_TIMESTAMP__: JSON.stringify(timestamp),
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString()),
   }
 }));
