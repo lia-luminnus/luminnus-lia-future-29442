@@ -544,7 +544,7 @@ export const AdminPlans = () => {
               <Label htmlFor="trial-days" className="text-sm font-semibold text-gray-900">
                 Período de Teste (dias)
               </Label>
-              <Input id="trial-days" type="number" defaultValue="7" className="h-9 text-gray-900 font-medium" />
+              <Input id="trial-days" type="number" defaultValue="7" className="h-9 bg-white text-gray-900 font-medium border-gray-300 focus:border-purple-500 focus:ring-purple-500" />
               <p className="text-xs text-gray-700 font-medium">
                 Tempo de teste gratuito para novos usuários
               </p>
@@ -554,7 +554,7 @@ export const AdminPlans = () => {
               <Label htmlFor="grace-period" className="text-sm font-semibold text-gray-900">
                 Período de Tolerância (dias)
               </Label>
-              <Input id="grace-period" type="number" defaultValue="3" className="h-9 text-gray-900 font-medium" />
+              <Input id="grace-period" type="number" defaultValue="3" className="h-9 bg-white text-gray-900 font-medium border-gray-300 focus:border-purple-500 focus:ring-purple-500" />
               <p className="text-xs text-gray-700 font-medium">
                 Dias após vencimento antes de bloquear
               </p>
@@ -564,7 +564,7 @@ export const AdminPlans = () => {
               <Label htmlFor="currency" className="text-sm font-semibold text-gray-900">
                 Moeda Padrão
               </Label>
-              <Input id="currency" defaultValue="EUR" className="h-9 text-gray-900 font-medium" />
+              <Input id="currency" defaultValue="EUR" className="h-9 bg-white text-gray-900 font-medium border-gray-300 focus:border-purple-500 focus:ring-purple-500" />
               <p className="text-xs text-gray-700 font-medium">
                 Será exibida nos preços (EUR, USD, BRL)
               </p>

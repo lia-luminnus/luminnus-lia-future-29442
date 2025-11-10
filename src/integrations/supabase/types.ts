@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_chat_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_chat_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "admin_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          message_count: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message_count?: number
+          title?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message_count?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       agendamentos: {
         Row: {
           created_at: string
@@ -99,6 +155,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      plan_configs: {
+        Row: {
+          created_at: string
+          description: string | null
+          features: string[] | null
+          id: string
+          max_channels: string | null
+          max_conversations: string | null
+          max_messages: string | null
+          plan_name: string
+          price: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          max_channels?: string | null
+          max_conversations?: string | null
+          max_messages?: string | null
+          plan_name: string
+          price?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          max_channels?: string | null
+          max_conversations?: string | null
+          max_messages?: string | null
+          plan_name?: string
+          price?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       planos: {
         Row: {
