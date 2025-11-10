@@ -10,6 +10,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { EditPlanModal } from "./EditPlanModal";
 import { toast } from "sonner";
 
+// Versão única para forçar rebuild: v2.0.0-2025-11-10
+const COMPONENT_VERSION = "2.0.0-2025-11-10-" + Date.now();
+
 export const AdminPlans = () => {
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -132,8 +135,8 @@ export const AdminPlans = () => {
 
       {/* Plans Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {plans.map((plan) => (
-          <Card key={plan.name} className="overflow-hidden hover:shadow-2xl transition-all duration-300">
+        {plans.map((plan, index) => (
+          <Card key={`${plan.name}-${COMPONENT_VERSION}-${index}`} className="overflow-hidden hover:shadow-2xl transition-all duration-300 bg-white">
             {/* Header colorido com gradiente do plano */}
             <div className={`bg-gradient-to-r ${plan.color} p-6 text-white relative overflow-hidden`}>
               {/* Efeito de brilho */}
@@ -171,35 +174,35 @@ export const AdminPlans = () => {
             <CardContent className="space-y-6 p-6">
               {/* Description */}
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                   Descrição
                 </Label>
-                <p className="text-sm text-gray-300">{plan.description}</p>
+                <p className="text-sm text-gray-800 font-medium">{plan.description}</p>
               </div>
 
               {/* Limits */}
               <div className="grid gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                  <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                     Limites do Plano
                   </Label>
                   <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Canais</Label>
+                      <Label className="text-xs text-gray-700 font-semibold">Canais</Label>
                       <div className="text-sm font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
                         {plan.maxChannels}
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Conversas/mês</Label>
+                      <Label className="text-xs text-gray-700 font-semibold">Conversas/mês</Label>
                       <div className="text-sm font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                         {plan.maxConversations}
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs text-gray-400">Msgs/mês</Label>
+                      <Label className="text-xs text-gray-700 font-semibold">Msgs/mês</Label>
                       <div className="text-sm font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
                         {plan.maxMessages}
                       </div>
@@ -210,18 +213,18 @@ export const AdminPlans = () => {
 
               {/* Features */}
               <div className="space-y-3">
-                <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
+                <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
                   Recursos Inclusos ({plan.features.length})
                 </Label>
                 <ul className="space-y-2 max-h-64 overflow-y-auto">
                   {plan.features.slice(0, 5).map((feature, idx) => (
                     <li key={idx} className="flex items-start gap-2 text-sm">
                       <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-                      <span className="text-gray-200 font-medium">{feature}</span>
+                      <span className="text-gray-800 font-semibold">{feature}</span>
                     </li>
                   ))}
                   {plan.features.length > 5 && (
-                    <li className="text-xs text-gray-400 italic">
+                    <li className="text-xs text-gray-700 font-medium italic">
                       + {plan.features.length - 5} recursos adicionais
                     </li>
                   )}
@@ -229,12 +232,12 @@ export const AdminPlans = () => {
               </div>
 
               {/* Actions */}
-              <div className="pt-4 border-t">
+              <div className="pt-4 border-t border-gray-300">
                 <Button
                   onClick={() => handleEdit(plan)}
                   size="sm"
                   variant="outline"
-                  className={`w-full border-2 hover:bg-gradient-to-r ${plan.color} hover:text-white hover:border-transparent transition-all`}
+                  className={`w-full border-2 border-gray-600 text-gray-900 font-bold hover:bg-gradient-to-r ${plan.color} hover:text-white hover:border-transparent transition-all shadow-md hover:shadow-lg`}
                 >
                   <Edit className="mr-2 h-4 w-4" />
                   Editar Plano
