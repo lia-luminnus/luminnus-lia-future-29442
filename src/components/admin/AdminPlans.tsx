@@ -327,7 +327,7 @@ export const AdminPlans = () => {
               <CardContent className="space-y-6 p-6">
                 {/* Description */}
                 <div className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                     Descrição
                   </Label>
                   {isEditing ? (
@@ -338,19 +338,19 @@ export const AdminPlans = () => {
                       className="resize-none text-sm"
                     />
                   ) : (
-                    <p className="text-sm text-muted-foreground">{plan.description}</p>
+                    <p className="text-sm text-gray-300">{plan.description}</p>
                   )}
                 </div>
 
                 {/* Limits */}
                 <div className="grid gap-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                       Limites do Plano
                     </Label>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="space-y-1">
-                        <Label className="text-xs">Canais</Label>
+                        <Label className="text-xs text-gray-400">Canais</Label>
                         {isEditing ? (
                           <Input
                             value={plan.maxChannels}
@@ -365,7 +365,7 @@ export const AdminPlans = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs">Conversas/mês</Label>
+                        <Label className="text-xs text-gray-400">Conversas/mês</Label>
                         {isEditing ? (
                           <Input
                             value={plan.maxConversations}
@@ -380,7 +380,7 @@ export const AdminPlans = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-xs">Msgs/mês</Label>
+                        <Label className="text-xs text-gray-400">Msgs/mês</Label>
                         {isEditing ? (
                           <Input
                             value={plan.maxMessages}
@@ -399,7 +399,7 @@ export const AdminPlans = () => {
 
                 {/* Features */}
                 <div className="space-y-3">
-                  <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                  <Label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
                     Recursos Inclusos
                   </Label>
 
@@ -481,7 +481,7 @@ export const AdminPlans = () => {
                       {plan.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-2 text-sm">
                           <Check className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" />
-                          <span className="text-gray-900 font-medium">{feature}</span>
+                          <span className="text-gray-200 font-medium">{feature}</span>
                         </li>
                       ))}
                     </ul>
