@@ -1,0 +1,66 @@
+name: Force Rebuild Admin Dashboard
+
+on:
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'src/components/admin/**'
+      - 'src/pages/Admin*.tsx'
+      - 'src/pages/admin/**'
+  pull_request:
+    branches:
+      - main
+      - master
+    paths:
+      - 'src/components/admin/**'
+      - 'src/pages/Admin*.tsx'
+      - 'src/pages/admin/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Clear cache before install
+        run: |
+          rm -rf node_modules
+          rm -rf .vite
+          rm -rf dist
+
+      - name: Install dependencies
+        run: npm ci --force
+
+      - name: Clear Vite cache
+        run: npm run clean:cache
+
+      - name: Build without cache
+        run: npm run build:force
+        env:
+          NODE_ENV: production
+
+      - name: Verify build output
+        run: |
+          if [ ! -d "dist" ]; then
+            echo "❌ Build falhou - diretório dist não foi criado"
+            exit 1
+          fi
+          echo "✅ Build concluído com sucesso!"
+          echo "📦 Conteúdo do dist:"
+          ls -lah dist/
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: admin-dashboard-build
+          path: dist/
+          retention-days: 7
