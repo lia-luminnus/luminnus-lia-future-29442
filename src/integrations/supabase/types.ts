@@ -267,6 +267,104 @@ export type Database = {
         }
         Relationships: []
       }
+      site_content: {
+        Row: {
+          content: Json
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          section_key: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          section_key: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          section_key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      site_content_versions: {
+        Row: {
+          content: Json
+          content_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          version_number: number
+        }
+        Insert: {
+          content: Json
+          content_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          version_number: number
+        }
+        Update: {
+          content?: Json
+          content_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "site_content_versions_content_id_fkey"
+            columns: ["content_id"]
+            isOneToOne: false
+            referencedRelation: "site_content"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      site_theme: {
+        Row: {
+          colors: Json
+          created_at: string | null
+          fonts: Json
+          id: string
+          is_active: boolean | null
+          spacing: Json
+          theme_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          colors: Json
+          created_at?: string | null
+          fonts: Json
+          id?: string
+          is_active?: boolean | null
+          spacing: Json
+          theme_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          colors?: Json
+          created_at?: string | null
+          fonts?: Json
+          id?: string
+          is_active?: boolean | null
+          spacing?: Json
+          theme_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       usage_limits: {
         Row: {
           agendamentos_count: number
