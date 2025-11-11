@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { EditPlanModal } from '../EditPlanModal';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2 } from 'lucide-react';
+import { CheckCircle2, Save, Sparkles } from 'lucide-react';
 
 export const PlansEditor = () => {
   const [plans, setPlans] = useState<any[]>([]);
@@ -138,6 +140,78 @@ export const PlansEditor = () => {
           onSave={handleSave}
         />
       )}
+
+      {/* Global Settings */}
+      <Card id="global-settings" className="border-2 border-primary/20 scroll-mt-6">
+        <CardHeader>
+          <CardTitle className="text-xl">
+            Configurações Globais de Planos
+          </CardTitle>
+          <CardDescription>
+            Defina configurações que afetam todos os planos do sistema
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="trial-days" className="text-sm font-semibold">
+                Período de Teste (dias)
+              </Label>
+              <Input id="trial-days" type="number" defaultValue="7" />
+              <p className="text-xs text-muted-foreground">
+                Tempo de teste gratuito para novos usuários
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="grace-period" className="text-sm font-semibold">
+                Período de Tolerância (dias)
+              </Label>
+              <Input id="grace-period" type="number" defaultValue="3" />
+              <p className="text-xs text-muted-foreground">
+                Dias após vencimento antes de bloquear
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="currency" className="text-sm font-semibold">
+                Moeda Padrão
+              </Label>
+              <Input id="currency" defaultValue="EUR" />
+              <p className="text-xs text-muted-foreground">
+                Será exibida nos preços (EUR, USD, BRL)
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <Button>
+              <Save className="mr-2 h-4 w-4" />
+              Salvar Configurações Globais
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Info Card */}
+      <Card className="border-blue-200 bg-blue-50/50 dark:bg-blue-950/20">
+        <CardContent className="p-6">
+          <div className="flex gap-4">
+            <div className="flex-shrink-0">
+              <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
+                <Sparkles className="w-5 h-5 text-white" />
+              </div>
+            </div>
+            <div className="flex-1 space-y-2">
+              <h4 className="font-semibold text-blue-900 dark:text-blue-100">Sincronização Automática</h4>
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                As alterações feitas aqui serão refletidas automaticamente na página pública de planos (/planos).
+                Os limites configurados serão aplicados aos usuários de cada plano em tempo real.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
