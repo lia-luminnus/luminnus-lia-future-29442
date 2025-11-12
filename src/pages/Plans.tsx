@@ -4,11 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { plans } from "@/data/plansData";
+import { usePlans } from "@/hooks/usePlans";
 
 const Plans = () => {
+  const { plans, loading } = usePlans();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#0B0B0F]">
+        <Header />
+        <div className="container mx-auto px-4 py-32">
+          <div className="text-center">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#7C3AED] border-r-transparent"></div>
+            <p className="mt-4 text-white/70">Carregando planos...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   const handleSubscribe = (planName: string) => {
     const plan = plans.find(p => p.name === planName);
