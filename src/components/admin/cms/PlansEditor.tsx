@@ -1,27 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { supabase } from '@/integrations/supabase/client';
 import { EditPlanModal } from '../EditPlanModal';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, Save, Sparkles } from 'lucide-react';
-import { usePlans } from '@/hooks/usePlans';
 
 export const PlansEditor = () => {
-  const { plans, loading } = usePlans();
+  const [plans, setPlans] = useState<any[]>([]);
   const [selectedPlan, setSelectedPlan] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      const { data } = await supabase
+        .from('plan_configs')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      setPlans(data || []);
+    } catch (error) {
+      console.error('Error loading plans:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleEdit = (plan: any) => {
     setSelectedPlan(plan);
     setIsModalOpen(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (updatedPlan: any) => {
+    setPlans((prev) =>
+      prev.map((p) => (p.id === updatedPlan.id ? updatedPlan : p))
+    );
     setIsModalOpen(false);
     setSelectedPlan(null);
-    // O hook usePlans atualiza automaticamente via Realtime
+    await loadPlans();
   };
 
   const handleClose = () => {
@@ -54,13 +78,13 @@ export const PlansEditor = () => {
             <div
               className="absolute inset-0 opacity-5"
               style={{
-                background: `linear-gradient(135deg, ${plan.color.split(' ')[0].replace('from-[', '').replace(']', '')}, ${plan.color.split(' ')[1].replace('to-[', '').replace(']', '')})`,
+                background: `linear-gradient(135deg, hsl(${plan.gradient_start || '262.1 83.3% 57.8%'}), hsl(${plan.gradient_end || '330.4 81.2% 60.4%'}))`,
               }}
             />
             <CardHeader className="relative">
               <div className="flex items-center justify-between">
-                <CardTitle>{plan.name}</CardTitle>
-                {plan.popular && (
+                <CardTitle>{plan.plan_name}</CardTitle>
+                {plan.is_popular && (
                   <Badge variant="secondary">Popular</Badge>
                 )}
               </div>
@@ -73,9 +97,9 @@ export const PlansEditor = () => {
                 <p className="text-sm text-muted-foreground">{plan.description}</p>
                 
                 <div className="space-y-1 text-sm">
-                  <p><strong>Canais:</strong> {plan.maxChannels}</p>
-                  <p><strong>Conversas:</strong> {plan.maxConversations}</p>
-                  <p><strong>Mensagens:</strong> {plan.maxMessages}</p>
+                  <p><strong>Canais:</strong> {plan.max_channels}</p>
+                  <p><strong>Conversas:</strong> {plan.max_conversations}</p>
+                  <p><strong>Mensagens:</strong> {plan.max_messages}</p>
                 </div>
               </div>
 

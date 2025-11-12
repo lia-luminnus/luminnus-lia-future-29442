@@ -82,13 +82,6 @@ const planFormSchema = z.object({
   maxConversations: z.string().min(1, "Limite de conversas é obrigatório"),
   maxMessages: z.string().min(1, "Limite de mensagens é obrigatório"),
   features: z.array(z.string()).min(1, "Adicione pelo menos um recurso"),
-  isPopular: z.boolean().optional(),
-  gradientStart: z.string().optional(),
-  gradientEnd: z.string().optional(),
-  customCtaText: z.string().optional(),
-  customCtaAction: z.string().optional(),
-  liaQuote: z.string().optional(),
-  discount: z.number().optional(),
 });
 
 type PlanFormValues = z.infer<typeof planFormSchema>;
@@ -115,24 +108,12 @@ export const EditPlanModal = ({ plan, isOpen, onClose, onSave }: EditPlanModalPr
       maxConversations: String(plan?.maxConversations || ""),
       maxMessages: String(plan?.maxMessages || ""),
       features: plan?.features || [],
-      isPopular: plan?.popular || false,
-      gradientStart: "",
-      gradientEnd: "",
-      customCtaText: plan?.customCTA?.text || "",
-      customCtaAction: plan?.customCTA?.action || "",
-      liaQuote: plan?.liaQuote || "",
-      discount: plan?.discount || 0,
     },
   });
 
   // Resetar o formulário quando o plano mudar
   useEffect(() => {
     if (plan) {
-      // Extrair cores do gradiente
-      const colorMatch = plan.color.match(/from-\[hsl\((.*?)\)\]\s+to-\[hsl\((.*?)\)\]/);
-      const gradientStart = colorMatch ? colorMatch[1] : "";
-      const gradientEnd = colorMatch ? colorMatch[2] : "";
-
       form.reset({
         name: plan.name,
         price: plan.price,
@@ -142,13 +123,6 @@ export const EditPlanModal = ({ plan, isOpen, onClose, onSave }: EditPlanModalPr
         maxConversations: String(plan.maxConversations),
         maxMessages: String(plan.maxMessages),
         features: plan.features,
-        isPopular: plan.popular,
-        gradientStart,
-        gradientEnd,
-        customCtaText: plan.customCTA?.text || "",
-        customCtaAction: plan.customCTA?.action || "",
-        liaQuote: plan.liaQuote || "",
-        discount: plan.discount || 0,
       });
     }
   }, [plan, form]);
@@ -159,25 +133,17 @@ export const EditPlanModal = ({ plan, isOpen, onClose, onSave }: EditPlanModalPr
     setSaving(true);
 
     try {
-      // Salvar no Supabase com TODOS os campos
+      // Salvar no Supabase
       const { error } = await supabase
         .from('plan_configs')
         .upsert({
           plan_name: values.name,
           price: values.price,
-          annual_price: values.annualPrice,
           description: values.description,
           max_channels: values.maxChannels,
           max_conversations: values.maxConversations,
           max_messages: values.maxMessages,
           features: values.features,
-          is_popular: values.isPopular,
-          gradient_start: values.gradientStart,
-          gradient_end: values.gradientEnd,
-          custom_cta_text: values.customCtaText,
-          custom_cta_action: values.customCtaAction,
-          lia_quote: values.liaQuote,
-          discount_percentage: values.discount,
           updated_at: new Date().toISOString(),
         } as any, {
           onConflict: 'plan_name'
@@ -196,14 +162,6 @@ export const EditPlanModal = ({ plan, isOpen, onClose, onSave }: EditPlanModalPr
         maxConversations: values.maxConversations,
         maxMessages: values.maxMessages,
         features: values.features,
-        popular: values.isPopular || false,
-        discount: values.discount || 0,
-        liaQuote: values.liaQuote,
-        customCTA: values.customCtaText ? {
-          text: values.customCtaText,
-          action: values.customCtaAction || "#"
-        } : undefined,
-        color: `from-[hsl(${values.gradientStart})] to-[hsl(${values.gradientEnd})]`,
       };
 
       onSave(updatedPlan);

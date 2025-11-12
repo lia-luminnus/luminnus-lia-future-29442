@@ -9,25 +9,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { usePlans } from "@/hooks/usePlans";
+import { plans } from "@/data/plansData";
 
 const Plans = () => {
-  const { plans, loading } = usePlans();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
-
-  if (loading) {
-    return (
-      <section id="planos" className="py-20 lg:py-32 relative overflow-hidden bg-[#0B0B0F]">
-        <div className="container mx-auto px-4 lg:px-8">
-          <div className="text-center">
-            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-[#7C3AED] border-r-transparent"></div>
-            <p className="mt-4 text-white/70">Carregando planos...</p>
-          </div>
-        </div>
-      </section>
-    );
-  }
 
   const handleSubscribe = (planName: string) => {
     const plan = plans.find(p => p.name === planName);
@@ -105,15 +91,7 @@ const Plans = () => {
                 <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                 <p className="text-sm text-white/60 mb-4">{plan.description}</p>
                 <div className="space-y-1">
-                  <p 
-                    className="text-4xl font-black"
-                    style={{
-                      background: `linear-gradient(to right, ${plan.color.split(' ')[0].replace('from-[', '').replace(']', '')}, ${plan.color.split(' ')[1].replace('to-[', '').replace(']', '')})`,
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                      backgroundClip: 'text'
-                    }}
-                  >
+                  <p className={`text-4xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
                     {isAnnual ? plan.annualPrice : plan.price}
                   </p>
                   <p className="text-sm text-white/50">
