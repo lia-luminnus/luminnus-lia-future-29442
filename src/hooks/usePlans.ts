@@ -33,7 +33,7 @@ export const usePlans = () => {
       .order('created_at', { ascending: true });
 
     if (!error && data) {
-      const formattedPlans: Plan[] = data.map((plan) => ({
+      const formattedPlans: Plan[] = (data as any[]).map((plan: any) => ({
         id: plan.id,
         name: plan.plan_name,
         price: plan.price || '€0',
