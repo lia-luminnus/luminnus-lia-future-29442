@@ -74,7 +74,7 @@ export const PlansEditor = () => {
                 
                 <div className="space-y-1 text-sm">
                   <p><strong>Canais:</strong> {plan.maxChannels}</p>
-                  <parameter name="strong">Conversas:</strong> {plan.maxConversations}</p>
+                  <p><strong>Conversas:</strong> {plan.maxConversations}</p>
                   <p><strong>Mensagens:</strong> {plan.maxMessages}</p>
                 </div>
               </div>
