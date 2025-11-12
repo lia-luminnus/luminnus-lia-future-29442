@@ -54,7 +54,7 @@ export const PlansEditor = () => {
             <div
               className="absolute inset-0 opacity-5"
               style={{
-                background: `linear-gradient(135deg, hsl(${plan.gradient_start || '262.1 83.3% 57.8%'}), hsl(${plan.gradient_end || '330.4 81.2% 60.4%'}))`,
+                background: `linear-gradient(135deg, ${plan.color.split(' ')[0].replace('from-[', '').replace(']', '')}, ${plan.color.split(' ')[1].replace('to-[', '').replace(']', '')})`,
               }}
             />
             <CardHeader className="relative">
