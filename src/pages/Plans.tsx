@@ -112,7 +112,15 @@ const Plans = () => {
                   <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
-                      <p className={`text-5xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
+                      <p 
+                        className="text-5xl font-black"
+                        style={{
+                          background: `linear-gradient(to right, ${plan.color.split(' ')[0].replace('from-[', '').replace(']', '')}, ${plan.color.split(' ')[1].replace('to-[', '').replace(']', '')})`,
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text'
+                        }}
+                      >
                         {isAnnual ? plan.annualPrice : plan.price}
                       </p>
                       {isAnnual && (
