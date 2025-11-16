@@ -3,11 +3,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Save, Eye, EyeOff, AlertCircle, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { secureStorage } from "@/lib/secureStorage";
+import { verificarStatusAPI } from "@/lib/api/lia";
 
 interface ConfigData {
   openaiApiKey: string;
@@ -23,6 +24,8 @@ export const AdminLiaConfig = () => {
   const { toast } = useToast();
   const [showKeys, setShowKeys] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [testingApi, setTestingApi] = useState(false);
+  const [apiStatus, setApiStatus] = useState<'idle' | 'online' | 'offline'>('idle');
   const [config, setConfig] = useState<ConfigData>({
     openaiApiKey: "",
     supabaseUrl: "",
@@ -90,6 +93,48 @@ export const AdminLiaConfig = () => {
       ...prev,
       [field]: value,
     }));
+    // Reset API status quando URL mudar
+    if (field === 'liaApiUrl') {
+      setApiStatus('idle');
+    }
+  };
+
+  const handleTestApi = async () => {
+    setTestingApi(true);
+    setApiStatus('idle');
+
+    try {
+      // Salvar temporariamente a URL configurada para teste
+      if (config.liaApiUrl) {
+        secureStorage.save({ ...secureStorage.load(), liaApiUrl: config.liaApiUrl });
+      }
+
+      const isOnline = await verificarStatusAPI();
+
+      if (isOnline) {
+        setApiStatus('online');
+        toast({
+          title: "✅ API Online",
+          description: "A API da LIA está respondendo corretamente!",
+        });
+      } else {
+        setApiStatus('offline');
+        toast({
+          title: "❌ API Offline",
+          description: "Não foi possível conectar à API. Verifique a URL e tente novamente.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      setApiStatus('offline');
+      toast({
+        title: "Erro ao testar API",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      });
+    } finally {
+      setTestingApi(false);
+    }
   };
 
   const maskKey = (key: string) => {
@@ -232,11 +277,34 @@ export const AdminLiaConfig = () => {
               value={config.systemPrompt}
               onChange={(e) => handleInputChange("systemPrompt", e.target.value)}
               rows={6}
-              className="resize-none"
+              className="resize-none font-mono text-sm"
             />
-            <p className="text-xs text-muted-foreground">
-              Este texto define a personalidade e comportamento da assistente
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Este texto define a personalidade e comportamento da assistente
+              </p>
+              <p className={`text-xs ${
+                config.systemPrompt.length > 2000 ? 'text-orange-500 font-semibold' :
+                config.systemPrompt.length > 3000 ? 'text-red-500 font-bold' :
+                'text-muted-foreground'
+              }`}>
+                {config.systemPrompt.length} caracteres
+                {config.systemPrompt.length > 2000 && ' ⚠️'}
+              </p>
+            </div>
+            {config.systemPrompt.length > 2000 && (
+              <Alert className="border-orange-500 bg-orange-50">
+                <AlertCircle className="h-4 w-4 text-orange-600" />
+                <AlertDescription className="text-orange-800">
+                  <strong>Atenção:</strong> Prompts muito longos ({config.systemPrompt.length} caracteres) podem causar problemas de armazenamento.
+                  {config.systemPrompt.length > 3000 && (
+                    <span className="block mt-1">
+                      Recomendamos reduzir para menos de 2000 caracteres ou salvar em um arquivo externo.
+                    </span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -244,7 +312,11 @@ export const AdminLiaConfig = () => {
       {/* LIA API Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle>API da LIA (Render)</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            API da LIA (Render)
+            {apiStatus === 'online' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
+            {apiStatus === 'offline' && <XCircle className="h-5 w-5 text-red-500" />}
+          </CardTitle>
           <CardDescription>
             Configure a URL da API da LIA hospedada no Render
           </CardDescription>
@@ -252,16 +324,48 @@ export const AdminLiaConfig = () => {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="lia-api-url">API da LIA (Render)</Label>
-            <Input
-              id="lia-api-url"
-              type="url"
-              placeholder="https://lia-chat-api.onrender.com"
-              value={config.liaApiUrl}
-              onChange={(e) => handleInputChange("liaApiUrl", e.target.value)}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="lia-api-url"
+                type="url"
+                placeholder="https://lia-chat-api.onrender.com"
+                value={config.liaApiUrl}
+                onChange={(e) => handleInputChange("liaApiUrl", e.target.value)}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                onClick={handleTestApi}
+                disabled={testingApi || !config.liaApiUrl}
+                variant="outline"
+                className="whitespace-nowrap"
+              >
+                {testingApi ? (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                    Testando...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Testar Conexão
+                  </>
+                )}
+              </Button>
+            </div>
             <p className="text-xs text-muted-foreground">
               URL base da API da LIA hospedada no Render. É usada para comunicação direta entre o painel e a assistente.
             </p>
+            {apiStatus === 'online' && (
+              <p className="text-xs text-green-600 font-semibold">
+                ✓ API está online e respondendo
+              </p>
+            )}
+            {apiStatus === 'offline' && (
+              <p className="text-xs text-red-600 font-semibold">
+                ✗ API está offline ou inacessível. Pode estar hibernando (aguarde ~30s e teste novamente)
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

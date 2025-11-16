@@ -4,15 +4,41 @@ import fetch from "node-fetch";
 
 const app = express();
 
-// CORS configurado para aceitar todas as origens (desenvolvimento)
-app.use(cors({
-  origin: '*',
+// ===== CONFIGURAÇÃO DE CORS SEGURA =====
+// Permite configurar domínios permitidos via variável de ambiente
+// Formato: ALLOWED_ORIGINS="https://seu-dominio.com,https://www.seu-dominio.com"
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['*']; // Fallback para desenvolvimento local
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Permitir requisições sem origin (ex: Postman, curl)
+    if (!origin) return callback(null, true);
+
+    // Se ALLOWED_ORIGINS='*', permitir qualquer origem (APENAS PARA DEV!)
+    if (allowedOrigins.includes('*')) {
+      return callback(null, true);
+    }
+
+    // Verificar se origin está na lista permitida
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ Origem bloqueada por CORS: ${origin}`);
+      callback(new Error('Origem não permitida pelo CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: false
-}));
+  credentials: process.env.ALLOWED_ORIGINS ? true : false, // Só permitir credentials se CORS estiver configurado
+  maxAge: 86400, // Cache preflight por 24h
+};
 
-app.use(express.json());
+app.use(cors(corsOptions));
+
+// Limitar tamanho do body (prevenir ataques de memória)
+app.use(express.json({ limit: '1mb' }));
 
 // Log de todas as requisições
 app.use((req, res, next) => {
@@ -128,12 +154,29 @@ app.post("/chat", async (req, res) => {
     console.log("[API] Body:", req.body);
 
     const { message } = req.body;
-    if (!message) {
-      console.error("[API] Mensagem não fornecida");
-      return res.status(400).json({ error: "Mensagem não fornecida." });
+
+    // Validação de input
+    if (!message || typeof message !== 'string') {
+      console.error("[API] Mensagem inválida ou não fornecida");
+      return res.status(400).json({ error: "Mensagem não fornecida ou inválida." });
     }
 
-    console.log("[API] Enviando para OpenAI:", message);
+    // Limitar tamanho da mensagem (prevenir abuse)
+    const maxMessageLength = 10000; // 10k caracteres
+    if (message.length > maxMessageLength) {
+      console.error(`[API] Mensagem muito longa: ${message.length} caracteres`);
+      return res.status(400).json({
+        error: `Mensagem muito longa. Máximo: ${maxMessageLength} caracteres.`
+      });
+    }
+
+    // Sanitizar: remover espaços extras
+    const sanitizedMessage = message.trim();
+    if (sanitizedMessage.length === 0) {
+      return res.status(400).json({ error: "Mensagem vazia." });
+    }
+
+    console.log("[API] Enviando para OpenAI:", sanitizedMessage);
 
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
@@ -145,7 +188,7 @@ app.post("/chat", async (req, res) => {
         model: "gpt-3.5-turbo",
         messages: [
           { role: "system", content: "Você é a LIA, uma assistente virtual inteligente e prestativa da plataforma Luminnus." },
-          { role: "user", content: message },
+          { role: "user", content: sanitizedMessage },
         ],
       }),
     });
