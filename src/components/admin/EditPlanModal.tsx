@@ -139,11 +139,14 @@ export const EditPlanModal = ({ plan, isOpen, onClose, onSave }: EditPlanModalPr
         .upsert({
           plan_name: values.name,
           price: values.price,
+          annual_price: values.annualPrice || null, // 🔥 NOVO: Preço anual
           description: values.description,
           max_channels: values.maxChannels,
           max_conversations: values.maxConversations,
           max_messages: values.maxMessages,
           features: values.features,
+          is_popular: plan.popular, // Manter valor atual de popular
+          discount: plan.discount, // Manter valor atual de desconto
           updated_at: new Date().toISOString(),
         } as any, {
           onConflict: 'plan_name'

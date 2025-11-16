@@ -1,5 +1,5 @@
-// Force rebuild - Updated with annual/monthly toggle
-import { Check, Bot } from "lucide-react";
+// Force rebuild - Updated with annual/monthly toggle + Supabase sync
+import { Check, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,11 +9,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { plans } from "@/data/plansData";
+import { usePlans } from "@/hooks/usePlans";
 
 const Plans = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
+
+  // 🔥 NOVO: Carregar planos do Supabase com fallback para estático
+  const { plans, loading, source } = usePlans();
 
   const handleSubscribe = (planName: string) => {
     const plan = plans.find(p => p.name === planName);
@@ -29,10 +32,44 @@ const Plans = () => {
     return plan?.liaQuote || "";
   };
 
+  /**
+   * Calcula o preço mensal equivalente a partir do preço anual
+   * Ex: "€291,60" → "€24,30" (291,60 / 12)
+   */
+  const calculateMonthlyFromAnnual = (annualPrice: string): string => {
+    // Extrair apenas números e vírgula/ponto
+    const numericPart = annualPrice.replace(/[^0-9.,]/g, '');
+
+    // Se não tiver preço numérico, retornar o original (ex: "A partir de €997")
+    if (!numericPart) return annualPrice;
+
+    try {
+      // Converter para número (substituir vírgula por ponto)
+      const annualValue = parseFloat(numericPart.replace(',', '.'));
+
+      // Calcular mensal
+      const monthlyValue = annualValue / 12;
+
+      // Detectar símbolo de moeda (€, $, R$, etc.)
+      const currencySymbol = annualPrice.match(/[€$R£¥]/)?.[0] || '€';
+
+      // Detectar se tem prefixo "A partir de"
+      const prefix = annualPrice.toLowerCase().includes('a partir de') ? 'A partir de ' : '';
+
+      // Formatar com 2 casas decimais
+      const formatted = monthlyValue.toFixed(2).replace('.', ',');
+
+      return `${prefix}${currencySymbol}${formatted}`;
+    } catch (error) {
+      console.error('Erro ao calcular preço mensal:', error);
+      return annualPrice;
+    }
+  };
+
   return (
     <section id="planos" className="py-20 lg:py-32 relative overflow-hidden bg-[#0B0B0F]">
       <div className="absolute inset-0 bg-gradient-to-b from-[#0B0B0F] via-[#FF2E9E]/5 to-[#0B0B0F]" />
-      
+
       <div className="container mx-auto px-4 lg:px-8 relative z-10">
         <div className="text-center space-y-4 mb-8 animate-fade-in">
           <h2 className="text-4xl lg:text-6xl font-bold text-white">
@@ -41,10 +78,26 @@ const Plans = () => {
           <p className="text-lg lg:text-xl text-white/70 max-w-2xl mx-auto">
             Planos para todos os tamanhos de negócio
           </p>
+          {source === 'supabase' && (
+            <p className="text-xs text-green-400/70">
+              ✓ Sincronizado com o Admin Panel
+            </p>
+          )}
         </div>
 
-        {/* Billing Toggle */}
-        <div className="flex items-center justify-center gap-4 mb-16 animate-fade-in">
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-8 h-8 text-[#7C3AED] animate-spin" />
+            <span className="ml-3 text-white/60">Carregando planos...</span>
+          </div>
+        )}
+
+        {/* Planos carregados */}
+        {!loading && (
+          <>
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-4 mb-16 animate-fade-in">
           <span className={`text-lg font-semibold transition-all ${!isAnnual ? 'text-white' : 'text-white/50'}`}>
             Mensal
           </span>
@@ -92,11 +145,16 @@ const Plans = () => {
                 <p className="text-sm text-white/60 mb-4">{plan.description}</p>
                 <div className="space-y-1">
                   <p className={`text-4xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
-                    {isAnnual ? plan.annualPrice : plan.price}
+                    {isAnnual ? calculateMonthlyFromAnnual(plan.annualPrice) : plan.price}
                   </p>
                   <p className="text-sm text-white/50">
-                    {isAnnual ? '/ano' : plan.period}
+                    {isAnnual ? '/mês pago anualmente' : plan.period}
                   </p>
+                  {isAnnual && plan.discount > 0 && (
+                    <p className="text-xs text-green-400">
+                      Economize {plan.discount}% no plano anual
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -162,6 +220,8 @@ const Plans = () => {
             </div>
           ))}
         </div>
+          </>
+        )}
       </div>
 
       {/* Dialog for Lia Explanation */}
