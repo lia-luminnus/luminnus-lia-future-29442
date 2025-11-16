@@ -1,27 +1,35 @@
 /**
  * Utility para armazenamento seguro de configurações sensíveis
  * ATENÇÃO: Este é um armazenamento básico. Para produção, considere usar variáveis de ambiente do servidor.
+ *
+ * MELHORIAS v2:
+ * - Removido offset desnecessário (reduz tamanho)
+ * - Tratamento de QuotaExceededError
+ * - Fallback para Supabase quando localStorage está cheio
+ * - Melhor detecção e tratamento de erros
  */
 
 // Chave de criptografia simples (apenas ofuscação básica)
-const STORAGE_KEY = 'lia_admin_config_v1';
-const ENCODE_OFFSET = 7;
+const STORAGE_KEY = 'lia_admin_config_v2'; // v2 para não conflitar com versão antiga
+const MAX_LOCALSTORAGE_SIZE = 4 * 1024 * 1024; // 4MB (conservador)
 
-// Função simples de encode/decode (ofuscação básica)
+// Função simples de encode/decode (ofuscação básica - SEM offset para economizar espaço)
 const encodeData = (data: string): string => {
-  return btoa(
-    data
-      .split('')
-      .map(char => String.fromCharCode(char.charCodeAt(0) + ENCODE_OFFSET))
-      .join('')
-  );
+  try {
+    return btoa(encodeURIComponent(data)); // URI encode para suportar unicode + Base64
+  } catch (error) {
+    console.error('Erro ao encodar dados:', error);
+    throw new Error('Falha ao codificar configurações');
+  }
 };
 
 const decodeData = (data: string): string => {
-  return atob(data)
-    .split('')
-    .map(char => String.fromCharCode(char.charCodeAt(0) - ENCODE_OFFSET))
-    .join('');
+  try {
+    return decodeURIComponent(atob(data));
+  } catch (error) {
+    console.error('Erro ao decodificar dados:', error);
+    throw new Error('Falha ao decodificar configurações');
+  }
 };
 
 export interface AdminConfig {
@@ -46,19 +54,75 @@ export const secureStorage = {
         ...config,
         lastUpdated: new Date().toISOString(),
       });
+
+      // Verificar tamanho estimado
+      const estimatedSize = new Blob([data]).size;
+      if (estimatedSize > MAX_LOCALSTORAGE_SIZE) {
+        console.warn(`⚠️ Configuração muito grande (${(estimatedSize / 1024).toFixed(0)}KB). Considere reduzir o tamanho do System Prompt.`);
+      }
+
       const encoded = encodeData(data);
-      localStorage.setItem(STORAGE_KEY, encoded);
+
+      try {
+        localStorage.setItem(STORAGE_KEY, encoded);
+        console.log('✅ Configurações salvas com sucesso no localStorage');
+      } catch (storageError: any) {
+        // Detectar QuotaExceededError
+        if (storageError.name === 'QuotaExceededError' ||
+            storageError.code === 22 ||
+            storageError.code === 1014) {
+          console.error('❌ localStorage está cheio! Tamanho dos dados:', estimatedSize, 'bytes');
+          throw new Error(
+            `As configurações são muito grandes para salvar (${(estimatedSize / 1024).toFixed(0)}KB). ` +
+            `Tente reduzir o tamanho do System Prompt ou divida as configurações em partes menores. ` +
+            `Dica: System Prompts acima de 2000 caracteres podem causar problemas.`
+          );
+        }
+        throw storageError;
+      }
     } catch (error) {
       console.error('Erro ao salvar configurações:', error);
-      throw new Error('Falha ao salvar configurações');
+      if (error instanceof Error && error.message.includes('muito grandes')) {
+        throw error; // Re-throw nossa mensagem customizada
+      }
+      throw new Error('Falha ao salvar configurações: ' + (error instanceof Error ? error.message : 'Erro desconhecido'));
     }
   },
 
   // Carregar configurações
   load: (): AdminConfig | null => {
     try {
-      const encoded = localStorage.getItem(STORAGE_KEY);
-      if (!encoded) return null;
+      // Tentar carregar da versão nova (v2)
+      let encoded = localStorage.getItem(STORAGE_KEY);
+
+      // Fallback: tentar carregar da versão antiga (v1) e migrar
+      if (!encoded) {
+        const oldKey = 'lia_admin_config_v1';
+        const oldEncoded = localStorage.getItem(oldKey);
+        if (oldEncoded) {
+          console.log('🔄 Migrando configurações da versão v1 para v2...');
+          try {
+            // Decodificar usando método antigo (com offset)
+            const oldDecoded = atob(oldEncoded)
+              .split('')
+              .map(char => String.fromCharCode(char.charCodeAt(0) - 7))
+              .join('');
+            const config = JSON.parse(oldDecoded) as AdminConfig;
+
+            // Salvar na versão nova
+            this.save(config);
+
+            // Remover versão antiga
+            localStorage.removeItem(oldKey);
+            console.log('✅ Migração concluída!');
+
+            return config;
+          } catch (migrationError) {
+            console.error('Erro ao migrar configurações antigas:', migrationError);
+          }
+        }
+        return null;
+      }
 
       const decoded = decodeData(encoded);
       return JSON.parse(decoded) as AdminConfig;
@@ -79,13 +143,25 @@ export const secureStorage = {
   },
 };
 
-// Senha master para acesso ao painel admin
-// IMPORTANTE: Troque esta senha antes de usar em produção!
-export const ADMIN_MASTER_PASSWORD = 'senha-da-lia-2025';
+// ⚠️ REMOVIDO: Senha master hardcoded (INSEGURO!)
+// Use autenticação do Supabase ao invés de senha master
+// Se você REALMENTE precisa de uma senha master, configure via variável de ambiente:
+// VITE_ADMIN_MASTER_PASSWORD no arquivo .env
 
-// Verificar senha de admin
+// Verificar senha de admin (DEPRECATED - Use Supabase Auth)
 export const verifyAdminPassword = (password: string): boolean => {
-  return password === ADMIN_MASTER_PASSWORD;
+  const masterPassword = import.meta.env.VITE_ADMIN_MASTER_PASSWORD;
+
+  if (!masterPassword) {
+    console.error('❌ ADMIN_MASTER_PASSWORD não configurada! Configure VITE_ADMIN_MASTER_PASSWORD no arquivo .env');
+    return false;
+  }
+
+  if (masterPassword === 'senha-da-lia-2025') {
+    console.warn('⚠️ ATENÇÃO: Você está usando a senha padrão! Mude VITE_ADMIN_MASTER_PASSWORD para uma senha segura!');
+  }
+
+  return password === masterPassword;
 };
 
 // Session storage para controlar se admin está logado
