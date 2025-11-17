@@ -10,7 +10,14 @@ import {
   LogOut,
   Menu,
   X,
-  Bot
+  Bot,
+  AlertTriangle,
+  FileText,
+  Building2,
+  Plug,
+  BarChart3,
+  Headphones,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
@@ -26,10 +33,17 @@ const menuItems = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
   { id: "lia-chat", label: "Assistente LIA", icon: Bot },
   { id: "users", label: "Gerenciar Usuários", icon: Users },
+  { id: "companies", label: "Empresas", icon: Building2, badge: "Novo" },
   { id: "lia-config", label: "Configurações da LIA", icon: Settings },
+  { id: "lia-core-updates", label: "LIA Core Updates", icon: Sparkles, badge: "Novo" },
   { id: "tools", label: "Ferramentas e Testes", icon: Wrench },
   { id: "history", label: "Histórico de Interações", icon: MessageSquare },
   { id: "plans", label: "Planos e Permissões", icon: CreditCard },
+  { id: "integrations", label: "Integrações", icon: Plug, badge: "Novo" },
+  { id: "metrics", label: "Métricas", icon: BarChart3, badge: "Novo" },
+  { id: "support", label: "Suporte", icon: Headphones, badge: "Novo" },
+  { id: "logs", label: "Logs", icon: FileText, badge: "Novo" },
+  { id: "errors", label: "Erros", icon: AlertTriangle, badge: "Novo" },
   { id: "technical", label: "Configurações Técnicas", icon: Code },
 ];
 
@@ -92,7 +106,12 @@ export const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarPro
                   )}
                 >
                   <Icon className="h-5 w-5" />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge && (
+                    <span className="px-2 py-0.5 text-xs font-semibold bg-green-500 text-white rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

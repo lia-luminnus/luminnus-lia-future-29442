@@ -9,6 +9,13 @@ import { AdminHistory } from "@/components/admin/AdminHistory";
 import { AdminPlans } from "@/components/admin/AdminPlans";
 import { AdminTechnical } from "@/components/admin/AdminTechnical";
 import AdminLiaChat from "@/components/admin/AdminLiaChat";
+import AdminErrors from "@/components/admin/AdminErrors";
+import AdminLogs from "@/components/admin/AdminLogs";
+import AdminCompanies from "@/components/admin/AdminCompanies";
+import AdminIntegrations from "@/components/admin/AdminIntegrations";
+import AdminMetrics from "@/components/admin/AdminMetrics";
+import AdminSupport from "@/components/admin/AdminSupport";
+import AdminLiaCoreUpdates from "@/components/admin/AdminLiaCoreUpdates";
 import { Loader2 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -50,14 +57,28 @@ const AdminDashboard = () => {
         return <AdminLiaChat />;
       case "users":
         return <AdminUsers />;
+      case "companies":
+        return <AdminCompanies />;
       case "lia-config":
         return <AdminLiaConfig />;
+      case "lia-core-updates":
+        return <AdminLiaCoreUpdates />;
       case "tools":
         return <AdminTools />;
       case "history":
         return <AdminHistory />;
       case "plans":
         return <AdminPlans />;
+      case "integrations":
+        return <AdminIntegrations />;
+      case "metrics":
+        return <AdminMetrics />;
+      case "support":
+        return <AdminSupport />;
+      case "logs":
+        return <AdminLogs />;
+      case "errors":
+        return <AdminErrors />;
       case "technical":
         return <AdminTechnical />;
       default:
