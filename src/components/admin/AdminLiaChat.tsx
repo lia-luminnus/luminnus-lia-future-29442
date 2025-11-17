@@ -373,18 +373,30 @@ const AdminLiaChat = () => {
     } catch (error) {
       console.error('Erro ao enviar mensagem:', error);
 
+      const errorMsg = error instanceof Error ? error.message : 'Não foi possível enviar a mensagem';
+      let userFriendlyMessage = errorMsg;
+
+      // Detectar se é erro de timeout/hibernação
+      if (errorMsg.includes('Timeout') || errorMsg.includes('acordando') || errorMsg.includes('hibernação')) {
+        userFriendlyMessage = `⏱️ A API do Render está demorando para responder. Ela pode estar em modo de hibernação (cold start).\n\n💡 Aguarde alguns segundos e tente novamente. Geralmente a primeira requisição após um período de inatividade pode demorar até 1 minuto.`;
+      } else if (errorMsg.includes('404') || errorMsg.includes('Not Found')) {
+        userFriendlyMessage = `❌ Erro 404: A rota /chat não foi encontrada na API.\n\n🔧 Verifique se:\n• A API está rodando no Render\n• A URL está configurada corretamente em "Configurações da LIA"\n• A variável OPENAI_API_KEY está configurada no Render`;
+      } else if (errorMsg.includes('CORS') || errorMsg.includes('fetch')) {
+        userFriendlyMessage = `🔒 Erro de conexão com a API.\n\n🔧 Possíveis causas:\n• CORS bloqueado\n• API offline no Render\n• URL incorreta\n\nVerifique a configuração em "Configurações da LIA"`;
+      }
+
       const errorMessage: ChatMessage = {
         id: `error-${Date.now()}`,
         role: 'assistant',
-        content: `❌ Erro: ${error instanceof Error ? error.message : 'Não foi possível enviar a mensagem'}`,
+        content: userFriendlyMessage,
         created_at: new Date().toISOString(),
       };
       setMessages(prev => [...prev, errorMessage]);
 
       setLoading(false);
       toast({
-        title: 'Erro',
-        description: error instanceof Error ? error.message : 'Não foi possível enviar a mensagem',
+        title: '❌ Erro ao enviar mensagem',
+        description: errorMsg.includes('Timeout') ? 'A API pode estar hibernada. Tente novamente em alguns segundos.' : 'Erro ao se comunicar com a API',
         variant: 'destructive',
       });
     }

@@ -1,5 +1,5 @@
 // Force rebuild - Updated with annual/monthly toggle
-import { Check, Bot } from "lucide-react";
+import { Check, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -9,9 +9,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useState } from "react";
-import { plans } from "@/data/plansData";
+import { usePlans } from "@/hooks/usePlans";
 
 const Plans = () => {
+  const { plans, loading } = usePlans();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
 
@@ -68,8 +69,13 @@ const Plans = () => {
           </span>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-12">
-          {plans.map((plan, index) => (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto mb-12">
+            {plans.map((plan, index) => (
             <div
               key={plan.name}
               className={`relative p-8 rounded-2xl backdrop-blur-lg border transition-all duration-300 hover:scale-105 animate-fade-in ${
@@ -161,7 +167,8 @@ const Plans = () => {
               </div>
             </div>
           ))}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Dialog for Lia Explanation */}

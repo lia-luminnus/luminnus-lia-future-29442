@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { Check, Sparkles, Bot } from "lucide-react";
+import { Check, Sparkles, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { plans } from "@/data/plansData";
+import { usePlans } from "@/hooks/usePlans";
 
 const Plans = () => {
+  const { plans, loading } = usePlans();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [isAnnual, setIsAnnual] = useState(true);
 
@@ -74,9 +75,16 @@ const Plans = () => {
             </span>
           </div>
 
-          {/* Plans Grid */}
-          <div id="planos" className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
-            {plans.map((plan, index) => (
+          {/* Loading state */}
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-12 h-12 text-purple-500 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* Plans Grid */}
+              <div id="planos" className="grid md:grid-cols-3 gap-8 max-w-7xl mx-auto">
+                {plans.map((plan, index) => (
               <div
                 key={index}
                 className={`relative p-8 rounded-2xl bg-white/5 backdrop-blur-lg border-2 transition-all duration-300 hover:scale-105 animate-fade-in ${
@@ -163,6 +171,8 @@ const Plans = () => {
               </div>
             ))}
           </div>
+            </>
+          )}
         </div>
       </section>
 

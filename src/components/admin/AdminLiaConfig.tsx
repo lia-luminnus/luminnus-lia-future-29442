@@ -8,6 +8,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { secureStorage } from "@/lib/secureStorage";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ConfigData {
   openaiApiKey: string;
@@ -35,25 +36,65 @@ export const AdminLiaConfig = () => {
 
   // Carregar configurações salvas ao montar o componente
   useEffect(() => {
-    const savedConfig = secureStorage.load();
-    if (savedConfig) {
-      setConfig({
-        openaiApiKey: savedConfig.openaiApiKey || savedConfig.openaiKey || "",
-        supabaseUrl: savedConfig.supabaseUrl || "",
-        supabaseAnonKey: savedConfig.supabaseAnonKey || savedConfig.supabaseAnonKey || "",
-        supabaseServiceRoleKey: savedConfig.supabaseServiceRoleKey || savedConfig.supabaseServiceKey || "",
-        systemPrompt: savedConfig.systemPrompt || "",
-        webhookUrl: savedConfig.webhookUrl || "",
-        liaApiUrl: savedConfig.liaApiUrl || "",
-      });
-    }
+    loadConfig();
   }, []);
+
+  const loadConfig = async () => {
+    try {
+      // Carregar do localStorage primeiro (para chaves sensíveis)
+      const savedConfig = secureStorage.load();
+
+      // Carregar system prompt do Supabase
+      const { data: systemPromptData } = await supabase
+        .from('admin_config' as any)
+        .select('config_value')
+        .eq('config_key', 'system_prompt')
+        .single();
+
+      const { data: liaApiUrlData } = await supabase
+        .from('admin_config' as any)
+        .select('config_value')
+        .eq('config_key', 'lia_api_url')
+        .single();
+
+      const { data: webhookUrlData } = await supabase
+        .from('admin_config' as any)
+        .select('config_value')
+        .eq('config_key', 'webhook_url')
+        .single();
+
+      setConfig({
+        openaiApiKey: savedConfig?.openaiApiKey || savedConfig?.openaiKey || "",
+        supabaseUrl: savedConfig?.supabaseUrl || "",
+        supabaseAnonKey: savedConfig?.supabaseAnonKey || "",
+        supabaseServiceRoleKey: savedConfig?.supabaseServiceRoleKey || savedConfig?.supabaseServiceKey || "",
+        systemPrompt: (systemPromptData as any)?.config_value || savedConfig?.systemPrompt || "",
+        webhookUrl: (webhookUrlData as any)?.config_value || savedConfig?.webhookUrl || "",
+        liaApiUrl: (liaApiUrlData as any)?.config_value || savedConfig?.liaApiUrl || "",
+      });
+    } catch (error) {
+      console.error('Erro ao carregar configurações:', error);
+      // Fallback para localStorage
+      const savedConfig = secureStorage.load();
+      if (savedConfig) {
+        setConfig({
+          openaiApiKey: savedConfig.openaiApiKey || savedConfig.openaiKey || "",
+          supabaseUrl: savedConfig.supabaseUrl || "",
+          supabaseAnonKey: savedConfig.supabaseAnonKey || "",
+          supabaseServiceRoleKey: savedConfig.supabaseServiceRoleKey || savedConfig.supabaseServiceKey || "",
+          systemPrompt: savedConfig.systemPrompt || "",
+          webhookUrl: savedConfig.webhookUrl || "",
+          liaApiUrl: savedConfig.liaApiUrl || "",
+        });
+      }
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
 
     try {
-      // Salvar no secure storage
+      // Salvar chaves sensíveis no secure storage (localStorage encriptado)
       secureStorage.save({
         openaiKey: config.openaiApiKey,
         openaiApiKey: config.openaiApiKey,
@@ -66,18 +107,62 @@ export const AdminLiaConfig = () => {
         webhookUrl: config.webhookUrl,
       });
 
-      // Aqui você também pode salvar em uma tabela do Supabase
-      // para persistir as configurações no servidor
-      // await supabase.from('admin_config').upsert({ ... });
+      // Salvar system prompt no Supabase (para persistência e acesso de outras partes do sistema)
+      if (config.systemPrompt) {
+        const { error: systemPromptError } = await supabase
+          .from('admin_config' as any)
+          .upsert({
+            config_key: 'system_prompt',
+            config_value: config.systemPrompt,
+            config_type: 'text',
+            description: 'Prompt do sistema que define a personalidade da LIA',
+          } as any, {
+            onConflict: 'config_key'
+          });
+
+        if (systemPromptError) {
+          console.error('Erro ao salvar system prompt:', systemPromptError);
+          throw new Error('Falha ao salvar System Prompt no banco de dados');
+        }
+      }
+
+      // Salvar URL da API LIA no Supabase
+      if (config.liaApiUrl) {
+        await supabase
+          .from('admin_config' as any)
+          .upsert({
+            config_key: 'lia_api_url',
+            config_value: config.liaApiUrl,
+            config_type: 'string',
+            description: 'URL da API da LIA hospedada no Render',
+          } as any, {
+            onConflict: 'config_key'
+          });
+      }
+
+      // Salvar webhook URL no Supabase
+      if (config.webhookUrl) {
+        await supabase
+          .from('admin_config' as any)
+          .upsert({
+            config_key: 'webhook_url',
+            config_value: config.webhookUrl,
+            config_type: 'string',
+            description: 'URL do webhook para notificações',
+          } as any, {
+            onConflict: 'config_key'
+          });
+      }
 
       toast({
-        title: "Configurações salvas",
-        description: "As configurações da LIA foram atualizadas com sucesso.",
+        title: "✅ Configurações salvas com sucesso",
+        description: "As configurações da LIA foram atualizadas e persistidas no banco de dados.",
       });
     } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
       toast({
-        title: "Erro ao salvar",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
+        title: "❌ Erro ao salvar configurações",
+        description: error instanceof Error ? error.message : "Erro desconhecido ao salvar",
         variant: "destructive",
       });
     } finally {
