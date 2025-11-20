@@ -94,7 +94,7 @@ const Header = () => {
         <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
           <button onClick={handleHomeClick} className="flex items-center cursor-pointer bg-transparent border-0 p-0">
-            <img src={luminmusLogo} alt="Luminnus - Inteligência & Soluções" className="h-16 lg:h-20 w-auto object-contain transition-all hover:scale-110" />
+            <img src={luminmusLogo} alt="Luminnus - Inteligência & Soluções" className="h-20 lg:h-28 w-auto object-contain transition-all hover:scale-110" />
           </button>
 
           {/* Desktop Navigation */}
