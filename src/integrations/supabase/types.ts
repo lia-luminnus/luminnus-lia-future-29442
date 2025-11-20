@@ -158,10 +158,18 @@ export type Database = {
       }
       plan_configs: {
         Row: {
+          annual_price: string | null
           created_at: string
+          custom_cta_action: string | null
+          custom_cta_text: string | null
           description: string | null
+          discount_percentage: number | null
           features: string[] | null
+          gradient_end: string | null
+          gradient_start: string | null
           id: string
+          is_popular: boolean | null
+          lia_quote: string | null
           max_channels: string | null
           max_conversations: string | null
           max_messages: string | null
@@ -170,10 +178,18 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          annual_price?: string | null
           created_at?: string
+          custom_cta_action?: string | null
+          custom_cta_text?: string | null
           description?: string | null
+          discount_percentage?: number | null
           features?: string[] | null
+          gradient_end?: string | null
+          gradient_start?: string | null
           id?: string
+          is_popular?: boolean | null
+          lia_quote?: string | null
           max_channels?: string | null
           max_conversations?: string | null
           max_messages?: string | null
@@ -182,10 +198,18 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          annual_price?: string | null
           created_at?: string
+          custom_cta_action?: string | null
+          custom_cta_text?: string | null
           description?: string | null
+          discount_percentage?: number | null
           features?: string[] | null
+          gradient_end?: string | null
+          gradient_start?: string | null
           id?: string
+          is_popular?: boolean | null
+          lia_quote?: string | null
           max_channels?: string | null
           max_conversations?: string | null
           max_messages?: string | null
