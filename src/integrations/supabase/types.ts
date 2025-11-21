@@ -452,6 +452,354 @@ export type Database = {
         }
         Relationships: []
       }
+      metrics_openai: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          usuario_id: string | null
+          timestamp: string
+          detalhes: Json | null
+          custo: number
+          input_tokens: number
+          output_tokens: number
+          modelo: string
+          origem: string | null
+          erro: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          usuario_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          custo?: number
+          input_tokens?: number
+          output_tokens?: number
+          modelo?: string
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          usuario_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          custo?: number
+          input_tokens?: number
+          output_tokens?: number
+          modelo?: string
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      metrics_cartesia: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          usuario_id: string | null
+          timestamp: string
+          detalhes: Json | null
+          custo: number
+          caracteres: number
+          duracao_segundos: number
+          voz_id: string | null
+          origem: string | null
+          erro: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          usuario_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          custo?: number
+          caracteres?: number
+          duracao_segundos?: number
+          voz_id?: string | null
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          usuario_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          custo?: number
+          caracteres?: number
+          duracao_segundos?: number
+          voz_id?: string | null
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      metrics_render: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          timestamp: string
+          detalhes: Json | null
+          servico: string
+          status: string
+          cpu_percent: number | null
+          memoria_percent: number | null
+          memoria_mb: number | null
+          uptime_seconds: number | null
+          requests_count: number | null
+          erro: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          servico?: string
+          status?: string
+          cpu_percent?: number | null
+          memoria_percent?: number | null
+          memoria_mb?: number | null
+          uptime_seconds?: number | null
+          requests_count?: number | null
+          erro?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          servico?: string
+          status?: string
+          cpu_percent?: number | null
+          memoria_percent?: number | null
+          memoria_mb?: number | null
+          uptime_seconds?: number | null
+          requests_count?: number | null
+          erro?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      metrics_cloudflare: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          timestamp: string
+          detalhes: Json | null
+          custo: number
+          requests_count: number
+          worker_name: string | null
+          cpu_time_ms: number | null
+          bandwidth_bytes: number | null
+          erros_count: number | null
+          origem: string | null
+          erro: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          custo?: number
+          requests_count?: number
+          worker_name?: string | null
+          cpu_time_ms?: number | null
+          bandwidth_bytes?: number | null
+          erros_count?: number | null
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          custo?: number
+          requests_count?: number
+          worker_name?: string | null
+          cpu_time_ms?: number | null
+          bandwidth_bytes?: number | null
+          erros_count?: number | null
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      metrics_supabase: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          timestamp: string
+          detalhes: Json | null
+          leituras: number
+          escritas: number
+          storage_bytes: number | null
+          realtime_connections: number | null
+          bandwidth_bytes: number | null
+          origem: string | null
+          erro: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          leituras?: number
+          escritas?: number
+          storage_bytes?: number | null
+          realtime_connections?: number | null
+          bandwidth_bytes?: number | null
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          timestamp?: string
+          detalhes?: Json | null
+          leituras?: number
+          escritas?: number
+          storage_bytes?: number | null
+          realtime_connections?: number | null
+          bandwidth_bytes?: number | null
+          origem?: string | null
+          erro?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      metrics_alerts: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          tipo: string
+          severidade: string
+          mensagem: string
+          provedor: string
+          valor_atual: number | null
+          valor_limite: number | null
+          resolvido: boolean
+          resolvido_em: string | null
+          detalhes: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          tipo: string
+          severidade?: string
+          mensagem: string
+          provedor: string
+          valor_atual?: number | null
+          valor_limite?: number | null
+          resolvido?: boolean
+          resolvido_em?: string | null
+          detalhes?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          tipo?: string
+          severidade?: string
+          mensagem?: string
+          provedor?: string
+          valor_atual?: number | null
+          valor_limite?: number | null
+          resolvido?: boolean
+          resolvido_em?: string | null
+          detalhes?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      metrics_daily_summary: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          data: string
+          provedor: string
+          total_requests: number
+          total_custo: number
+          total_erros: number
+          detalhes: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          data: string
+          provedor: string
+          total_requests?: number
+          total_custo?: number
+          total_erros?: number
+          detalhes?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          data?: string
+          provedor?: string
+          total_requests?: number
+          total_custo?: number
+          total_erros?: number
+          detalhes?: Json | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      metrics_alert_configs: {
+        Row: {
+          id: string
+          empresa_id: string | null
+          provedor: string
+          tipo: string
+          limite_valor: number
+          ativo: boolean
+          notificar_email: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id?: string | null
+          provedor: string
+          tipo: string
+          limite_valor: number
+          ativo?: boolean
+          notificar_email?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string | null
+          provedor?: string
+          tipo?: string
+          limite_valor?: number
+          ativo?: boolean
+          notificar_email?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
