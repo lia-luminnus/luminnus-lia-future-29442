@@ -104,9 +104,26 @@ const Plans = () => {
                   <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                   <div className="space-y-2">
                     <div className="flex items-center justify-center gap-2">
-                      <p className={`text-5xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
-                        {isAnnual ? plan.annualPrice : plan.price}
-                      </p>
+                      {(() => {
+                        const colors = plan.color.match(/hsl\([^)]+\)/g) || [];
+                        const gradient = colors.length === 2 
+                          ? `linear-gradient(to right, ${colors[0]}, ${colors[1]})` 
+                          : 'linear-gradient(to right, #7C3AED, #FF2E9E)';
+                        
+                        return (
+                          <p 
+                            className="text-5xl font-black"
+                            style={{
+                              background: gradient,
+                              WebkitBackgroundClip: 'text',
+                              WebkitTextFillColor: 'transparent',
+                              backgroundClip: 'text'
+                            }}
+                          >
+                            {isAnnual ? plan.annualPrice : plan.price}
+                          </p>
+                        );
+                      })()}
                       {isAnnual && (
                         <span className={`px-2 py-1 text-xs font-semibold rounded-full ${
                           plan.discount === 10
