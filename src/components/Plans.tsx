@@ -97,9 +97,26 @@ const Plans = () => {
                 <h3 className="text-2xl font-bold text-white mb-2">{plan.name}</h3>
                 <p className="text-sm text-white/60 mb-4">{plan.description}</p>
                 <div className="space-y-1">
-                  <p className={`text-4xl font-black bg-gradient-to-r ${plan.color} bg-clip-text text-transparent`}>
-                    {isAnnual ? plan.annualPrice : plan.price}
-                  </p>
+                  {(() => {
+                    const colors = plan.color.match(/hsl\([^)]+\)/g) || [];
+                    const gradient = colors.length === 2 
+                      ? `linear-gradient(to right, ${colors[0]}, ${colors[1]})` 
+                      : 'linear-gradient(to right, #7C3AED, #FF2E9E)';
+                    
+                    return (
+                      <p 
+                        className="text-4xl font-black"
+                        style={{
+                          background: gradient,
+                          WebkitBackgroundClip: 'text',
+                          WebkitTextFillColor: 'transparent',
+                          backgroundClip: 'text'
+                        }}
+                      >
+                        {isAnnual ? plan.annualPrice : plan.price}
+                      </p>
+                    );
+                  })()}
                   <p className="text-sm text-white/50">
                     {isAnnual ? '/ano' : plan.period}
                   </p>
