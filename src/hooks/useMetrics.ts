@@ -278,7 +278,7 @@ export const useMetricsRender = (days: number = 30) => {
       if (error) throw error;
       return (data || []).map(item => ({
         ...item,
-        logs_erro: (item.logs_erro || []) as RenderErrorLog[],
+        logs_erro: (item.logs_erro as unknown as RenderErrorLog[]) || [],
       })) as MetricsRender[];
     },
   });
@@ -299,7 +299,7 @@ export const useMetricsRenderLatest = () => {
       if (!data) return null;
       return {
         ...data,
-        logs_erro: (data.logs_erro || []) as RenderErrorLog[],
+        logs_erro: (data.logs_erro as unknown as RenderErrorLog[]) || [],
       } as MetricsRender;
     },
   });
@@ -754,7 +754,11 @@ export const useInsertMetricsRender = () => {
 
   return useMutation({
     mutationFn: async (data: MetricsRenderInsert) => {
-      const { error } = await supabase.from("metrics_render").insert(data);
+      const payload = {
+        ...data,
+        logs_erro: data.logs_erro as unknown as any,
+      };
+      const { error } = await supabase.from("metrics_render").insert([payload]);
       if (error) throw error;
     },
     onSuccess: () => {
