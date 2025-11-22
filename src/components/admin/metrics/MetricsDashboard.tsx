@@ -4,6 +4,7 @@
  * - OpenAI, Cartesia, Render, Cloudflare, Supabase
  * - Custo total do mês
  * - Projeção de custo até fim do mês
+ * - Status em tempo real dos provedores
  */
 
 import { useMemo } from "react";
@@ -18,16 +19,36 @@ import {
   AlertTriangle,
   CheckCircle,
   Loader2,
+  RefreshCw,
+  Clock,
+  Wifi,
+  WifiOff,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import StatusIndicator from "./StatusIndicator";
 import { useDashboardMetrics } from "@/hooks/useMetrics";
 import { useMetricsAlerts } from "@/hooks/useMetrics";
+import { useProviderDashboard } from "@/hooks/useProviderMetrics";
 
 const MetricsDashboard = () => {
   const { data: metrics, isLoading } = useDashboardMetrics();
   const { data: alerts } = useMetricsAlerts(false);
+
+  // Usar o novo hook para status real e refresh
+  const {
+    status: providerStatus,
+    statusByProvider,
+    projection,
+    allOnline,
+    onlineCount,
+    totalProviders,
+    refresh,
+    isRefreshing,
+  } = useProviderDashboard();
 
   const activeAlerts = alerts?.length || 0;
 
@@ -45,6 +66,11 @@ const MetricsDashboard = () => {
 
   const formatPercent = (value: number) => `${value.toFixed(1)}%`;
 
+  const formatLatency = (ms: number) => {
+    if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
+    return `${ms.toFixed(0)}ms`;
+  };
+
   // Calcular dias restantes no mês
   const daysInfo = useMemo(() => {
     const hoje = new Date();
@@ -54,6 +80,25 @@ const MetricsDashboard = () => {
     const percentualMes = (diasPassados / diasNoMes) * 100;
     return { diasNoMes, diasPassados, diasRestantes, percentualMes };
   }, []);
+
+  // Obter status real de um provedor
+  const getProviderStatus = (provider: string): 'green' | 'yellow' | 'red' => {
+    const status = statusByProvider[provider];
+    if (!status) return 'green';
+    if (!status.online) return 'red';
+    if (status.latency_ms > 2000) return 'yellow';
+    return 'green';
+  };
+
+  // Obter latência de um provedor
+  const getProviderLatency = (provider: string): number => {
+    return statusByProvider[provider]?.latency_ms || 0;
+  };
+
+  // Última atualização de status
+  const lastCheckTime = providerStatus?.[0]?.last_check
+    ? new Date(providerStatus[0].last_check).toLocaleTimeString('pt-BR')
+    : null;
 
   if (isLoading) {
     return (
@@ -65,6 +110,48 @@ const MetricsDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header com botão de refresh */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Badge
+            variant={allOnline ? "default" : "destructive"}
+            className={allOnline ? "bg-green-100 text-green-700" : ""}
+          >
+            {allOnline ? (
+              <><Wifi className="w-3 h-3 mr-1" /> {onlineCount}/{totalProviders} Online</>
+            ) : (
+              <><WifiOff className="w-3 h-3 mr-1" /> {onlineCount}/{totalProviders} Online</>
+            )}
+          </Badge>
+          {lastCheckTime && (
+            <span className="text-xs text-gray-500 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Última verificação: {lastCheckTime}
+            </span>
+          )}
+        </div>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => refresh()}
+                disabled={isRefreshing}
+                className="gap-2"
+              >
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                {isRefreshing ? 'Atualizando...' : 'Atualizar Agora'}
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Executa coleta de métricas e status imediatamente</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
+
       {/* Alertas Ativos */}
       {activeAlerts > 0 && (
         <Card className="border-yellow-200 bg-yellow-50">
@@ -110,7 +197,7 @@ const MetricsDashboard = () => {
           </CardHeader>
           <CardContent>
             <p className="text-4xl font-bold">
-              {formatCost(metrics?.projecao_fim_mes || 0)}
+              {formatCost(projection?.total || metrics?.projecao_fim_mes || 0)}
             </p>
             <p className="text-cyan-200 text-sm mt-2">
               Baseado no consumo atual ({daysInfo.diasRestantes} dias restantes)
@@ -149,13 +236,25 @@ const MetricsDashboard = () => {
                 </div>
                 OpenAI
               </CardTitle>
-              <StatusIndicator
-                status={
-                  (metrics?.openai.custo_mes || 0) > 10 ? 'yellow' : 'green'
-                }
-                showPulse={false}
-                size="sm"
-              />
+              <div className="flex items-center gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <StatusIndicator
+                        status={getProviderStatus('openai')}
+                        showPulse={statusByProvider['openai']?.online}
+                        size="sm"
+                      />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>
+                        {statusByProvider['openai']?.online ? 'Online' : 'Offline'}
+                        {getProviderLatency('openai') > 0 && ` - ${formatLatency(getProviderLatency('openai'))}`}
+                      </p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
             </div>
           </CardHeader>
           <CardContent>
@@ -172,8 +271,11 @@ const MetricsDashboard = () => {
                   {formatCost(metrics?.openai.custo_mes || 0)}
                 </span>
               </div>
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t flex justify-between items-center">
                 <p className="text-xs text-gray-500">Modelo: GPT-4o-mini</p>
+                {getProviderLatency('openai') > 0 && (
+                  <p className="text-xs text-gray-400">{formatLatency(getProviderLatency('openai'))}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -189,17 +291,23 @@ const MetricsDashboard = () => {
                 </div>
                 Cartesia (TTS)
               </CardTitle>
-              <StatusIndicator
-                status={
-                  (metrics?.cartesia.creditos_restantes || 0) < 100
-                    ? 'red'
-                    : (metrics?.cartesia.creditos_restantes || 0) < 200
-                    ? 'yellow'
-                    : 'green'
-                }
-                showPulse={false}
-                size="sm"
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <StatusIndicator
+                      status={getProviderStatus('cartesia')}
+                      showPulse={statusByProvider['cartesia']?.online}
+                      size="sm"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {statusByProvider['cartesia']?.online ? 'Online' : 'Offline'}
+                      {getProviderLatency('cartesia') > 0 && ` - ${formatLatency(getProviderLatency('cartesia'))}`}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </CardHeader>
           <CardContent>
@@ -222,10 +330,13 @@ const MetricsDashboard = () => {
                   {(metrics?.cartesia.minutos_fala || 0).toFixed(1)}min
                 </span>
               </div>
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t flex justify-between items-center">
                 <span className="font-bold text-green-600">
                   {formatCost(metrics?.cartesia.custo_mes || 0)}
                 </span>
+                {getProviderLatency('cartesia') > 0 && (
+                  <p className="text-xs text-gray-400">{formatLatency(getProviderLatency('cartesia'))}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -241,11 +352,23 @@ const MetricsDashboard = () => {
                 </div>
                 Render
               </CardTitle>
-              <StatusIndicator
-                status={metrics?.render.status || 'online'}
-                showPulse={true}
-                size="sm"
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <StatusIndicator
+                      status={getProviderStatus('render')}
+                      showPulse={statusByProvider['render']?.online}
+                      size="sm"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {statusByProvider['render']?.online ? 'Online' : 'Offline'}
+                      {getProviderLatency('render') > 0 && ` - ${formatLatency(getProviderLatency('render'))}`}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </CardHeader>
           <CardContent>
@@ -253,7 +376,7 @@ const MetricsDashboard = () => {
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Status</span>
                 <span className="font-bold capitalize">
-                  {metrics?.render.status || 'Online'}
+                  {statusByProvider['render']?.online ? 'Online' : 'Offline'}
                 </span>
               </div>
               <div className="flex justify-between items-center">
@@ -268,11 +391,16 @@ const MetricsDashboard = () => {
                   {formatNumber(metrics?.render.chamadas_mes || 0)}
                 </span>
               </div>
-              <div className="pt-2 border-t">
-                <span className="font-bold text-green-600">
-                  {formatCost(metrics?.render.custo_mes || 0)}
-                </span>
-                <span className="text-xs text-gray-500 ml-1">/mês</span>
+              <div className="pt-2 border-t flex justify-between items-center">
+                <div>
+                  <span className="font-bold text-green-600">
+                    {formatCost(metrics?.render.custo_mes || 0)}
+                  </span>
+                  <span className="text-xs text-gray-500 ml-1">/mês</span>
+                </div>
+                {getProviderLatency('render') > 0 && (
+                  <p className="text-xs text-gray-400">{formatLatency(getProviderLatency('render'))}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -288,11 +416,23 @@ const MetricsDashboard = () => {
                 </div>
                 Cloudflare
               </CardTitle>
-              <StatusIndicator
-                status="green"
-                showPulse={false}
-                size="sm"
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <StatusIndicator
+                      status={getProviderStatus('cloudflare')}
+                      showPulse={statusByProvider['cloudflare']?.online}
+                      size="sm"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {statusByProvider['cloudflare']?.online ? 'Online' : 'Offline'}
+                      {getProviderLatency('cloudflare') > 0 && ` - ${formatLatency(getProviderLatency('cloudflare'))}`}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </CardHeader>
           <CardContent>
@@ -309,10 +449,13 @@ const MetricsDashboard = () => {
                   {formatNumber(metrics?.cloudflare.workers_executados || 0)}
                 </span>
               </div>
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t flex justify-between items-center">
                 <span className="font-bold text-green-600">
                   {formatCost(metrics?.cloudflare.custo_mes || 0)}
                 </span>
+                {getProviderLatency('cloudflare') > 0 && (
+                  <p className="text-xs text-gray-400">{formatLatency(getProviderLatency('cloudflare'))}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -328,17 +471,23 @@ const MetricsDashboard = () => {
                 </div>
                 Supabase
               </CardTitle>
-              <StatusIndicator
-                status={
-                  (metrics?.supabase.storage_usado_percent || 0) > 90
-                    ? 'red'
-                    : (metrics?.supabase.storage_usado_percent || 0) > 80
-                    ? 'yellow'
-                    : 'green'
-                }
-                showPulse={false}
-                size="sm"
-              />
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <StatusIndicator
+                      status={getProviderStatus('supabase')}
+                      showPulse={statusByProvider['supabase']?.online}
+                      size="sm"
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {statusByProvider['supabase']?.online ? 'Online' : 'Offline'}
+                      {getProviderLatency('supabase') > 0 && ` - ${formatLatency(getProviderLatency('supabase'))}`}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </CardHeader>
           <CardContent>
@@ -361,10 +510,13 @@ const MetricsDashboard = () => {
                   {formatPercent(metrics?.supabase.storage_usado_percent || 0)}
                 </span>
               </div>
-              <div className="pt-2 border-t">
+              <div className="pt-2 border-t flex justify-between items-center">
                 <span className="font-bold text-green-600">
                   {formatCost(metrics?.supabase.custo_mes || 0)}
                 </span>
+                {getProviderLatency('supabase') > 0 && (
+                  <p className="text-xs text-gray-400">{formatLatency(getProviderLatency('supabase'))}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -384,7 +536,9 @@ const MetricsDashboard = () => {
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Provedores</span>
-                <span className="font-bold text-lg text-green-600">5/5</span>
+                <span className={`font-bold text-lg ${allOnline ? 'text-green-600' : 'text-yellow-600'}`}>
+                  {onlineCount}/{totalProviders}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Alertas</span>
@@ -394,7 +548,7 @@ const MetricsDashboard = () => {
               </div>
               <div className="pt-2 border-t">
                 <div className="flex items-center gap-2">
-                  {activeAlerts === 0 ? (
+                  {allOnline && activeAlerts === 0 ? (
                     <>
                       <CheckCircle className="w-4 h-4 text-green-500" />
                       <span className="text-sm text-green-600">Todos os sistemas operacionais</span>
@@ -421,11 +575,11 @@ const MetricsDashboard = () => {
         <CardContent>
           <div className="space-y-4">
             {[
-              { name: 'OpenAI', value: metrics?.openai.custo_mes || 0, color: 'bg-purple-500' },
-              { name: 'Cartesia', value: metrics?.cartesia.custo_mes || 0, color: 'bg-cyan-500' },
-              { name: 'Render', value: metrics?.render.custo_mes || 0, color: 'bg-blue-500' },
-              { name: 'Cloudflare', value: metrics?.cloudflare.custo_mes || 0, color: 'bg-orange-500' },
-              { name: 'Supabase', value: metrics?.supabase.custo_mes || 0, color: 'bg-emerald-500' },
+              { name: 'OpenAI', value: metrics?.openai.custo_mes || 0, color: 'bg-purple-500', projection: projection?.byProvider?.openai || 0 },
+              { name: 'Cartesia', value: metrics?.cartesia.custo_mes || 0, color: 'bg-cyan-500', projection: projection?.byProvider?.cartesia || 0 },
+              { name: 'Render', value: metrics?.render.custo_mes || 0, color: 'bg-blue-500', projection: projection?.byProvider?.render || 0 },
+              { name: 'Cloudflare', value: metrics?.cloudflare.custo_mes || 0, color: 'bg-orange-500', projection: projection?.byProvider?.cloudflare || 0 },
+              { name: 'Supabase', value: metrics?.supabase.custo_mes || 0, color: 'bg-emerald-500', projection: projection?.byProvider?.supabase || 0 },
             ].map((provider) => {
               const total = metrics?.custo_total_mes || 1;
               const percent = (provider.value / total) * 100;
@@ -434,9 +588,16 @@ const MetricsDashboard = () => {
                 <div key={provider.name} className="space-y-1">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">{provider.name}</span>
-                    <span className="font-medium">
-                      {formatCost(provider.value)} ({formatPercent(percent)})
-                    </span>
+                    <div className="flex gap-3">
+                      <span className="font-medium">
+                        {formatCost(provider.value)} ({formatPercent(percent)})
+                      </span>
+                      {provider.projection > 0 && (
+                        <span className="text-gray-400 text-xs">
+                          Proj: {formatCost(provider.projection)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div
