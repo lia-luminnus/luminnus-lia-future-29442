@@ -156,6 +156,321 @@ export type Database = {
           },
         ]
       }
+      lia_configurations: {
+        Row: {
+          created_at: string
+          id: string
+          metrics_settings: Json | null
+          openai_api_key: string | null
+          render_api_url: string | null
+          supabase_anon_key: string | null
+          supabase_service_role_key: string | null
+          supabase_url: string | null
+          system_prompt: string | null
+          updated_at: string
+          webhook_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metrics_settings?: Json | null
+          openai_api_key?: string | null
+          render_api_url?: string | null
+          supabase_anon_key?: string | null
+          supabase_service_role_key?: string | null
+          supabase_url?: string | null
+          system_prompt?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metrics_settings?: Json | null
+          openai_api_key?: string | null
+          render_api_url?: string | null
+          supabase_anon_key?: string | null
+          supabase_service_role_key?: string | null
+          supabase_url?: string | null
+          system_prompt?: string | null
+          updated_at?: string
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      metrics_alerts: {
+        Row: {
+          created_at: string
+          fonte: string
+          id: string
+          mensagem: string
+          nivel: string | null
+          resolvido: boolean | null
+          resolvido_em: string | null
+          tipo_alerta: string
+          valor_atual: number | null
+          valor_limite: number | null
+        }
+        Insert: {
+          created_at?: string
+          fonte: string
+          id?: string
+          mensagem: string
+          nivel?: string | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          tipo_alerta: string
+          valor_atual?: number | null
+          valor_limite?: number | null
+        }
+        Update: {
+          created_at?: string
+          fonte?: string
+          id?: string
+          mensagem?: string
+          nivel?: string | null
+          resolvido?: boolean | null
+          resolvido_em?: string | null
+          tipo_alerta?: string
+          valor_atual?: number | null
+          valor_limite?: number | null
+        }
+        Relationships: []
+      }
+      metrics_cartesia: {
+        Row: {
+          caracteres_enviados: number
+          created_at: string
+          creditos_restantes: number | null
+          creditos_usados: number | null
+          custo_estimado: number | null
+          data: string
+          empresa_id: string | null
+          id: string
+          minutos_fala: number | null
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          caracteres_enviados?: number
+          created_at?: string
+          creditos_restantes?: number | null
+          creditos_usados?: number | null
+          custo_estimado?: number | null
+          data?: string
+          empresa_id?: string | null
+          id?: string
+          minutos_fala?: number | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          caracteres_enviados?: number
+          created_at?: string
+          creditos_restantes?: number | null
+          creditos_usados?: number | null
+          custo_estimado?: number | null
+          data?: string
+          empresa_id?: string | null
+          id?: string
+          minutos_fala?: number | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      metrics_cloudflare: {
+        Row: {
+          created_at: string
+          custo_estimado: number | null
+          data: string
+          empresa_id: string | null
+          erros_4xx: number | null
+          erros_5xx: number | null
+          id: string
+          plano: string | null
+          requests_dia: number | null
+          tempo_execucao_ms: number | null
+          trafego_rota: Json | null
+          updated_at: string
+          workers_executados: number | null
+        }
+        Insert: {
+          created_at?: string
+          custo_estimado?: number | null
+          data?: string
+          empresa_id?: string | null
+          erros_4xx?: number | null
+          erros_5xx?: number | null
+          id?: string
+          plano?: string | null
+          requests_dia?: number | null
+          tempo_execucao_ms?: number | null
+          trafego_rota?: Json | null
+          updated_at?: string
+          workers_executados?: number | null
+        }
+        Update: {
+          created_at?: string
+          custo_estimado?: number | null
+          data?: string
+          empresa_id?: string | null
+          erros_4xx?: number | null
+          erros_5xx?: number | null
+          id?: string
+          plano?: string | null
+          requests_dia?: number | null
+          tempo_execucao_ms?: number | null
+          trafego_rota?: Json | null
+          updated_at?: string
+          workers_executados?: number | null
+        }
+        Relationships: []
+      }
+      metrics_openai: {
+        Row: {
+          created_at: string
+          custo_estimado: number | null
+          data: string
+          empresa_id: string | null
+          id: string
+          modelo: string | null
+          tokens_input: number
+          tokens_output: number
+          tokens_total: number | null
+          updated_at: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          custo_estimado?: number | null
+          data?: string
+          empresa_id?: string | null
+          id?: string
+          modelo?: string | null
+          tokens_input?: number
+          tokens_output?: number
+          tokens_total?: number | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          custo_estimado?: number | null
+          data?: string
+          empresa_id?: string | null
+          id?: string
+          modelo?: string | null
+          tokens_input?: number
+          tokens_output?: number
+          tokens_total?: number | null
+          updated_at?: string
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
+      metrics_render: {
+        Row: {
+          chamadas_dia: number | null
+          cpu_percent: number | null
+          created_at: string
+          custo_mensal: number | null
+          data: string
+          erros_4xx: number | null
+          erros_500: number | null
+          id: string
+          instancia_tipo: string | null
+          logs_erro: Json | null
+          ram_percent: number | null
+          status: string | null
+          tempo_resposta_ms: number | null
+          updated_at: string
+        }
+        Insert: {
+          chamadas_dia?: number | null
+          cpu_percent?: number | null
+          created_at?: string
+          custo_mensal?: number | null
+          data?: string
+          erros_4xx?: number | null
+          erros_500?: number | null
+          id?: string
+          instancia_tipo?: string | null
+          logs_erro?: Json | null
+          ram_percent?: number | null
+          status?: string | null
+          tempo_resposta_ms?: number | null
+          updated_at?: string
+        }
+        Update: {
+          chamadas_dia?: number | null
+          cpu_percent?: number | null
+          created_at?: string
+          custo_mensal?: number | null
+          data?: string
+          erros_4xx?: number | null
+          erros_500?: number | null
+          id?: string
+          instancia_tipo?: string | null
+          logs_erro?: Json | null
+          ram_percent?: number | null
+          status?: string | null
+          tempo_resposta_ms?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      metrics_supabase: {
+        Row: {
+          conexoes_abertas: number | null
+          consultas_lentas: number | null
+          consumo_tabela: Json | null
+          created_at: string
+          custo_estimado: number | null
+          data: string
+          escritas_segundo: number | null
+          id: string
+          leituras_segundo: number | null
+          storage_limite_mb: number | null
+          storage_usado_mb: number | null
+          tamanho_banco_mb: number | null
+          taxa_erros: number | null
+          updated_at: string
+        }
+        Insert: {
+          conexoes_abertas?: number | null
+          consultas_lentas?: number | null
+          consumo_tabela?: Json | null
+          created_at?: string
+          custo_estimado?: number | null
+          data?: string
+          escritas_segundo?: number | null
+          id?: string
+          leituras_segundo?: number | null
+          storage_limite_mb?: number | null
+          storage_usado_mb?: number | null
+          tamanho_banco_mb?: number | null
+          taxa_erros?: number | null
+          updated_at?: string
+        }
+        Update: {
+          conexoes_abertas?: number | null
+          consultas_lentas?: number | null
+          consumo_tabela?: Json | null
+          created_at?: string
+          custo_estimado?: number | null
+          data?: string
+          escritas_segundo?: number | null
+          id?: string
+          leituras_segundo?: number | null
+          storage_limite_mb?: number | null
+          storage_usado_mb?: number | null
+          tamanho_banco_mb?: number | null
+          taxa_erros?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       plan_configs: {
         Row: {
           annual_price: string | null
