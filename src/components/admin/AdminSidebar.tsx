@@ -34,7 +34,6 @@ const menuItems = [
   { id: "lia-chat", label: "Assistente LIA", icon: Bot },
   { id: "users", label: "Gerenciar Usuários", icon: Users },
   { id: "companies", label: "Empresas", icon: Building2, badge: "Novo" },
-  { id: "lia-config", label: "Configurações da LIA", icon: Settings },
   { id: "lia-core-updates", label: "LIA Core Updates", icon: Sparkles, badge: "Novo" },
   { id: "tools", label: "Ferramentas e Testes", icon: Wrench },
   { id: "history", label: "Histórico de Interações", icon: MessageSquare },
@@ -45,6 +44,7 @@ const menuItems = [
   { id: "logs", label: "Logs", icon: FileText, badge: "Novo" },
   { id: "errors", label: "Erros", icon: AlertTriangle, badge: "Novo" },
   { id: "technical", label: "Configurações Técnicas", icon: Code },
+  { id: "lia-config", label: "Configurações da LIA", icon: Settings },
 ];
 
 export const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
