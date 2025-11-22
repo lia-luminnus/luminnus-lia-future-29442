@@ -1,17 +1,87 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart3, TrendingUp, Users, MessageSquare, Clock, Zap } from "lucide-react";
-
 /**
  * COMPONENTE: AdminMetrics
  *
- * Painel para visualização de métricas e analytics
- * - Consumo de tokens por empresa
- * - Mensagens processadas
- * - Tempo de resposta médio
- * - Taxa de conversão
- * - Gráficos e estatísticas
+ * Painel completo para visualização de métricas e analytics
+ * Integração com provedores:
+ * - OpenAI (GPT-4o-mini)
+ * - Cartesia (TTS)
+ * - Render (Servidor)
+ * - Cloudflare (Workers)
+ * - Supabase (Database)
+ *
+ * Features:
+ * - Painel geral unificado
+ * - Abas por provedor
+ * - Gráficos interativos
+ * - Alertas e notificações
+ * - Cálculos de custo
+ * - Previsões de consumo
  */
+
+import { useState } from "react";
+import {
+  BarChart3,
+  Zap,
+  Mic,
+  Server,
+  Cloud,
+  Database,
+  LayoutDashboard,
+} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  MetricsDashboard,
+  OpenAIMetricsTab,
+  CartesiaMetricsTab,
+  RenderMetricsTab,
+  CloudflareMetricsTab,
+  SupabaseMetricsTab,
+} from "./metrics";
+
+type MetricsTab = 'dashboard' | 'openai' | 'cartesia' | 'render' | 'cloudflare' | 'supabase';
+
 const AdminMetrics = () => {
+  const [activeTab, setActiveTab] = useState<MetricsTab>('dashboard');
+
+  const tabs = [
+    {
+      id: 'dashboard' as const,
+      label: 'Painel Geral',
+      icon: LayoutDashboard,
+      color: 'text-gray-600',
+    },
+    {
+      id: 'openai' as const,
+      label: 'OpenAI',
+      icon: Zap,
+      color: 'text-purple-600',
+    },
+    {
+      id: 'cartesia' as const,
+      label: 'Cartesia',
+      icon: Mic,
+      color: 'text-cyan-600',
+    },
+    {
+      id: 'render' as const,
+      label: 'Render',
+      icon: Server,
+      color: 'text-blue-600',
+    },
+    {
+      id: 'cloudflare' as const,
+      label: 'Cloudflare',
+      icon: Cloud,
+      color: 'text-orange-600',
+    },
+    {
+      id: 'supabase' as const,
+      label: 'Supabase',
+      icon: Database,
+      color: 'text-emerald-600',
+    },
+  ];
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -21,105 +91,62 @@ const AdminMetrics = () => {
           Métricas e Analytics
         </h1>
         <p className="text-gray-600">
-          Acompanhe o desempenho e uso da plataforma
+          Acompanhe o consumo, custos e desempenho de todos os provedores da LIA
         </p>
       </div>
 
-      {/* Métricas Principais */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Mensagens Hoje</CardTitle>
-            <MessageSquare className="w-4 h-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-purple-600">0</p>
-            <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
-              <TrendingUp className="w-3 h-3 text-green-500" />
-              +0% vs ontem
-            </p>
-          </CardContent>
-        </Card>
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as MetricsTab)}>
+        <TabsList className="grid grid-cols-6 w-full h-auto p-1 bg-gray-100">
+          {tabs.map((tab) => (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              className="flex items-center gap-2 py-2.5 px-3 data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <tab.icon className={`w-4 h-4 ${tab.color}`} />
+              <span className="hidden md:inline text-sm">{tab.label}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Tokens Consumidos</CardTitle>
-            <Zap className="w-4 h-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-orange-600">0</p>
-            <p className="text-xs text-gray-500 mt-1">Últimas 24h</p>
-          </CardContent>
-        </Card>
+        {/* Conteúdo das Tabs */}
+        <div className="mt-6">
+          <TabsContent value="dashboard" className="m-0">
+            <MetricsDashboard />
+          </TabsContent>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Usuários Ativos</CardTitle>
-            <Users className="w-4 h-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-blue-600">0</p>
-            <p className="text-xs text-gray-500 mt-1">Agora</p>
-          </CardContent>
-        </Card>
+          <TabsContent value="openai" className="m-0">
+            <OpenAIMetricsTab />
+          </TabsContent>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Tempo Médio</CardTitle>
-            <Clock className="w-4 h-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-600">0s</p>
-            <p className="text-xs text-gray-500 mt-1">Resposta da LIA</p>
-          </CardContent>
-        </Card>
+          <TabsContent value="cartesia" className="m-0">
+            <CartesiaMetricsTab />
+          </TabsContent>
+
+          <TabsContent value="render" className="m-0">
+            <RenderMetricsTab />
+          </TabsContent>
+
+          <TabsContent value="cloudflare" className="m-0">
+            <CloudflareMetricsTab />
+          </TabsContent>
+
+          <TabsContent value="supabase" className="m-0">
+            <SupabaseMetricsTab />
+          </TabsContent>
+        </div>
+      </Tabs>
+
+      {/* Informações adicionais */}
+      <div className="text-center text-xs text-gray-400 pt-4 border-t">
+        <p>
+          Métricas atualizadas em tempo real. Dados dos últimos 30 dias.
+        </p>
+        <p className="mt-1">
+          Preços baseados em: OpenAI (GPT-4o-mini), Cartesia TTS, Render, Cloudflare Workers, Supabase
+        </p>
       </div>
-
-      {/* Gráficos */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Mensagens por Dia</CardTitle>
-            <CardDescription>Volume de mensagens processadas nos últimos 30 dias</CardDescription>
-          </CardHeader>
-          <CardContent className="h-64 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <BarChart3 className="w-16 h-16 mx-auto mb-4 opacity-30" />
-              <p className="text-sm">Gráfico será implementado em breve</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Consumo de Tokens</CardTitle>
-            <CardDescription>Uso de tokens por empresa nos últimos 30 dias</CardDescription>
-          </CardHeader>
-          <CardContent className="h-64 flex items-center justify-center">
-            <div className="text-center text-gray-500">
-              <Zap className="w-16 h-16 mx-auto mb-4 opacity-30" />
-              <p className="text-sm">Gráfico será implementado em breve</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Tabela de Uso por Empresa */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Uso por Empresa</CardTitle>
-          <CardDescription>
-            Detalhamento de consumo por cliente
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-gray-500">
-            <Users className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-semibold">Nenhum dado disponível</p>
-            <p className="text-sm">Métricas detalhadas serão exibidas aqui</p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
