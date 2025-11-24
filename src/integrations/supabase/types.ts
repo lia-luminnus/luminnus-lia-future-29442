@@ -70,6 +70,57 @@ export type Database = {
         }
         Relationships: []
       }
+      agenda: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          data: string
+          descricao: string | null
+          hora: string
+          id: string
+          imovel_id: string | null
+          status: string | null
+          tipo: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          data: string
+          descricao?: string | null
+          hora: string
+          id?: string
+          imovel_id?: string | null
+          status?: string | null
+          tipo: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          data?: string
+          descricao?: string | null
+          hora?: string
+          id?: string
+          imovel_id?: string | null
+          status?: string | null
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agenda_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agendamentos: {
         Row: {
           created_at: string
@@ -156,43 +207,208 @@ export type Database = {
           },
         ]
       }
+      clientes: {
+        Row: {
+          created_at: string | null
+          email: string
+          endereco: string | null
+          id: string
+          nome: string
+          status_processo: string | null
+          telefone: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          endereco?: string | null
+          id?: string
+          nome: string
+          status_processo?: string | null
+          telefone?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          endereco?: string | null
+          id?: string
+          nome?: string
+          status_processo?: string | null
+          telefone?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      companies: {
+        Row: {
+          cnpj: string
+          created_at: string | null
+          email: string
+          id: string
+          name: string
+          phone: string | null
+          plan: string | null
+          status: string | null
+          users_count: number | null
+        }
+        Insert: {
+          cnpj: string
+          created_at?: string | null
+          email: string
+          id?: string
+          name: string
+          phone?: string | null
+          plan?: string | null
+          status?: string | null
+          users_count?: number | null
+        }
+        Update: {
+          cnpj?: string
+          created_at?: string | null
+          email?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          plan?: string | null
+          status?: string | null
+          users_count?: number | null
+        }
+        Relationships: []
+      }
+      imoveis: {
+        Row: {
+          area: number | null
+          banheiros: number | null
+          caracteristicas: string[] | null
+          created_at: string | null
+          descricao: string | null
+          disponivel: boolean | null
+          fotos: string[] | null
+          id: string
+          localizacao: string
+          preco: number
+          quartos: number | null
+          tipologia: string | null
+          titulo: string
+        }
+        Insert: {
+          area?: number | null
+          banheiros?: number | null
+          caracteristicas?: string[] | null
+          created_at?: string | null
+          descricao?: string | null
+          disponivel?: boolean | null
+          fotos?: string[] | null
+          id?: string
+          localizacao: string
+          preco: number
+          quartos?: number | null
+          tipologia?: string | null
+          titulo: string
+        }
+        Update: {
+          area?: number | null
+          banheiros?: number | null
+          caracteristicas?: string[] | null
+          created_at?: string | null
+          descricao?: string | null
+          disponivel?: boolean | null
+          fotos?: string[] | null
+          id?: string
+          localizacao?: string
+          preco?: number
+          quartos?: number | null
+          tipologia?: string | null
+          titulo?: string
+        }
+        Relationships: []
+      }
+      imoveis_sugeridos: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          id: string
+          imovel_id: string
+          nota_lia: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          id?: string
+          imovel_id: string
+          nota_lia?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          id?: string
+          imovel_id?: string
+          nota_lia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "imoveis_sugeridos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "imoveis_sugeridos_imovel_id_fkey"
+            columns: ["imovel_id"]
+            isOneToOne: false
+            referencedRelation: "imoveis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lia_configurations: {
         Row: {
           created_at: string
           id: string
+          max_tokens: number | null
           metrics_settings: Json | null
           openai_api_key: string | null
+          openai_model: string | null
           render_api_url: string | null
           supabase_anon_key: string | null
           supabase_service_role_key: string | null
           supabase_url: string | null
           system_prompt: string | null
+          temperature: number | null
           updated_at: string
           webhook_url: string | null
         }
         Insert: {
           created_at?: string
           id?: string
+          max_tokens?: number | null
           metrics_settings?: Json | null
           openai_api_key?: string | null
+          openai_model?: string | null
           render_api_url?: string | null
           supabase_anon_key?: string | null
           supabase_service_role_key?: string | null
           supabase_url?: string | null
           system_prompt?: string | null
+          temperature?: number | null
           updated_at?: string
           webhook_url?: string | null
         }
         Update: {
           created_at?: string
           id?: string
+          max_tokens?: number | null
           metrics_settings?: Json | null
           openai_api_key?: string | null
+          openai_model?: string | null
           render_api_url?: string | null
           supabase_anon_key?: string | null
           supabase_service_role_key?: string | null
           supabase_url?: string | null
           system_prompt?: string | null
+          temperature?: number | null
           updated_at?: string
           webhook_url?: string | null
         }
@@ -471,6 +687,47 @@ export type Database = {
         }
         Relationships: []
       }
+      notificacoes: {
+        Row: {
+          cliente_id: string | null
+          created_at: string | null
+          id: string
+          lida: boolean | null
+          mensagem: string
+          origem: string
+          tipo: string
+          titulo: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          lida?: boolean | null
+          mensagem: string
+          origem: string
+          tipo: string
+          titulo: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string | null
+          id?: string
+          lida?: boolean | null
+          mensagem?: string
+          origem?: string
+          tipo?: string
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notificacoes_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_configs: {
         Row: {
           annual_price: string | null
@@ -566,6 +823,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      processos: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          etapa_atual: number | null
+          id: string
+          observacoes: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          etapa_atual?: number | null
+          id?: string
+          observacoes?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          etapa_atual?: number | null
+          id?: string
+          observacoes?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "processos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -704,6 +999,66 @@ export type Database = {
         }
         Relationships: []
       }
+      system_errors: {
+        Row: {
+          component: string | null
+          created_at: string | null
+          id: string
+          message: string
+          resolved: boolean | null
+          resolved_at: string | null
+          severity: string
+          stack_trace: string | null
+        }
+        Insert: {
+          component?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity: string
+          stack_trace?: string | null
+        }
+        Update: {
+          component?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          resolved?: boolean | null
+          resolved_at?: string | null
+          severity?: string
+          stack_trace?: string | null
+        }
+        Relationships: []
+      }
+      system_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: string
+          message: string
+          metadata: Json | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level: string
+          message: string
+          metadata?: Json | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: string
+          message?: string
+          metadata?: Json | null
+          type?: string
+        }
+        Relationships: []
+      }
       usage_limits: {
         Row: {
           agendamentos_count: number
@@ -733,6 +1088,27 @@ export type Database = {
           mensagens_count?: number
           periodo_mes?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
         }
         Relationships: []
@@ -772,13 +1148,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       increment_usage_limit: {
         Args: { p_type: string; p_user_id: string }
         Returns: undefined
       }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "cliente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -905,6 +1288,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "cliente"],
+    },
   },
 } as const
