@@ -101,10 +101,17 @@ const AdminDashboard = () => {
                 {activeSection === "overview" && "Visão Geral"}
                 {activeSection === "lia-chat" && "Assistente LIA"}
                 {activeSection === "users" && "Gerenciar Usuários"}
+                {activeSection === "companies" && "Gestão de Empresas"}
                 {activeSection === "lia-config" && "Configurações da LIA"}
+                {activeSection === "lia-core-updates" && "LIA Core Updates"}
                 {activeSection === "tools" && "Ferramentas e Testes"}
                 {activeSection === "history" && "Histórico de Interações"}
                 {activeSection === "plans" && "Planos e Permissões"}
+                {activeSection === "integrations" && "Integrações"}
+                {activeSection === "metrics" && "Métricas e Analytics"}
+                {activeSection === "support" && "Suporte"}
+                {activeSection === "logs" && "Logs do Sistema"}
+                {activeSection === "errors" && "Monitoramento de Erros"}
                 {activeSection === "technical" && "Configurações Técnicas"}
               </h1>
               <p className="text-sm text-muted-foreground">

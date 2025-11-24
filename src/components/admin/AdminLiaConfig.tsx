@@ -273,35 +273,35 @@ export const AdminLiaConfig = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6">
       {/* HEADER */}
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-purple-900 bg-clip-text text-transparent mb-2">
             Configurações da LIA
           </h1>
-          <p className="text-white/60">
+          <p className="text-gray-600">
             Gerencie as credenciais, prompts e configurações da assistente virtual
           </p>
         </div>
       </div>
 
       {/* SEÇÃO 1: CREDENCIAIS DE API */}
-      <Card className="bg-white/5 backdrop-blur-lg border border-white/10">
+      <Card className="border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <Key className="w-5 h-5 text-blue-400" />
+          <CardTitle className="text-gray-900 flex items-center gap-2">
+            <Key className="w-5 h-5 text-blue-600" />
             Credenciais de API
           </CardTitle>
-          <CardDescription className="text-white/60">
+          <CardDescription className="text-gray-600">
             Configure as chaves de acesso dos provedores externos
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* OpenAI API Key */}
           <div className="space-y-2">
-            <Label htmlFor="openai-key" className="text-white">
-              OpenAI API Key <span className="text-red-400">*</span>
+            <Label htmlFor="openai-key" className="text-gray-700">
+              OpenAI API Key <span className="text-red-500">*</span>
             </Label>
             <div className="flex gap-2">
               <Input
@@ -310,13 +310,13 @@ export const AdminLiaConfig = () => {
                 value={liaConfig.openaiApiKey}
                 onChange={(e) => setLiaConfig({ ...liaConfig, openaiApiKey: e.target.value })}
                 placeholder="sk-..."
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
                 onClick={() => setShowKeys(!showKeys)}
-                className="text-white/60 hover:text-white"
+                className="text-gray-600 hover:text-gray-900"
               >
                 {showKeys ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </Button>
@@ -324,54 +324,54 @@ export const AdminLiaConfig = () => {
           </div>
 
           {/* Supabase */}
-          <div className="space-y-4 pt-4 border-t border-white/10">
+          <div className="space-y-4 pt-4 border-t border-gray-200">
             <div className="flex items-center gap-2">
-              <Database className="w-5 h-5 text-green-400" />
-              <h3 className="text-white font-semibold">Supabase</h3>
+              <Database className="w-5 h-5 text-green-600" />
+              <h3 className="text-gray-900 font-semibold">Supabase</h3>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="supabase-url" className="text-white">URL do Projeto</Label>
+              <Label htmlFor="supabase-url" className="text-gray-700">URL do Projeto</Label>
               <Input
                 id="supabase-url"
                 type="text"
                 value={liaConfig.supabaseUrl}
                 onChange={(e) => setLiaConfig({ ...liaConfig, supabaseUrl: e.target.value })}
                 placeholder="https://seu-projeto.supabase.co"
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="supabase-anon" className="text-white">Anon Key (Pública)</Label>
+              <Label htmlFor="supabase-anon" className="text-gray-700">Anon Key (Pública)</Label>
               <Input
                 id="supabase-anon"
                 type={showKeys ? "text" : "password"}
                 value={liaConfig.supabaseAnonKey}
                 onChange={(e) => setLiaConfig({ ...liaConfig, supabaseAnonKey: e.target.value })}
                 placeholder="eyJ..."
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="supabase-service" className="text-white">Service Role Key (Privada)</Label>
+              <Label htmlFor="supabase-service" className="text-gray-700">Service Role Key (Privada)</Label>
               <Input
                 id="supabase-service"
                 type={showKeys ? "text" : "password"}
                 value={liaConfig.supabaseServiceKey}
                 onChange={(e) => setLiaConfig({ ...liaConfig, supabaseServiceKey: e.target.value })}
                 placeholder="eyJ..."
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
           </div>
 
           {/* Render API */}
-          <div className="space-y-2 pt-4 border-t border-white/10">
+          <div className="space-y-2 pt-4 border-t border-gray-200">
             <div className="flex items-center gap-2">
-              <Server className="w-5 h-5 text-purple-400" />
-              <Label htmlFor="render-url" className="text-white">Render API URL</Label>
+              <Server className="w-5 h-5 text-purple-600" />
+              <Label htmlFor="render-url" className="text-gray-700">Render API URL</Label>
             </div>
             <Input
               id="render-url"
@@ -379,15 +379,15 @@ export const AdminLiaConfig = () => {
               value={liaConfig.renderApiUrl}
               onChange={(e) => setLiaConfig({ ...liaConfig, renderApiUrl: e.target.value })}
               placeholder="https://sua-api.onrender.com"
-              className="bg-white/10 border-white/20 text-white"
+              className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
             />
           </div>
 
           {/* Webhook */}
-          <div className="space-y-2 pt-4 border-t border-white/10">
+          <div className="space-y-2 pt-4 border-t border-gray-200">
             <div className="flex items-center gap-2">
-              <Webhook className="w-5 h-5 text-yellow-400" />
-              <Label htmlFor="webhook-url" className="text-white">Webhook URL</Label>
+              <Webhook className="w-5 h-5 text-yellow-600" />
+              <Label htmlFor="webhook-url" className="text-gray-700">Webhook URL</Label>
             </div>
             <Input
               id="webhook-url"
@@ -395,34 +395,34 @@ export const AdminLiaConfig = () => {
               value={liaConfig.webhookUrl}
               onChange={(e) => setLiaConfig({ ...liaConfig, webhookUrl: e.target.value })}
               placeholder="https://seu-webhook.com/endpoint"
-              className="bg-white/10 border-white/20 text-white"
+              className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
             />
           </div>
         </CardContent>
       </Card>
 
       {/* SEÇÃO 2: PROMPT DO SISTEMA */}
-      <Card className="bg-white/5 backdrop-blur-lg border border-white/10">
+      <Card className="border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <FileText className="w-5 h-5 text-green-400" />
+          <CardTitle className="text-gray-900 flex items-center gap-2">
+            <FileText className="w-5 h-5 text-green-600" />
             Prompt do Sistema
           </CardTitle>
-          <CardDescription className="text-white/60">
+          <CardDescription className="text-gray-600">
             Configure a personalidade e comportamento da assistente LIA
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="system-prompt" className="text-white">Instruções do Sistema</Label>
+            <Label htmlFor="system-prompt" className="text-gray-700">Instruções do Sistema</Label>
             <Textarea
               id="system-prompt"
               value={liaConfig.systemPrompt}
               onChange={(e) => setLiaConfig({ ...liaConfig, systemPrompt: e.target.value })}
               placeholder="Você é a LIA, uma assistente virtual inteligente..."
-              className="bg-white/10 border-white/20 text-white min-h-[120px]"
+              className="border-gray-300 focus:border-purple-500 focus:ring-purple-500 min-h-[120px]"
             />
-            <p className="text-xs text-white/40">
+            <p className="text-xs text-gray-500">
               Este prompt será usado como instruções base para todas as interações da LIA
             </p>
           </div>
@@ -430,13 +430,13 @@ export const AdminLiaConfig = () => {
       </Card>
 
       {/* SEÇÃO 3: CONFIGURAÇÕES DE MÉTRICAS */}
-      <Card className="bg-white/5 backdrop-blur-lg border border-white/10">
+      <Card className="border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-orange-400" />
+          <CardTitle className="text-gray-900 flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-orange-600" />
             Configurações de Métricas
           </CardTitle>
-          <CardDescription className="text-white/60">
+          <CardDescription className="text-gray-600">
             Defina os preços e limites para cálculo de custos
           </CardDescription>
         </CardHeader>
@@ -444,63 +444,63 @@ export const AdminLiaConfig = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* OpenAI */}
             <div className="space-y-2">
-              <Label htmlFor="openai-input" className="text-white">OpenAI Input Price ($/1M tokens)</Label>
+              <Label htmlFor="openai-input" className="text-gray-700">OpenAI Input Price ($/1M tokens)</Label>
               <Input
                 id="openai-input"
                 type="number"
                 step="0.01"
                 value={metricsSettings.openaiInputPrice}
                 onChange={(e) => setMetricsSettings({ ...metricsSettings, openaiInputPrice: e.target.value })}
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="openai-output" className="text-white">OpenAI Output Price ($/1M tokens)</Label>
+              <Label htmlFor="openai-output" className="text-gray-700">OpenAI Output Price ($/1M tokens)</Label>
               <Input
                 id="openai-output"
                 type="number"
                 step="0.01"
                 value={metricsSettings.openaiOutputPrice}
                 onChange={(e) => setMetricsSettings({ ...metricsSettings, openaiOutputPrice: e.target.value })}
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
 
             {/* Cartesia */}
             <div className="space-y-2">
-              <Label htmlFor="cartesia-price" className="text-white">Cartesia Price ($/min)</Label>
+              <Label htmlFor="cartesia-price" className="text-gray-700">Cartesia Price ($/min)</Label>
               <Input
                 id="cartesia-price"
                 type="number"
                 step="0.001"
                 value={metricsSettings.cartesiaPricePerMinute}
                 onChange={(e) => setMetricsSettings({ ...metricsSettings, cartesiaPricePerMinute: e.target.value })}
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="cartesia-credits" className="text-white">Cartesia Total Credits</Label>
+              <Label htmlFor="cartesia-credits" className="text-gray-700">Cartesia Total Credits</Label>
               <Input
                 id="cartesia-credits"
                 type="number"
                 value={metricsSettings.cartesiaTotalCredits}
                 onChange={(e) => setMetricsSettings({ ...metricsSettings, cartesiaTotalCredits: e.target.value })}
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
 
             {/* Cloudflare */}
             <div className="space-y-2">
-              <Label htmlFor="cloudflare-price" className="text-white">Cloudflare Price ($/1M requests)</Label>
+              <Label htmlFor="cloudflare-price" className="text-gray-700">Cloudflare Price ($/1M requests)</Label>
               <Input
                 id="cloudflare-price"
                 type="number"
                 step="0.01"
                 value={metricsSettings.cloudflarePricePerRequest}
                 onChange={(e) => setMetricsSettings({ ...metricsSettings, cloudflarePricePerRequest: e.target.value })}
-                className="bg-white/10 border-white/20 text-white"
+                className="border-gray-300 focus:border-purple-500 focus:ring-purple-500"
               />
             </div>
           </div>
