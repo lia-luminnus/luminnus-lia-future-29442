@@ -1,3 +1,4 @@
+import React, { useState } from 'react';
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
@@ -5,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, Bed, Bath, Square, Phone, MessageCircle, ArrowRight, Building2, Search, Home } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Phone, MessageCircle, ArrowRight, Building2, Search, Home, Loader2 } from "lucide-react";
 import ImobiliariaHeader from "@/components/header/ImobiliariaHeader";
+import { saveBuscaCliente } from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
 
 // Mock data for featured properties
 const imoveisDestaque = [
@@ -50,6 +53,75 @@ const formatPrice = (price: number) => {
 };
 
 const ImobiliariaHome = () => {
+  const { toast } = useToast();
+  const [formData, setFormData] = useState({
+    localizacao: "",
+    tipo_imovel: "",
+    tipologia: "",
+    casas_banho: "",
+    valor_aprovado: "",
+    preco_min: "",
+    preco_max: "",
+    nome: "",
+    email: "",
+    telefone: ""
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.nome || !formData.email) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha nome e email para continuar",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await saveBuscaCliente({
+        ...formData,
+        valor_aprovado: formData.valor_aprovado ? Number(formData.valor_aprovado) : undefined,
+        preco_min: formData.preco_min ? Number(formData.preco_min) : undefined,
+        preco_max: formData.preco_max ? Number(formData.preco_max) : undefined,
+      });
+      
+      toast({
+        title: "Informações salvas!",
+        description: "Obrigado! Em breve entraremos em contato com as melhores opções para você.",
+      });
+      
+      // Limpar formulário
+      setFormData({
+        localizacao: "",
+        tipo_imovel: "",
+        tipologia: "",
+        casas_banho: "",
+        valor_aprovado: "",
+        preco_min: "",
+        preco_max: "",
+        nome: "",
+        email: "",
+        telefone: ""
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar as informações. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleWhatsApp = () => {
     window.open('https://wa.me/5511999999999?text=Olá! Gostaria de mais informações sobre os imóveis.', '_blank');
   };
@@ -113,65 +185,52 @@ const ImobiliariaHome = () => {
 
             <Card className="bg-muted/50 border-[#8A2FFF]/30">
               <CardContent className="p-6">
-                <form className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Linha 1: Localização e Tipo */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="localizacao" className="text-foreground">Localização *</Label>
+                      <Label htmlFor="localizacao" className="text-foreground">Localização</Label>
                       <Input
                         id="localizacao"
                         placeholder="Ex: Porto, Lisboa, Braga..."
                         className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.localizacao}
+                        onChange={(e) => handleChange("localizacao", e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="tipo" className="text-foreground">Tipo de Imovel *</Label>
-                      <Select>
-                        <SelectTrigger className="bg-input border-[#8A2FFF] text-foreground">
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="apartamento">Apartamento</SelectItem>
-                          <SelectItem value="vivenda">Vivenda / Casa</SelectItem>
-                          <SelectItem value="studio">Studio</SelectItem>
-                          <SelectItem value="terreno">Terreno</SelectItem>
-                          <SelectItem value="outro">Outro</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="tipo" className="text-foreground">Tipo de Imovel</Label>
+                      <Input
+                        id="tipo"
+                        placeholder="Apartamento, Vivenda..."
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.tipo_imovel}
+                        onChange={(e) => handleChange("tipo_imovel", e.target.value)}
+                      />
                     </div>
                   </div>
 
                   {/* Linha 2: Tipologia e Casas de Banho */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="tipologia" className="text-foreground">Tipologia *</Label>
-                      <Select>
-                        <SelectTrigger className="bg-input border-[#8A2FFF] text-foreground">
-                          <SelectValue placeholder="Selecione a tipologia" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="t0">T0</SelectItem>
-                          <SelectItem value="t1">T1</SelectItem>
-                          <SelectItem value="t2">T2</SelectItem>
-                          <SelectItem value="t3">T3</SelectItem>
-                          <SelectItem value="t4">T4</SelectItem>
-                          <SelectItem value="t5+">T5+</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label htmlFor="tipologia" className="text-foreground">Tipologia</Label>
+                      <Input
+                        id="tipologia"
+                        placeholder="T1, T2, T3..."
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.tipologia}
+                        onChange={(e) => handleChange("tipologia", e.target.value)}
+                      />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="banhos" className="text-foreground">Casas de Banho</Label>
-                      <Select>
-                        <SelectTrigger className="bg-input border-[#8A2FFF] text-foreground">
-                          <SelectValue placeholder="Selecione" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
-                          <SelectItem value="3">3</SelectItem>
-                          <SelectItem value="4+">4+</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        id="banhos"
+                        placeholder="1, 2, 3..."
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.casas_banho}
+                        onChange={(e) => handleChange("casas_banho", e.target.value)}
+                      />
                     </div>
                   </div>
 
@@ -184,6 +243,8 @@ const ImobiliariaHome = () => {
                         type="number"
                         placeholder="Ex: 250000"
                         className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.valor_aprovado}
+                        onChange={(e) => handleChange("valor_aprovado", e.target.value)}
                       />
                     </div>
                     <div className="space-y-2">
@@ -193,19 +254,69 @@ const ImobiliariaHome = () => {
                           placeholder="Min"
                           type="number"
                           className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                          value={formData.preco_min}
+                          onChange={(e) => handleChange("preco_min", e.target.value)}
                         />
                         <Input
                           placeholder="Max"
                           type="number"
                           className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                          value={formData.preco_max}
+                          onChange={(e) => handleChange("preco_max", e.target.value)}
                         />
                       </div>
                     </div>
                   </div>
 
-                  <Button type="submit" className="w-full bg-[#8A2FFF] hover:bg-[#C08BFF] text-white py-6 text-lg">
-                    <Search className="w-5 h-5 mr-2" />
-                    Buscar Imoveis
+                  {/* Dados de Contato */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t border-border">
+                    <div className="space-y-2">
+                      <Label htmlFor="nome" className="text-foreground">Nome *</Label>
+                      <Input
+                        id="nome"
+                        placeholder="Seu nome completo"
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.nome}
+                        onChange={(e) => handleChange("nome", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email" className="text-foreground">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.email}
+                        onChange={(e) => handleChange("email", e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="telefone" className="text-foreground">Telefone</Label>
+                      <Input
+                        id="telefone"
+                        placeholder="+351 912 345 678"
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
+                        value={formData.telefone}
+                        onChange={(e) => handleChange("telefone", e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <Button type="submit" disabled={saving} className="w-full bg-[#8A2FFF] hover:bg-[#C08BFF] text-white py-6 text-lg">
+                    {saving ? (
+                      <>
+                        <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="w-5 h-5 mr-2" />
+                        Salvar Informação
+                      </>
+                    )}
                   </Button>
                 </form>
               </CardContent>
@@ -294,17 +405,17 @@ const ImobiliariaHome = () => {
                 <form className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="nome" className="text-foreground">Nome</Label>
+                      <Label htmlFor="nome-contato" className="text-foreground">Nome</Label>
                       <Input
-                        id="nome"
+                        id="nome-contato"
                         placeholder="Seu nome completo"
                         className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email" className="text-foreground">Email</Label>
+                      <Label htmlFor="email-contato" className="text-foreground">Email</Label>
                       <Input
-                        id="email"
+                        id="email-contato"
                         type="email"
                         placeholder="seu@email.com"
                         className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
@@ -312,9 +423,9 @@ const ImobiliariaHome = () => {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="telefone" className="text-foreground">Telefone</Label>
+                    <Label htmlFor="telefone-contato" className="text-foreground">Telefone</Label>
                     <Input
-                      id="telefone"
+                      id="telefone-contato"
                       placeholder="(11) 99999-9999"
                       className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
                     />

@@ -78,6 +78,21 @@ export interface Notificacao {
   origem: string;
 }
 
+export interface BuscaCliente {
+  id: string;
+  localizacao?: string;
+  tipo_imovel?: string;
+  tipologia?: string;
+  casas_banho?: string;
+  valor_aprovado?: number;
+  preco_min?: number;
+  preco_max?: number;
+  nome?: string;
+  email?: string;
+  telefone?: string;
+  created_at?: string;
+}
+
 // ==================== CLIENTES ====================
 
 /**
@@ -493,6 +508,37 @@ export async function marcarNotificacaoLida(id: string): Promise<void> {
     .eq("id", id);
 
   if (error) throw new Error(error.message);
+}
+
+// ===============================
+// Buscas de Clientes
+// ===============================
+
+/**
+ * Salva uma busca de cliente
+ */
+export async function saveBuscaCliente(busca: Partial<BuscaCliente>): Promise<BuscaCliente> {
+  const { data, error } = await supabase
+    .from('buscas_clientes')
+    .insert(busca)
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
+  return data as BuscaCliente;
+}
+
+/**
+ * Busca todas as buscas de clientes (admins)
+ */
+export async function getBuscasClientes(): Promise<BuscaCliente[]> {
+  const { data, error } = await supabase
+    .from('buscas_clientes')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data as BuscaCliente[];
 }
 
 // ==================== STORAGE - FOTOS DE IMÓVEIS ====================

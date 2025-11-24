@@ -157,6 +157,51 @@ export type Database = {
         }
         Relationships: []
       }
+      buscas_clientes: {
+        Row: {
+          casas_banho: string | null
+          created_at: string | null
+          email: string | null
+          id: string
+          localizacao: string | null
+          nome: string | null
+          preco_max: number | null
+          preco_min: number | null
+          telefone: string | null
+          tipo_imovel: string | null
+          tipologia: string | null
+          valor_aprovado: number | null
+        }
+        Insert: {
+          casas_banho?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          localizacao?: string | null
+          nome?: string | null
+          preco_max?: number | null
+          preco_min?: number | null
+          telefone?: string | null
+          tipo_imovel?: string | null
+          tipologia?: string | null
+          valor_aprovado?: number | null
+        }
+        Update: {
+          casas_banho?: string | null
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          localizacao?: string | null
+          nome?: string | null
+          preco_max?: number | null
+          preco_min?: number | null
+          telefone?: string | null
+          tipo_imovel?: string | null
+          tipologia?: string | null
+          valor_aprovado?: number | null
+        }
+        Relationships: []
+      }
       chat_conversations: {
         Row: {
           created_at: string | null
