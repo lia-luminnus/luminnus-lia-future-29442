@@ -87,7 +87,18 @@ export function usePlans() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    // Timeout de segurança para evitar carregamento infinito
+    const timeoutId = setTimeout(() => {
+      if (loading && plans.length === 0) {
+        console.log('[usePlans] Timeout atingido, usando dados estáticos como fallback');
+        setPlans(staticPlans);
+        setLoading(false);
+      }
+    }, 5000);
+
     loadPlans();
+
+    return () => clearTimeout(timeoutId);
   }, []);
 
   const loadPlans = async () => {

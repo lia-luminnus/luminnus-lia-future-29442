@@ -102,11 +102,11 @@ const ImobiliariaHeader = () => {
             {user ? (
               <div className="flex items-center gap-3">
                 <Link
-                  to={role === 'admin' ? "/admin-imob" : "/cliente"}
-                  className="bg-[#7B2FF7] text-white font-semibold px-5 py-2.5 rounded-xl shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] hover:shadow-[var(--shadow-purple-lg)] hover:-translate-y-0.5 transition-all duration-[var(--transition-smooth)] flex items-center gap-2"
+                  to={role === 'admin' ? "/admin-dashboard" : "/cliente/dashboard"}
+                  className="bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl shadow-lg hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2"
                 >
                   <User className="w-4 h-4" />
-                  {role === 'admin' ? 'Painel Admin' : 'Minha Area'}
+                  {role === 'admin' ? 'Painel Admin' : 'Minha Área'}
                 </Link>
                 <Button
                   variant="ghost"
@@ -119,8 +119,8 @@ const ImobiliariaHeader = () => {
               </div>
             ) : (
               <Link
-                to="/imobiliaria/login"
-                className="bg-[#7B2FF7] text-white font-semibold px-6 py-2.5 rounded-xl shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] hover:shadow-[var(--shadow-purple-lg)] hover:-translate-y-0.5 transition-all duration-[var(--transition-smooth)]"
+                to="/auth"
+                className="bg-primary text-primary-foreground font-semibold px-6 py-2.5 rounded-xl shadow-lg hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300"
               >
                 Entrar
               </Link>
@@ -194,12 +194,12 @@ const ImobiliariaHeader = () => {
                   {user ? (
                     <>
                       <Link
-                        to={role === 'admin' ? "/admin-imob" : "/cliente"}
+                        to={role === 'admin' ? "/admin-dashboard" : "/cliente/dashboard"}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="bg-[#7B2FF7] text-white font-semibold px-4 py-3.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] transition-all duration-[var(--transition-smooth)]"
+                        className="bg-primary text-primary-foreground font-semibold px-4 py-3.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-lg hover:bg-primary/90 transition-all duration-300"
                       >
                         <User className="w-5 h-5" />
-                        {role === 'admin' ? 'Painel Admin' : 'Minha Area'}
+                        {role === 'admin' ? 'Painel Admin' : 'Minha Área'}
                       </Link>
                       <Button
                         variant="outline"
@@ -212,9 +212,9 @@ const ImobiliariaHeader = () => {
                     </>
                   ) : (
                     <Link
-                      to="/imobiliaria/login"
+                      to="/auth"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="bg-[#7B2FF7] text-white font-semibold px-4 py-3.5 rounded-xl text-center shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] transition-all duration-[var(--transition-smooth)]"
+                      className="bg-primary text-primary-foreground font-semibold px-4 py-3.5 rounded-xl text-center shadow-lg hover:bg-primary/90 transition-all duration-300"
                     >
                       Entrar
                     </Link>
