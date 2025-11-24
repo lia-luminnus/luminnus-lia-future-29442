@@ -15,9 +15,12 @@ import {
   Menu,
   X,
   ChevronLeft,
-  Shield
+  Shield,
+  Bell,
+  Search
 } from "lucide-react";
 import luminmusLogo from "@/assets/luminnus-logo-new.png";
+import { Input } from "@/components/ui/input";
 
 interface AdminImobLayoutProps {
   children: ReactNode;
@@ -51,29 +54,35 @@ const AdminImobLayout = ({ children }: AdminImobLayoutProps) => {
   };
 
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-gradient-to-b from-primary/95 to-primary">
+    <div className="flex flex-col h-full bg-gradient-to-b from-[#1A1A22] to-[#0F0F14]">
       {/* Logo */}
-      <div className="p-4 border-b border-white/10">
-        <Link to="/imobiliaria" className="flex items-center gap-2">
-          <img src={luminmusLogo} alt="Luminnus" className="h-10 w-auto brightness-0 invert" />
+      <div className="p-5 border-b border-white/10">
+        <Link to="/imobiliaria" className="flex items-center gap-2 group">
+          <img
+            src={luminmusLogo}
+            alt="Luminnus"
+            className="h-10 w-auto brightness-0 invert transition-all duration-[var(--transition)] group-hover:scale-105"
+          />
         </Link>
-        <div className="flex items-center gap-2 mt-2 text-sm text-white/80">
-          <Shield className="w-4 h-4" />
-          Painel Administrativo
+        <div className="flex items-center gap-2 mt-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-[#7B2FF7]/20 rounded-lg">
+            <Shield className="w-3.5 h-3.5 text-[#9F57FF]" />
+            <span className="text-xs font-semibold text-[#C7A4FF]">Admin</span>
+          </div>
         </div>
       </div>
 
       {/* User Info */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
+          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#7B2FF7] to-[#9F57FF] flex items-center justify-center shadow-[var(--shadow-purple)]">
             <Shield className="w-5 h-5 text-white" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-white truncate">
-              Admin
+            <p className="text-sm font-semibold text-white truncate">
+              Administrador
             </p>
-            <p className="text-xs text-white/70 truncate">
+            <p className="text-xs text-white/60 truncate">
               {user?.email}
             </p>
           </div>
@@ -81,20 +90,23 @@ const AdminImobLayout = ({ children }: AdminImobLayoutProps) => {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
         {menuItems.map((item) => (
           <Link
             key={item.path}
             to={item.path}
             onClick={() => setMobileMenuOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
+            className={`group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-[var(--transition-smooth)] relative ${
               isActive(item.path)
-                ? "bg-white text-primary"
-                : "text-white/80 hover:text-white hover:bg-white/10"
+                ? "bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]"
+                : "text-white/70 hover:text-white hover:bg-white/10"
             }`}
           >
-            <item.icon className="w-5 h-5" />
-            {item.label}
+            {isActive(item.path) && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-white rounded-r-full" />
+            )}
+            <item.icon className={`w-5 h-5 transition-transform duration-[var(--transition)] ${!isActive(item.path) ? 'group-hover:scale-110' : ''}`} />
+            <span className="font-medium">{item.label}</span>
           </Link>
         ))}
       </nav>
@@ -103,17 +115,17 @@ const AdminImobLayout = ({ children }: AdminImobLayoutProps) => {
       <div className="p-4 border-t border-white/10 space-y-2">
         <Link
           to="/imobiliaria"
-          className="flex items-center gap-3 px-3 py-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          className="flex items-center gap-3 px-4 py-3 text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-[var(--transition-smooth)] group"
         >
-          <ChevronLeft className="w-5 h-5" />
-          Voltar ao Site
+          <ChevronLeft className="w-5 h-5 transition-transform duration-[var(--transition)] group-hover:-translate-x-1" />
+          <span className="font-medium">Voltar ao Site</span>
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2.5 w-full text-white/80 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+          className="flex items-center gap-3 px-4 py-3 w-full text-white/70 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-[var(--transition-smooth)] group"
         >
-          <LogOut className="w-5 h-5" />
-          Sair
+          <LogOut className="w-5 h-5 transition-transform duration-[var(--transition)] group-hover:translate-x-1" />
+          <span className="font-medium">Sair</span>
         </button>
       </div>
     </div>
@@ -122,45 +134,68 @@ const AdminImobLayout = ({ children }: AdminImobLayoutProps) => {
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0">
+      <aside className="hidden lg:flex lg:w-72 lg:flex-col lg:fixed lg:inset-y-0 shadow-xl">
         <SidebarContent />
       </aside>
 
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md border-b border-white/10">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-[#1A1A22]/95 backdrop-blur-xl border-b border-white/10">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center gap-3">
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10">
+                <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-xl">
                   {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-64 p-0 border-0">
+              <SheetContent side="left" className="w-72 p-0 border-0">
                 <SidebarContent />
               </SheetContent>
             </Sheet>
             <Link to="/imobiliaria" className="flex items-center gap-2">
-              <img src={luminmusLogo} alt="Luminnus" className="h-8 w-auto brightness-0 invert" />
+              <img src={luminmusLogo} alt="Luminnus" className="h-9 w-auto brightness-0 invert" />
             </Link>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/10 rounded-xl relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1 right-1 w-2 h-2 bg-[#7B2FF7] rounded-full" />
+            </Button>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="lg:pl-64">
+      <main className="lg:pl-72">
         {/* Desktop Header */}
-        <header className="hidden lg:flex items-center justify-between p-4 border-b border-border bg-card/50">
-          <h1 className="text-lg font-semibold text-foreground">
-            {menuItems.find(item => isActive(item.path))?.label || "Painel"}
-          </h1>
-          <ThemeToggle />
+        <header className="hidden lg:flex items-center justify-between p-5 border-b border-[var(--lum-border)] dark:border-[var(--lum-border-dark)] bg-card/50 backdrop-blur-sm sticky top-0 z-40">
+          <div className="flex items-center gap-4">
+            <h1 className="text-xl font-semibold text-foreground">
+              {menuItems.find(item => isActive(item.path))?.label || "Painel"}
+            </h1>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar..."
+                className="pl-10 w-64 bg-muted/50 border-0 focus-visible:ring-[#7B2FF7]"
+              />
+            </div>
+            <Button variant="ghost" size="icon" className="rounded-xl relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-[#7B2FF7] rounded-full" />
+            </Button>
+            <ThemeToggle />
+          </div>
         </header>
 
         {/* Page Content */}
-        <div className="pt-20 lg:pt-0">
-          {children}
+        <div className="pt-20 lg:pt-0 min-h-screen bg-muted/30">
+          <div className="animate-fade-in">
+            {children}
+          </div>
         </div>
       </main>
     </div>

@@ -20,10 +20,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Edit, Trash2, MapPin, Bed, Bath, Square, Eye, Loader2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, MapPin, Bed, Bath, Square, Eye, Building2 } from "lucide-react";
 import AdminImobLayout from "@/components/layout/AdminImobLayout";
 import { getImoveis, createImovel, updateImovel, deleteImovel, type Imovel } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import Loading from "@/components/ui/Loading";
+import EmptyState from "@/components/ui/EmptyState";
+import MotionPageTransition, { StaggeredMotionContainer, StaggeredItem, HoverCardAnimation } from "@/components/layout/MotionPageTransition";
 
 const formatPrice = (price: number) => {
   return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -31,9 +34,9 @@ const formatPrice = (price: number) => {
 
 const getStatusBadge = (disponivel: boolean) => {
   return disponivel ? (
-    <Badge className="bg-green-500">Disponivel</Badge>
+    <Badge className="bg-[var(--lum-success)] hover:bg-[var(--lum-success)]/90 shadow-sm">Disponivel</Badge>
   ) : (
-    <Badge className="bg-gray-500">Indisponivel</Badge>
+    <Badge className="bg-gray-500 hover:bg-gray-500/90 shadow-sm">Indisponivel</Badge>
   );
 };
 
@@ -186,281 +189,311 @@ const AdminImoveis = () => {
   if (loading) {
     return (
       <AdminImobLayout>
-        <div className="flex items-center justify-center h-[50vh]">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
+        <Loading message="Carregando imoveis..." size="lg" variant="dots" />
       </AdminImobLayout>
     );
   }
 
   return (
     <AdminImobLayout>
-      <div className="p-6 space-y-6">
-        {/* Page Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Imoveis</h1>
-            <p className="text-muted-foreground">Gerencie o catalogo de imoveis</p>
-          </div>
-          <Button className="gap-2" onClick={handleNew}>
-            <Plus className="w-4 h-4" />
-            Novo Imovel
-          </Button>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{totalImoveis}</p>
-              <p className="text-sm text-muted-foreground">Total</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-500">{disponiveis}</p>
-              <p className="text-sm text-muted-foreground">Disponiveis</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-500">{indisponiveis}</p>
-              <p className="text-sm text-muted-foreground">Indisponiveis</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Search */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <CardTitle className="flex-1">Catalogo de Imoveis</CardTitle>
-              <div className="relative w-full sm:w-64">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar imovel..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
+      <MotionPageTransition>
+        <div className="p-6 lg:p-8 space-y-6">
+          {/* Page Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Imoveis</h1>
+              <p className="text-muted-foreground mt-1">Gerencie o catalogo de imoveis</p>
             </div>
-          </CardHeader>
-          <CardContent>
-            {filteredImoveis.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredImoveis.map((imovel) => (
-                  <Card key={imovel.id} className="overflow-hidden">
-                    <div className="relative h-40 overflow-hidden bg-muted">
-                      {imovel.fotos && imovel.fotos.length > 0 ? (
-                        <img
-                          src={imovel.fotos[0]}
-                          alt={imovel.titulo}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <MapPin className="w-12 h-12 text-muted-foreground" />
-                        </div>
-                      )}
-                      <div className="absolute top-2 left-2">
-                        {getStatusBadge(imovel.disponivel)}
-                      </div>
-                      <div className="absolute top-2 right-2">
-                        <Badge variant="secondary">{imovel.tipologia || "Imovel"}</Badge>
-                      </div>
-                    </div>
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold text-foreground mb-1">{imovel.titulo}</h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1 mb-2">
-                        <MapPin className="w-3 h-3" />
-                        {imovel.localizacao}
-                      </p>
-                      <div className="flex items-center gap-3 text-sm text-muted-foreground mb-3">
-                        <span className="flex items-center gap-1">
-                          <Bed className="w-3 h-3" /> {imovel.quartos || 0}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Bath className="w-3 h-3" /> {imovel.banheiros || 0}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Square className="w-3 h-3" /> {imovel.area || 0}m2
-                        </span>
-                      </div>
-                      <p className="text-lg font-bold text-primary mb-3">
-                        {formatPrice(imovel.preco)}
-                      </p>
-                      <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="flex-1 gap-1">
-                          <Eye className="w-4 h-4" />
-                          Ver
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1 gap-1"
-                          onClick={() => handleEdit(imovel)}
-                        >
-                          <Edit className="w-4 h-4" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="text-red-500"
-                          onClick={() => handleDelete(imovel.id)}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum imovel encontrado
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <Button className="gap-2 shadow-luminnus" onClick={handleNew} size="lg">
+              <Plus className="w-5 h-5" />
+              Novo Imovel
+            </Button>
+          </div>
 
-        {/* Add/Edit Dialog */}
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>{selectedImovel ? "Editar Imovel" : "Novo Imovel"}</DialogTitle>
-              <DialogDescription>Preencha os dados do imovel abaixo</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="titulo">Titulo *</Label>
+          {/* Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <HoverCardAnimation>
+              <Card className="border-0 shadow-[var(--shadow-md)] bg-gradient-to-br from-[#7B2FF7]/5 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-[#7B2FF7]/10 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-[#7B2FF7]" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-foreground">{totalImoveis}</p>
+                      <p className="text-sm text-muted-foreground">Total de Imoveis</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </HoverCardAnimation>
+            <HoverCardAnimation>
+              <Card className="border-0 shadow-[var(--shadow-md)] bg-gradient-to-br from-green-500/5 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-green-500">{disponiveis}</p>
+                      <p className="text-sm text-muted-foreground">Disponiveis</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </HoverCardAnimation>
+            <HoverCardAnimation>
+              <Card className="border-0 shadow-[var(--shadow-md)] bg-gradient-to-br from-gray-500/5 to-transparent">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-gray-500/10 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-gray-500" />
+                    </div>
+                    <div>
+                      <p className="text-3xl font-bold text-gray-500">{indisponiveis}</p>
+                      <p className="text-sm text-muted-foreground">Indisponiveis</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </HoverCardAnimation>
+          </div>
+
+          {/* Search */}
+          <Card className="border-0 shadow-[var(--shadow-md)]">
+            <CardHeader className="pb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                <CardTitle className="flex-1 text-lg">Catalogo de Imoveis</CardTitle>
+                <div className="relative w-full sm:w-72">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    id="titulo"
-                    value={formData.titulo}
-                    onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
-                    placeholder="Nome do imovel"
+                    placeholder="Buscar imovel..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-11 bg-muted/50 border-0"
                   />
                 </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {filteredImoveis.length > 0 ? (
+                <StaggeredMotionContainer className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                  {filteredImoveis.map((imovel) => (
+                    <StaggeredItem key={imovel.id}>
+                      <HoverCardAnimation>
+                        <Card className="overflow-hidden border border-[var(--lum-border)] dark:border-[var(--lum-border-dark)] shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-lg)] transition-all duration-[var(--transition-smooth)]">
+                          <div className="relative h-44 overflow-hidden bg-muted">
+                            {imovel.fotos && imovel.fotos.length > 0 ? (
+                              <img
+                                src={imovel.fotos[0]}
+                                alt={imovel.titulo}
+                                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                                <MapPin className="w-12 h-12 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="absolute top-3 left-3">
+                              {getStatusBadge(imovel.disponivel)}
+                            </div>
+                            <div className="absolute top-3 right-3">
+                              <Badge variant="secondary" className="backdrop-blur-sm bg-white/80 dark:bg-black/50 shadow-sm">
+                                {imovel.tipologia || "Imovel"}
+                              </Badge>
+                            </div>
+                          </div>
+                          <CardContent className="p-5">
+                            <h3 className="font-semibold text-foreground mb-2 line-clamp-1">{imovel.titulo}</h3>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1.5 mb-3">
+                              <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                              <span className="line-clamp-1">{imovel.localizacao}</span>
+                            </p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                              <span className="flex items-center gap-1.5">
+                                <Bed className="w-4 h-4" /> {imovel.quartos || 0}
+                              </span>
+                              <span className="flex items-center gap-1.5">
+                                <Bath className="w-4 h-4" /> {imovel.banheiros || 0}
+                              </span>
+                              <span className="flex items-center gap-1.5">
+                                <Square className="w-4 h-4" /> {imovel.area || 0}m2
+                              </span>
+                            </div>
+                            <p className="text-xl font-bold text-[#7B2FF7] mb-4">
+                              {formatPrice(imovel.preco)}
+                            </p>
+                            <div className="flex gap-2">
+                              <Button variant="secondary" size="sm" className="flex-1 gap-1.5">
+                                <Eye className="w-4 h-4" />
+                                Ver
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex-1 gap-1.5"
+                                onClick={() => handleEdit(imovel)}
+                              >
+                                <Edit className="w-4 h-4" />
+                                Editar
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                onClick={() => handleDelete(imovel.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </HoverCardAnimation>
+                    </StaggeredItem>
+                  ))}
+                </StaggeredMotionContainer>
+              ) : (
+                <EmptyState
+                  variant="search"
+                  message="Nenhum imovel encontrado com os filtros aplicados."
+                  action={{
+                    label: "Limpar busca",
+                    onClick: () => setSearchTerm("")
+                  }}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Add/Edit Dialog */}
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-xl">{selectedImovel ? "Editar Imovel" : "Novo Imovel"}</DialogTitle>
+                <DialogDescription>Preencha os dados do imovel abaixo</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-5 py-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="titulo">Titulo *</Label>
+                    <Input
+                      id="titulo"
+                      value={formData.titulo}
+                      onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
+                      placeholder="Nome do imovel"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="tipo">Tipo</Label>
+                    <Select
+                      value={formData.tipologia}
+                      onValueChange={(value) => setFormData({ ...formData, tipologia: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Apartamento">Apartamento</SelectItem>
+                        <SelectItem value="Casa">Casa</SelectItem>
+                        <SelectItem value="Cobertura">Cobertura</SelectItem>
+                        <SelectItem value="Studio">Studio</SelectItem>
+                        <SelectItem value="Terreno">Terreno</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="space-y-2">
-                  <Label htmlFor="tipo">Tipo</Label>
+                  <Label htmlFor="endereco">Localizacao *</Label>
+                  <Input
+                    id="endereco"
+                    value={formData.localizacao}
+                    onChange={(e) => setFormData({ ...formData, localizacao: e.target.value })}
+                    placeholder="Endereco completo"
+                  />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="preco">Preco (R$) *</Label>
+                    <Input
+                      id="preco"
+                      type="number"
+                      value={formData.preco}
+                      onChange={(e) => setFormData({ ...formData, preco: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="quartos">Quartos</Label>
+                    <Input
+                      id="quartos"
+                      type="number"
+                      value={formData.quartos}
+                      onChange={(e) => setFormData({ ...formData, quartos: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="banheiros">Banheiros</Label>
+                    <Input
+                      id="banheiros"
+                      type="number"
+                      value={formData.banheiros}
+                      onChange={(e) => setFormData({ ...formData, banheiros: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="area">Area (m2)</Label>
+                    <Input
+                      id="area"
+                      type="number"
+                      value={formData.area}
+                      onChange={(e) => setFormData({ ...formData, area: e.target.value })}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
                   <Select
-                    value={formData.tipologia}
-                    onValueChange={(value) => setFormData({ ...formData, tipologia: value })}
+                    value={formData.disponivel ? "disponivel" : "indisponivel"}
+                    onValueChange={(value) =>
+                      setFormData({ ...formData, disponivel: value === "disponivel" })
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Apartamento">Apartamento</SelectItem>
-                      <SelectItem value="Casa">Casa</SelectItem>
-                      <SelectItem value="Cobertura">Cobertura</SelectItem>
-                      <SelectItem value="Studio">Studio</SelectItem>
-                      <SelectItem value="Terreno">Terreno</SelectItem>
+                      <SelectItem value="disponivel">Disponivel</SelectItem>
+                      <SelectItem value="indisponivel">Indisponivel</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="endereco">Localizacao *</Label>
-                <Input
-                  id="endereco"
-                  value={formData.localizacao}
-                  onChange={(e) => setFormData({ ...formData, localizacao: e.target.value })}
-                  placeholder="Endereco completo"
-                />
-              </div>
-              <div className="grid grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="preco">Preco (R$) *</Label>
-                  <Input
-                    id="preco"
-                    type="number"
-                    value={formData.preco}
-                    onChange={(e) => setFormData({ ...formData, preco: e.target.value })}
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="quartos">Quartos</Label>
-                  <Input
-                    id="quartos"
-                    type="number"
-                    value={formData.quartos}
-                    onChange={(e) => setFormData({ ...formData, quartos: e.target.value })}
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="banheiros">Banheiros</Label>
-                  <Input
-                    id="banheiros"
-                    type="number"
-                    value={formData.banheiros}
-                    onChange={(e) => setFormData({ ...formData, banheiros: e.target.value })}
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="area">Area (m2)</Label>
-                  <Input
-                    id="area"
-                    type="number"
-                    value={formData.area}
-                    onChange={(e) => setFormData({ ...formData, area: e.target.value })}
-                    placeholder="0"
+                  <Label htmlFor="descricao">Descricao</Label>
+                  <Textarea
+                    id="descricao"
+                    value={formData.descricao}
+                    onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
+                    placeholder="Descricao do imovel..."
+                    rows={3}
+                    className="resize-none"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="status">Status</Label>
-                <Select
-                  value={formData.disponivel ? "disponivel" : "indisponivel"}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, disponivel: value === "disponivel" })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="disponivel">Disponivel</SelectItem>
-                    <SelectItem value="indisponivel">Indisponivel</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="descricao">Descricao</Label>
-                <Textarea
-                  id="descricao"
-                  value={formData.descricao}
-                  onChange={(e) => setFormData({ ...formData, descricao: e.target.value })}
-                  placeholder="Descricao do imovel..."
-                  rows={3}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Salvando...
-                  </>
-                ) : selectedImovel ? (
-                  "Salvar"
-                ) : (
-                  "Criar"
-                )}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? "Salvando..." : selectedImovel ? "Salvar" : "Criar"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </MotionPageTransition>
     </AdminImobLayout>
   );
 };

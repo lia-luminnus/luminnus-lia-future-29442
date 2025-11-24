@@ -23,27 +23,34 @@ const ImobiliariaHeader = () => {
     navigate('/');
   };
 
+  const isActiveLink = (path: string) => {
+    if (path === '/imobiliaria') {
+      return location.pathname === '/imobiliaria';
+    }
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md shadow-lg border-b border-border">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl shadow-[var(--shadow-sm)] border-b border-[var(--lum-border)] dark:border-[var(--lum-border-dark)] animate-fade-in">
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center cursor-pointer">
+          <Link to="/" className="flex items-center cursor-pointer group">
             <img
               src={luminmusLogo}
               alt="Luminnus - Inteligencia & Solucoes"
-              className="h-16 lg:h-20 w-auto object-contain transition-all hover:scale-105"
+              className="h-14 lg:h-18 w-auto object-contain transition-all duration-[var(--transition)] group-hover:scale-105 group-hover:brightness-110"
             />
           </Link>
 
           {/* Tab Navigation - Desktop */}
           <nav className="hidden md:flex items-center">
-            <div className="flex bg-muted rounded-lg p-1">
+            <div className="flex bg-muted/50 rounded-xl p-1.5 backdrop-blur-sm border border-[var(--lum-border)] dark:border-[var(--lum-border-dark)]">
               <Link
                 to="/"
-                className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-[var(--transition-smooth)] ${
                   !isImobiliariaSection
-                    ? 'bg-primary text-primary-foreground shadow-md'
+                    ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
               >
@@ -52,9 +59,9 @@ const ImobiliariaHeader = () => {
               </Link>
               <Link
                 to="/imobiliaria"
-                className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-all ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-[var(--transition-smooth)] ${
                   isImobiliariaSection
-                    ? 'bg-primary text-primary-foreground shadow-md'
+                    ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
               >
@@ -66,49 +73,56 @@ const ImobiliariaHeader = () => {
 
           {/* Secondary Navigation for Imobiliaria - Desktop */}
           {isImobiliariaSection && (
-            <nav className="hidden lg:flex items-center space-x-6">
-              <Link
-                to="/imobiliaria"
-                className="text-foreground hover:text-primary transition-all font-medium"
-              >
-                Inicio
-              </Link>
-              <Link
-                to="/imobiliaria/imoveis"
-                className="text-foreground hover:text-primary transition-all font-medium"
-              >
-                Imoveis
-              </Link>
-              <Link
-                to="/imobiliaria/contato"
-                className="text-foreground hover:text-primary transition-all font-medium"
-              >
-                Contato
-              </Link>
+            <nav className="hidden lg:flex items-center space-x-8">
+              {[
+                { path: '/imobiliaria', label: 'Inicio', exact: true },
+                { path: '/imobiliaria/imoveis', label: 'Imoveis' },
+                { path: '/imobiliaria/contato', label: 'Contato' },
+              ].map((link) => (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  className={`relative text-foreground font-medium transition-all duration-[var(--transition)] hover:text-[#7B2FF7] ${
+                    (link.exact ? location.pathname === link.path : location.pathname.startsWith(link.path))
+                      ? 'text-[#7B2FF7]'
+                      : ''
+                  }`}
+                >
+                  {link.label}
+                  {(link.exact ? location.pathname === link.path : location.pathname.startsWith(link.path)) && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#7B2FF7] rounded-full animate-scale-in" />
+                  )}
+                </Link>
+              ))}
             </nav>
           )}
 
           {/* Action Buttons - Desktop */}
-          <div className="hidden md:flex items-center gap-3">
+          <div className="hidden md:flex items-center gap-4">
             <ThemeToggle />
 
             {user ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <Link
                   to={user.email === ADMIN_EMAIL ? "/admin-imob" : "/cliente"}
-                  className="bg-primary text-primary-foreground font-semibold px-4 py-2 rounded-md shadow-md hover:bg-primary/90 transition-all flex items-center gap-2"
+                  className="bg-[#7B2FF7] text-white font-semibold px-5 py-2.5 rounded-xl shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] hover:shadow-[var(--shadow-purple-lg)] hover:-translate-y-0.5 transition-all duration-[var(--transition-smooth)] flex items-center gap-2"
                 >
                   <User className="w-4 h-4" />
                   {user.email === ADMIN_EMAIL ? 'Painel Admin' : 'Minha Area'}
                 </Link>
-                <Button variant="ghost" size="icon" onClick={handleLogout}>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleLogout}
+                  className="hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+                >
                   <LogOut className="w-4 h-4" />
                 </Button>
               </div>
             ) : (
               <Link
                 to="/imobiliaria/login"
-                className="bg-primary text-primary-foreground font-semibold px-5 py-2 rounded-md shadow-md hover:bg-primary/90 transition-all"
+                className="bg-[#7B2FF7] text-white font-semibold px-6 py-2.5 rounded-xl shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] hover:shadow-[var(--shadow-purple-lg)] hover:-translate-y-0.5 transition-all duration-[var(--transition-smooth)]"
               >
                 Entrar
               </Link>
@@ -116,70 +130,67 @@ const ImobiliariaHeader = () => {
           </div>
 
           {/* Mobile Menu */}
-          <div className="md:hidden flex items-center gap-2">
+          <div className="md:hidden flex items-center gap-3">
             <ThemeToggle />
             <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="rounded-xl">
                   {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] bg-background">
+              <SheetContent side="right" className="w-[300px] bg-background border-l border-[var(--lum-border)] dark:border-[var(--lum-border-dark)]">
                 <nav className="flex flex-col gap-4 mt-8">
                   {/* Tab Navigation - Mobile */}
                   <div className="flex flex-col gap-2">
                     <Link
                       to="/"
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-3 rounded-md font-medium transition-all ${
+                      className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-[var(--transition-smooth)] ${
                         !isImobiliariaSection
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
                           : 'text-muted-foreground hover:bg-muted'
                       }`}
                     >
-                      <Cpu className="w-4 h-4" />
+                      <Cpu className="w-5 h-5" />
                       Tecnologia & LIA
                     </Link>
                     <Link
                       to="/imobiliaria"
                       onClick={() => setMobileMenuOpen(false)}
-                      className={`flex items-center gap-2 px-4 py-3 rounded-md font-medium transition-all ${
+                      className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-[var(--transition-smooth)] ${
                         isImobiliariaSection
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
                           : 'text-muted-foreground hover:bg-muted'
                       }`}
                     >
-                      <Building2 className="w-4 h-4" />
+                      <Building2 className="w-5 h-5" />
                       Imobiliaria
                     </Link>
                   </div>
 
-                  <div className="border-t border-border my-2" />
+                  <div className="border-t border-[var(--lum-border)] dark:border-[var(--lum-border-dark)] my-2" />
 
                   {/* Imobiliaria Links */}
-                  <Link
-                    to="/imobiliaria"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-2 text-foreground hover:text-primary transition-colors font-medium"
-                  >
-                    Inicio
-                  </Link>
-                  <Link
-                    to="/imobiliaria/imoveis"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-2 text-foreground hover:text-primary transition-colors font-medium"
-                  >
-                    Imoveis
-                  </Link>
-                  <Link
-                    to="/imobiliaria/contato"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="px-4 py-2 text-foreground hover:text-primary transition-colors font-medium"
-                  >
-                    Contato
-                  </Link>
+                  {[
+                    { path: '/imobiliaria', label: 'Inicio' },
+                    { path: '/imobiliaria/imoveis', label: 'Imoveis' },
+                    { path: '/imobiliaria/contato', label: 'Contato' },
+                  ].map((link) => (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className={`px-4 py-3 rounded-lg font-medium transition-all duration-[var(--transition)] ${
+                        isActiveLink(link.path)
+                          ? 'text-[#7B2FF7] bg-[#7B2FF7]/10'
+                          : 'text-foreground hover:text-[#7B2FF7] hover:bg-muted'
+                      }`}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
 
-                  <div className="border-t border-border my-2" />
+                  <div className="border-t border-[var(--lum-border)] dark:border-[var(--lum-border-dark)] my-2" />
 
                   {/* Auth Buttons - Mobile */}
                   {user ? (
@@ -187,15 +198,15 @@ const ImobiliariaHeader = () => {
                       <Link
                         to={user.email === ADMIN_EMAIL ? "/admin-imob" : "/cliente"}
                         onClick={() => setMobileMenuOpen(false)}
-                        className="bg-primary text-primary-foreground font-semibold px-4 py-3 rounded-md text-center flex items-center justify-center gap-2"
+                        className="bg-[#7B2FF7] text-white font-semibold px-4 py-3.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] transition-all duration-[var(--transition-smooth)]"
                       >
-                        <User className="w-4 h-4" />
+                        <User className="w-5 h-5" />
                         {user.email === ADMIN_EMAIL ? 'Painel Admin' : 'Minha Area'}
                       </Link>
                       <Button
                         variant="outline"
                         onClick={handleLogout}
-                        className="flex items-center justify-center gap-2"
+                        className="flex items-center justify-center gap-2 border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 dark:border-red-800 dark:hover:bg-red-900/20"
                       >
                         <LogOut className="w-4 h-4" />
                         Sair
@@ -205,7 +216,7 @@ const ImobiliariaHeader = () => {
                     <Link
                       to="/imobiliaria/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="bg-primary text-primary-foreground font-semibold px-4 py-3 rounded-md text-center"
+                      className="bg-[#7B2FF7] text-white font-semibold px-4 py-3.5 rounded-xl text-center shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] transition-all duration-[var(--transition-smooth)]"
                     >
                       Entrar
                     </Link>
