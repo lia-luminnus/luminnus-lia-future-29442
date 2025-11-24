@@ -62,7 +62,7 @@ const ImobiliariaHome = () => {
       <section
         className="relative pt-32 pb-24 bg-cover bg-center bg-no-repeat overflow-hidden"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1555881604-69a24a0f1cdf?q=80&w=2000&fit=crop)',
+          backgroundImage: 'url(https://images.unsplash.com/photo-1555881400-74d7acaacd8b?q=80&w=2000&fit=crop)',
         }}
       >
         {/* Overlay escuro/roxo */}
@@ -96,46 +96,46 @@ const ImobiliariaHome = () => {
       </section>
 
       {/* Filtros do Cliente */}
-      <section className="py-16 bg-[#141418] dark:bg-[#141418]" id="filtros">
+      <section className="py-16 bg-card" id="filtros">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
               <div className="flex items-center justify-center gap-2 mb-4">
                 <Search className="w-8 h-8 text-[#8A2FFF]" />
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
                 Encontre o Imovel Ideal
               </h2>
-              <p className="text-[#EDEDED]">
+              <p className="text-muted-foreground">
                 Preencha os filtros abaixo para encontrarmos as melhores opcoes para voce
               </p>
             </div>
 
-            <Card className="bg-[#0B0B0F] border-[#8A2FFF]/30">
+            <Card className="bg-muted/50 border-[#8A2FFF]/30">
               <CardContent className="p-6">
                 <form className="space-y-6">
                   {/* Linha 1: Localização e Tipo */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="localizacao" className="text-white">Localização *</Label>
+                      <Label htmlFor="localizacao" className="text-foreground">Localização *</Label>
                       <Input
                         id="localizacao"
                         placeholder="Ex: Porto, Lisboa, Braga..."
-                        className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="tipo" className="text-white">Tipo de Imovel *</Label>
+                      <Label htmlFor="tipo" className="text-foreground">Tipo de Imovel *</Label>
                       <Select>
-                        <SelectTrigger className="bg-[#141418] border-[#8A2FFF] text-white">
+                        <SelectTrigger className="bg-input border-[#8A2FFF] text-foreground">
                           <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#141418] border-[#8A2FFF]">
-                          <SelectItem value="apartamento" className="text-white">Apartamento</SelectItem>
-                          <SelectItem value="vivenda" className="text-white">Vivenda / Casa</SelectItem>
-                          <SelectItem value="studio" className="text-white">Studio</SelectItem>
-                          <SelectItem value="terreno" className="text-white">Terreno</SelectItem>
-                          <SelectItem value="outro" className="text-white">Outro</SelectItem>
+                        <SelectContent>
+                          <SelectItem value="apartamento">Apartamento</SelectItem>
+                          <SelectItem value="vivenda">Vivenda / Casa</SelectItem>
+                          <SelectItem value="studio">Studio</SelectItem>
+                          <SelectItem value="terreno">Terreno</SelectItem>
+                          <SelectItem value="outro">Outro</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -144,32 +144,32 @@ const ImobiliariaHome = () => {
                   {/* Linha 2: Tipologia e Casas de Banho */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="tipologia" className="text-white">Tipologia *</Label>
+                      <Label htmlFor="tipologia" className="text-foreground">Tipologia *</Label>
                       <Select>
-                        <SelectTrigger className="bg-[#141418] border-[#8A2FFF] text-white">
+                        <SelectTrigger className="bg-input border-[#8A2FFF] text-foreground">
                           <SelectValue placeholder="Selecione a tipologia" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#141418] border-[#8A2FFF]">
-                          <SelectItem value="t0" className="text-white">T0</SelectItem>
-                          <SelectItem value="t1" className="text-white">T1</SelectItem>
-                          <SelectItem value="t2" className="text-white">T2</SelectItem>
-                          <SelectItem value="t3" className="text-white">T3</SelectItem>
-                          <SelectItem value="t4" className="text-white">T4</SelectItem>
-                          <SelectItem value="t5+" className="text-white">T5+</SelectItem>
+                        <SelectContent>
+                          <SelectItem value="t0">T0</SelectItem>
+                          <SelectItem value="t1">T1</SelectItem>
+                          <SelectItem value="t2">T2</SelectItem>
+                          <SelectItem value="t3">T3</SelectItem>
+                          <SelectItem value="t4">T4</SelectItem>
+                          <SelectItem value="t5+">T5+</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="banhos" className="text-white">Casas de Banho</Label>
+                      <Label htmlFor="banhos" className="text-foreground">Casas de Banho</Label>
                       <Select>
-                        <SelectTrigger className="bg-[#141418] border-[#8A2FFF] text-white">
+                        <SelectTrigger className="bg-input border-[#8A2FFF] text-foreground">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
-                        <SelectContent className="bg-[#141418] border-[#8A2FFF]">
-                          <SelectItem value="1" className="text-white">1</SelectItem>
-                          <SelectItem value="2" className="text-white">2</SelectItem>
-                          <SelectItem value="3" className="text-white">3</SelectItem>
-                          <SelectItem value="4+" className="text-white">4+</SelectItem>
+                        <SelectContent>
+                          <SelectItem value="1">1</SelectItem>
+                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="3">3</SelectItem>
+                          <SelectItem value="4+">4+</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -178,26 +178,26 @@ const ImobiliariaHome = () => {
                   {/* Linha 3: Valor Aprovado e Intervalo de Preço */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="valor-aprovado" className="text-white">Valor Aprovado pelo Banco (€)</Label>
+                      <Label htmlFor="valor-aprovado" className="text-foreground">Valor Aprovado pelo Banco (€)</Label>
                       <Input
                         id="valor-aprovado"
                         type="number"
                         placeholder="Ex: 250000"
-                        className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                        className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-white">Intervalo de Preco Desejado (€)</Label>
+                      <Label className="text-foreground">Intervalo de Preco Desejado (€)</Label>
                       <div className="grid grid-cols-2 gap-2">
                         <Input
                           placeholder="Min"
                           type="number"
-                          className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                          className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
                         />
                         <Input
                           placeholder="Max"
                           type="number"
-                          className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                          className="bg-input border-[#8A2FFF] text-foreground placeholder:text-muted-foreground"
                         />
                       </div>
                     </div>
