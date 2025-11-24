@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAdminAuth } from "@/hooks/useAdminAuth";
+import { UnifiedHeader } from "@/components/UnifiedHeader";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminOverview } from "@/components/admin/AdminOverview";
 import { AdminUsers } from "@/components/admin/AdminUsers";

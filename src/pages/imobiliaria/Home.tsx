@@ -55,7 +55,7 @@ const ImobiliariaHome = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <ImobiliariaHeader />
+      <UnifiedHeader />
 
       {/* Hero Section */}
       <section className="pt-32 pb-24 bg-gradient-to-br from-[#F3EEFF] to-white dark:from-[#0F0F14] dark:to-[#1A1A22]">
