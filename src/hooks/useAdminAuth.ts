@@ -8,13 +8,13 @@ const ADMIN_EMAILS = [
 ];
 
 export function useAdminAuth() {
-  const { user, loading } = useAuth();
+  const { user, loading, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [hasActivePlan, setHasActivePlan] = useState<boolean | null>(null);
 
-  // Verificação inline do isAdmin
-  const isAdmin = user?.email === "luminnus.lia.ai@gmail.com";
+  // Verificação baseada na role do AuthContext
+  const isAdmin = role === 'admin';
 
   // Verifica se o usuário tem plano ativo
   useEffect(() => {
