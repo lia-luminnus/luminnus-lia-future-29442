@@ -48,32 +48,20 @@ export function useAdminAuth() {
     // Se ainda estiver carregando, não faz nada
     if (loading) return;
 
+    // Proteção: só redireciona se estiver em rota de admin
+    if (!location.pathname.startsWith("/admin-dashboard")) return;
+
     // Se não tiver usuário autenticado e estiver tentando acessar admin
-    if (!user && location.pathname.startsWith("/admin-dashboard")) {
-      navigate("/auth");
+    if (!user) {
+      navigate("/auth", { replace: true });
       return;
     }
 
-    // Se tiver usuário, verifica se é admin
-    if (user?.email) {
-      // Redireciona admin para dashboard admin se estiver em outra página após login
-      if (isAdmin && location.pathname === "/auth") {
-        navigate("/admin-dashboard");
-      }
-      // Redireciona não-admin para dashboard normal se tentar acessar área admin
-      else if (!isAdmin && location.pathname.startsWith("/admin-dashboard")) {
-        navigate("/dashboard");
-      }
-      // Para usuários comuns após login, verifica plano
-      else if (!isAdmin && location.pathname === "/auth" && hasActivePlan !== null) {
-        if (hasActivePlan) {
-          navigate("/dashboard");
-        } else {
-          navigate("/");
-        }
-      }
+    // Redireciona não-admin para dashboard normal se tentar acessar área admin
+    if (!isAdmin) {
+      navigate("/dashboard", { replace: true });
     }
-  }, [user, loading, navigate, location.pathname, isAdmin, hasActivePlan]);
+  }, [user, loading, navigate, location.pathname, isAdmin]);
 
   return {
     isAdmin,

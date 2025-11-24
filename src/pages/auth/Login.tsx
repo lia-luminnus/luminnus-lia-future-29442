@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,16 +9,29 @@ import { Building2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import luminmusLogo from "@/assets/luminnus-logo-new.png";
 
-const ADMIN_EMAIL = "luminnus.lia.ai@gmail.com";
-
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user, role } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Redireciona usuários já autenticados
+  useEffect(() => {
+    if (user && role) {
+      const from = location.state?.from?.pathname;
+      if (from && from !== "/imobiliaria/login") {
+        navigate(from, { replace: true });
+      } else if (role === "admin") {
+        navigate("/admin-imob", { replace: true });
+      } else {
+        navigate("/cliente", { replace: true });
+      }
+    }
+  }, [user, role, navigate, location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,15 +41,13 @@ const Login = () => {
     try {
       const { error } = await signIn(email, password);
       if (error) {
-        setError(error.message);
-      } else {
-        // Redirect based on user type
-        if (email === ADMIN_EMAIL) {
-          navigate("/admin-imob");
+        if (error.message === "Invalid login credentials") {
+          setError("Email ou senha incorretos");
         } else {
-          navigate("/cliente");
+          setError(error.message);
         }
       }
+      // O redirecionamento é feito pelo useEffect acima
     } catch (err) {
       setError("Erro ao fazer login. Tente novamente.");
     } finally {

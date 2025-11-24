@@ -6,7 +6,6 @@ import LiaPositioning from "@/components/LiaPositioning";
 import LiaAtendimento from "@/components/LiaAtendimento";
 import LiaSimulator from "@/components/LiaSimulator";
 import Solutions from "@/components/Solutions";
-import Plans from "@/components/Plans";
 import FuturePersonas from "@/components/FuturePersonas";
 import Footer from "@/components/Footer";
 import FloatingChatButton from "@/components/FloatingChatButton";
@@ -22,7 +21,6 @@ const Index = () => {
       <LiaAtendimento />
       <LiaSimulator />
       <Solutions />
-      <Plans />
       <FuturePersonas />
       <Footer />
       <FloatingChatButton />

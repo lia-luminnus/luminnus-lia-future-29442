@@ -87,17 +87,17 @@ const AdminDashboard = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
       <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Main Content */}
       <main className="flex-1 md:ml-64">
         {/* Top Bar */}
-        <div className="border-b bg-white px-6 py-4">
+        <div className="border-b border-border bg-card px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+              <h1 className="text-2xl font-bold text-foreground">
                 {activeSection === "overview" && "Visão Geral"}
                 {activeSection === "lia-chat" && "Assistente LIA"}
                 {activeSection === "users" && "Gerenciar Usuários"}
@@ -120,7 +120,7 @@ const AdminDashboard = () => {
             </div>
             <div className="hidden items-center gap-4 md:flex">
               <div className="text-right">
-                <div className="text-sm font-medium text-gray-900">Painel Admin</div>
+                <div className="text-sm font-medium text-foreground">Painel Admin</div>
                 <div className="text-xs text-muted-foreground">Sistema LIA</div>
               </div>
             </div>

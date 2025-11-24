@@ -10,17 +10,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-[#7B2FF7] text-white hover:bg-[#9F57FF] shadow-[0_4px_20px_rgba(123,47,247,0.25)] hover:shadow-[0_8px_32px_rgba(123,47,247,0.35)] hover:-translate-y-0.5 rounded-xl",
+          "bg-primary text-primary-foreground hover:bg-accent shadow-[var(--shadow-soft)] hover:shadow-[var(--shadow-glow)] hover:-translate-y-0.5 rounded-xl",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm hover:shadow-md rounded-xl",
         outline:
-          "border-2 border-[#7B2FF7] bg-transparent text-[#7B2FF7] hover:bg-[#7B2FF7]/10 hover:border-[#9F57FF] rounded-xl",
+          "border-2 border-primary bg-background text-primary hover:bg-primary/10 hover:border-accent rounded-xl dark:bg-background dark:text-primary dark:hover:bg-primary/10",
         secondary:
-          "bg-[#F3EEFF] text-[#7B2FF7] hover:bg-[#E8DBFF] dark:bg-[#7B2FF7]/20 dark:text-[#C7A4FF] dark:hover:bg-[#7B2FF7]/30 rounded-xl",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-xl",
         ghost:
-          "hover:bg-[#7B2FF7]/10 hover:text-[#7B2FF7] rounded-xl",
+          "hover:bg-primary/10 hover:text-primary rounded-xl",
         link:
-          "text-[#7B2FF7] underline-offset-4 hover:underline",
+          "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-11 px-5 py-2.5",

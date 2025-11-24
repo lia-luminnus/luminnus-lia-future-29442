@@ -72,16 +72,16 @@ export const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarPro
       {/* Sidebar */}
       <aside
         className={cn(
-          "fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-purple-900 via-purple-800 to-purple-900 text-white transition-transform duration-300 ease-in-out",
+          "fixed left-0 top-0 z-40 h-screen w-64 bg-gradient-to-b from-primary via-accent to-primary text-primary-foreground transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-center border-b border-purple-700 p-6">
+          <div className="flex items-center justify-center border-b border-primary/30 p-6">
             <div className="text-center">
-              <h1 className="text-2xl font-bold">LIA Admin</h1>
-              <p className="text-sm text-purple-200">Painel de Controle</p>
+              <h1 className="text-2xl font-bold text-primary-foreground">LIA Admin</h1>
+              <p className="text-sm text-primary-foreground/80">Painel de Controle</p>
             </div>
           </div>
 
@@ -101,8 +101,8 @@ export const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarPro
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left text-sm font-medium transition-all",
                     isActive
-                      ? "bg-white text-purple-900 shadow-lg"
-                      : "text-purple-100 hover:bg-purple-700/50"
+                      ? "bg-primary-foreground text-primary shadow-lg"
+                      : "text-primary-foreground/80 hover:bg-primary-foreground/10"
                   )}
                 >
                   <Icon className="h-5 w-5" />
@@ -118,10 +118,10 @@ export const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarPro
           </nav>
 
           {/* Footer - Logout */}
-          <div className="border-t border-purple-700 p-4">
+          <div className="border-t border-primary/30 p-4">
             <Button
               variant="ghost"
-              className="w-full justify-start text-purple-100 hover:bg-purple-700/50 hover:text-white"
+              className="w-full justify-start text-primary-foreground/80 hover:bg-primary-foreground/10 hover:text-primary-foreground"
               onClick={handleSignOut}
             >
               <LogOut className="mr-3 h-5 w-5" />
