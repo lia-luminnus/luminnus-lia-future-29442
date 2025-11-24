@@ -20,9 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Search, Plus, Edit, Trash2, MapPin, Bed, Bath, Square, Eye, Building2 } from "lucide-react";
+import { Search, Plus, Edit, Trash2, MapPin, Bed, Bath, Square, Eye, Building2, Upload, X } from "lucide-react";
 import AdminImobLayout from "@/components/layout/AdminImobLayout";
-import { getImoveis, createImovel, updateImovel, deleteImovel, type Imovel } from "@/services/api";
+import { getImoveis, createImovel, updateImovel, deleteImovel, uploadImovelFoto, deleteImovelFoto, type Imovel } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import Loading from "@/components/ui/Loading";
 import EmptyState from "@/components/ui/EmptyState";
@@ -57,8 +57,10 @@ const AdminImoveis = () => {
     banheiros: "",
     area: "",
     disponivel: true,
-    descricao: ""
+    descricao: "",
+    fotos: [] as string[]
   });
+  const [uploadingFoto, setUploadingFoto] = useState(false);
 
   useEffect(() => {
     loadImoveis();
@@ -91,7 +93,8 @@ const AdminImoveis = () => {
       banheiros: String(imovel.banheiros || 0),
       area: String(imovel.area || 0),
       disponivel: imovel.disponivel,
-      descricao: imovel.descricao || ""
+      descricao: imovel.descricao || "",
+      fotos: imovel.fotos || []
     });
     setIsDialogOpen(true);
   };
@@ -107,7 +110,8 @@ const AdminImoveis = () => {
       banheiros: "",
       area: "",
       disponivel: true,
-      descricao: ""
+      descricao: "",
+      fotos: []
     });
     setIsDialogOpen(true);
   };
@@ -134,7 +138,8 @@ const AdminImoveis = () => {
         banheiros: Number(formData.banheiros) || 0,
         area: Number(formData.area) || 0,
         disponivel: formData.disponivel,
-        descricao: formData.descricao
+        descricao: formData.descricao,
+        fotos: formData.fotos
       };
 
       if (selectedImovel) {
@@ -180,6 +185,61 @@ const AdminImoveis = () => {
       imovel.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
       imovel.localizacao.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleFotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validação de tipo
+    if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast({
+        title: "Erro",
+        description: "Apenas arquivos JPG, PNG e WEBP são permitidos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validação de tamanho (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Erro",
+        description: "A imagem deve ter no máximo 5MB",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingFoto(true);
+    try {
+      const tempId = selectedImovel?.id || 'temp-' + Date.now();
+      const url = await uploadImovelFoto(file, tempId);
+      setFormData({ ...formData, fotos: [...formData.fotos, url] });
+      toast({ title: "Sucesso", description: "Foto adicionada!" });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível fazer upload da foto",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingFoto(false);
+    }
+  };
+
+  const handleRemoverFoto = async (url: string) => {
+    try {
+      await deleteImovelFoto(url);
+      setFormData({ ...formData, fotos: formData.fotos.filter(f => f !== url) });
+      toast({ title: "Sucesso", description: "Foto removida!" });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover a foto",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Estatisticas
   const totalImoveis = imoveis.length;
@@ -480,6 +540,62 @@ const AdminImoveis = () => {
                     rows={3}
                     className="resize-none"
                   />
+                </div>
+
+                {/* EDITOR DE FOTOS */}
+                <div className="space-y-3">
+                  <Label>Fotos do Imóvel</Label>
+                  
+                  {/* Galeria de fotos */}
+                  {formData.fotos.length > 0 && (
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                      {formData.fotos.map((foto, index) => (
+                        <div key={index} className="relative group">
+                          <img 
+                            src={foto} 
+                            alt={`Foto ${index + 1}`}
+                            className="w-full h-24 object-cover rounded-lg border border-border"
+                          />
+                          {index === 0 && (
+                            <div className="absolute top-1 left-1 bg-[#8A2FFF] text-white text-xs px-2 py-0.5 rounded">
+                              Capa
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoverFoto(foto)}
+                            className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Upload button */}
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="foto-upload"
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleFotoUpload}
+                      disabled={uploadingFoto}
+                      className="hidden"
+                    />
+                    <Label
+                      htmlFor="foto-upload"
+                      className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-[#8A2FFF]/30 rounded-lg p-4 cursor-pointer hover:border-[#8A2FFF]/60 transition-colors"
+                    >
+                      <Upload className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-sm text-muted-foreground">
+                        {uploadingFoto ? 'Enviando...' : 'Clique para adicionar foto'}
+                      </span>
+                    </Label>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Formatos: JPG, PNG, WEBP • Tamanho máximo: 5MB • A primeira foto será a capa
+                  </p>
                 </div>
               </div>
               <DialogFooter className="gap-2 sm:gap-0">

@@ -495,6 +495,57 @@ export async function marcarNotificacaoLida(id: string): Promise<void> {
   if (error) throw new Error(error.message);
 }
 
+// ==================== STORAGE - FOTOS DE IMÓVEIS ====================
+
+/**
+ * Faz upload de uma foto de imóvel para o bucket
+ */
+export async function uploadImovelFoto(file: File, imovelId: string): Promise<string> {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${imovelId}/${Date.now()}.${fileExt}`;
+
+    const { data, error } = await supabase.storage
+      .from('imoveis-fotos')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (error) throw error;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('imoveis-fotos')
+      .getPublicUrl(data.path);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Erro ao fazer upload da foto:', error);
+    throw error;
+  }
+}
+
+/**
+ * Remove uma foto do bucket
+ */
+export async function deleteImovelFoto(url: string): Promise<void> {
+  try {
+    const urlParts = url.split('/imoveis-fotos/');
+    if (urlParts.length < 2) throw new Error('URL inválida');
+    
+    const filePath = urlParts[1];
+
+    const { error } = await supabase.storage
+      .from('imoveis-fotos')
+      .remove([filePath]);
+
+    if (error) throw error;
+  } catch (error) {
+    console.error('Erro ao deletar foto:', error);
+    throw error;
+  }
+}
+
 // ==================== HELPERS ====================
 
 /**
