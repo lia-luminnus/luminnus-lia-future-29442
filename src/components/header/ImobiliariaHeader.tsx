@@ -16,9 +16,8 @@ const ImobiliariaHeader = () => {
   const isImobiliariaSection = location.pathname.startsWith('/imobiliaria');
 
   const handleLogout = async () => {
-    await signOut();
     setMobileMenuOpen(false);
-    navigate('/');
+    await signOut();
   };
 
   const isActiveLink = (path: string) => {
