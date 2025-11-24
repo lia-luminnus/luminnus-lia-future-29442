@@ -28,6 +28,30 @@ const ImobiliariaHeader = () => {
     return location.pathname.startsWith(path);
   };
 
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId?: string) => {
+    // Only handle smooth scroll if we're on the imobiliaria home page
+    if (location.pathname === '/imobiliaria' && targetId) {
+      e.preventDefault();
+      const element = document.getElementById(targetId);
+      if (element) {
+        const headerOffset = 100; // Account for fixed header
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: 'smooth'
+        });
+      }
+    } else if (targetId === 'top') {
+      e.preventDefault();
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl shadow-[var(--shadow-sm)] border-b border-[var(--lum-border)] dark:border-[var(--lum-border-dark)] animate-fade-in">
       <div className="container mx-auto px-4 lg:px-8">
@@ -48,7 +72,7 @@ const ImobiliariaHeader = () => {
                 to="/"
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-[var(--transition-smooth)] ${
                   !isImobiliariaSection
-                    ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
+                    ? 'bg-[#8A2FFF] text-white shadow-[var(--shadow-purple)]'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
               >
@@ -59,7 +83,7 @@ const ImobiliariaHeader = () => {
                 to="/imobiliaria"
                 className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-medium transition-all duration-[var(--transition-smooth)] ${
                   isImobiliariaSection
-                    ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
+                    ? 'bg-[#8A2FFF] text-white shadow-[var(--shadow-purple)]'
                     : 'text-muted-foreground hover:text-foreground hover:bg-muted/80'
                 }`}
               >
@@ -73,22 +97,23 @@ const ImobiliariaHeader = () => {
           {isImobiliariaSection && (
             <nav className="hidden lg:flex items-center space-x-8">
               {[
-                { path: '/imobiliaria', label: 'Inicio', exact: true },
-                { path: '/imobiliaria/imoveis', label: 'Imoveis' },
-                { path: '/imobiliaria/contato', label: 'Contato' },
+                { path: '/imobiliaria', label: 'Inicio', exact: true, scrollTo: 'top' },
+                { path: '/imobiliaria', label: 'Imoveis', scrollTo: 'imoveis-destaque' },
+                { path: '/imobiliaria', label: 'Contato', scrollTo: 'contato-rapido' },
               ].map((link) => (
                 <Link
-                  key={link.path}
+                  key={link.label}
                   to={link.path}
-                  className={`relative text-foreground font-medium transition-all duration-[var(--transition)] hover:text-[#7B2FF7] ${
+                  onClick={(e) => handleSmoothScroll(e, link.scrollTo)}
+                  className={`relative text-foreground font-medium transition-all duration-[var(--transition)] hover:text-[#8A2FFF] ${
                     (link.exact ? location.pathname === link.path : location.pathname.startsWith(link.path))
-                      ? 'text-[#7B2FF7]'
+                      ? 'text-[#8A2FFF]'
                       : ''
                   }`}
                 >
                   {link.label}
                   {(link.exact ? location.pathname === link.path : location.pathname.startsWith(link.path)) && (
-                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#7B2FF7] rounded-full animate-scale-in" />
+                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-[#8A2FFF] rounded-full animate-scale-in" />
                   )}
                 </Link>
               ))}
@@ -145,7 +170,7 @@ const ImobiliariaHeader = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-[var(--transition-smooth)] ${
                         !isImobiliariaSection
-                          ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
+                          ? 'bg-[#8A2FFF] text-white shadow-[var(--shadow-purple)]'
                           : 'text-muted-foreground hover:bg-muted'
                       }`}
                     >
@@ -157,7 +182,7 @@ const ImobiliariaHeader = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`flex items-center gap-3 px-4 py-3.5 rounded-xl font-medium transition-all duration-[var(--transition-smooth)] ${
                         isImobiliariaSection
-                          ? 'bg-[#7B2FF7] text-white shadow-[var(--shadow-purple)]'
+                          ? 'bg-[#8A2FFF] text-white shadow-[var(--shadow-purple)]'
                           : 'text-muted-foreground hover:bg-muted'
                       }`}
                     >
@@ -170,18 +195,21 @@ const ImobiliariaHeader = () => {
 
                   {/* Imobiliaria Links */}
                   {[
-                    { path: '/imobiliaria', label: 'Inicio' },
-                    { path: '/imobiliaria/imoveis', label: 'Imoveis' },
-                    { path: '/imobiliaria/contato', label: 'Contato' },
+                    { path: '/imobiliaria', label: 'Inicio', scrollTo: 'top' },
+                    { path: '/imobiliaria', label: 'Imoveis', scrollTo: 'imoveis-destaque' },
+                    { path: '/imobiliaria', label: 'Contato', scrollTo: 'contato-rapido' },
                   ].map((link) => (
                     <Link
-                      key={link.path}
+                      key={link.label}
                       to={link.path}
-                      onClick={() => setMobileMenuOpen(false)}
+                      onClick={(e) => {
+                        handleSmoothScroll(e, link.scrollTo);
+                        setMobileMenuOpen(false);
+                      }}
                       className={`px-4 py-3 rounded-lg font-medium transition-all duration-[var(--transition)] ${
                         isActiveLink(link.path)
-                          ? 'text-[#7B2FF7] bg-[#7B2FF7]/10'
-                          : 'text-foreground hover:text-[#7B2FF7] hover:bg-muted'
+                          ? 'text-[#8A2FFF] bg-[#8A2FFF]/10'
+                          : 'text-foreground hover:text-[#8A2FFF] hover:bg-muted'
                       }`}
                     >
                       {link.label}

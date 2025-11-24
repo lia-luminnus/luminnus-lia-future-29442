@@ -3,24 +3,24 @@
    ================================================ */
 
 :root {
-  /* ===== CORES PRINCIPAIS ===== */
-  --lum-purple: #7B2FF7;
-  --lum-purple-light: #9F57FF;
+  /* ===== CORES PRINCIPAIS - PALETA OFICIAL LUMINNUS ===== */
+  --lum-purple: #8A2FFF;
+  --lum-purple-light: #C08BFF;
   --lum-purple-soft: #C7A4FF;
   --lum-purple-subtle: #E8DBFF;
 
   /* ===== BACKGROUNDS ===== */
   --lum-bg-light: #F3EEFF;
   --lum-bg-white: #FFFFFF;
-  --lum-bg-dark: #0F0F14;
-  --lum-card-dark: #1A1A22;
+  --lum-bg-dark: #0B0B0F;
+  --lum-card-dark: #141418;
   --lum-card-darker: #141418;
 
   /* ===== TEXTO ===== */
   --lum-text-light: #FFFFFF;
-  --lum-text-dark: #0F0F14;
+  --lum-text-dark: #0B0B0F;
   --lum-text-muted: #6B7280;
-  --lum-text-muted-light: #9CA3AF;
+  --lum-text-muted-light: #EDEDED;
 
   /* ===== BORDAS ===== */
   --lum-border: #E2E2E2;
@@ -55,9 +55,9 @@
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
   --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
-  --shadow-purple: 0 4px 20px rgba(123, 47, 247, 0.25);
-  --shadow-purple-lg: 0 8px 32px rgba(123, 47, 247, 0.35);
-  --shadow-glow: 0 0 40px rgba(123, 47, 247, 0.3);
+  --shadow-purple: 0 4px 20px rgba(138, 47, 255, 0.25);
+  --shadow-purple-lg: 0 8px 32px rgba(138, 47, 255, 0.35);
+  --shadow-glow: 0 0 40px rgba(138, 47, 255, 0.3);
   --shadow-card-hover: 0 10px 20px rgba(0, 0, 0, 0.15);
 
   /* ===== TRANSIÇÕES ===== */
@@ -118,7 +118,7 @@
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
   --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-purple: 0 4px 20px rgba(123, 47, 247, 0.35);
+  --shadow-purple: 0 4px 20px rgba(138, 47, 255, 0.35);
   --shadow-card-hover: 0 10px 20px rgba(0, 0, 0, 0.4);
 }
 
@@ -208,7 +208,7 @@ html {
 
 .input-luminnus:focus {
   border-color: var(--lum-purple);
-  box-shadow: 0 0 0 3px rgba(123, 47, 247, 0.2);
+  box-shadow: 0 0 0 3px rgba(138, 47, 255, 0.2);
   outline: none;
 }
 
@@ -233,13 +233,13 @@ html {
 }
 
 .sidebar-link:hover {
-  background-color: rgba(123, 47, 247, 0.08);
+  background-color: rgba(138, 47, 255, 0.08);
   color: var(--lum-purple);
 }
 
 .sidebar-link.active {
   border-left: 4px solid var(--lum-purple);
-  background-color: rgba(123, 47, 247, 0.1);
+  background-color: rgba(138, 47, 255, 0.1);
   color: var(--lum-purple);
   font-weight: var(--font-weight-medium);
 }

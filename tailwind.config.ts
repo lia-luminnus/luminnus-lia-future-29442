@@ -61,14 +61,14 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Luminnus brand colors
+        // Luminnus brand colors - Paleta Oficial
         luminnus: {
-          purple: "#7B2FF7",
-          "purple-light": "#9F57FF",
+          purple: "#8A2FFF",
+          "purple-light": "#C08BFF",
           "purple-soft": "#C7A4FF",
           "bg-light": "#F3EEFF",
-          "bg-dark": "#0F0F14",
-          "card-dark": "#1A1A22",
+          "bg-dark": "#0B0B0F",
+          "card-dark": "#141418",
         },
       },
       borderRadius: {
@@ -79,9 +79,9 @@ export default {
         "2xl": "1.5rem",
       },
       boxShadow: {
-        "luminnus": "0 4px 20px rgba(123, 47, 247, 0.25)",
-        "luminnus-lg": "0 8px 32px rgba(123, 47, 247, 0.35)",
-        "luminnus-glow": "0 0 40px rgba(123, 47, 247, 0.3)",
+        "luminnus": "0 4px 20px rgba(138, 47, 255, 0.25)",
+        "luminnus-lg": "0 8px 32px rgba(138, 47, 255, 0.35)",
+        "luminnus-glow": "0 0 40px rgba(138, 47, 255, 0.3)",
       },
       keyframes: {
         "accordion-down": {

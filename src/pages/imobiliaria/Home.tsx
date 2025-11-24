@@ -4,7 +4,8 @@ import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { MapPin, Bed, Bath, Square, Phone, MessageCircle, ArrowRight, Building2, Star, Shield, Users } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MapPin, Bed, Bath, Square, Phone, MessageCircle, ArrowRight, Building2, Search, Home } from "lucide-react";
 import ImobiliariaHeader from "@/components/header/ImobiliariaHeader";
 
 // Mock data for featured properties
@@ -57,28 +58,36 @@ const ImobiliariaHome = () => {
     <div className="min-h-screen bg-background">
       <ImobiliariaHeader />
 
-      {/* Hero Section */}
-      <section className="pt-32 pb-24 bg-gradient-to-br from-[#F3EEFF] to-white dark:from-[#0F0F14] dark:to-[#1A1A22]">
-        <div className="container mx-auto px-4 text-center">
+      {/* Hero Section com Background do Porto */}
+      <section
+        className="relative pt-32 pb-24 bg-cover bg-center bg-no-repeat overflow-hidden"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1555881604-69a24a0f1cdf?q=80&w=2000&fit=crop)',
+        }}
+      >
+        {/* Overlay escuro/roxo */}
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0B0B0F]/70 via-[#8A2FFF]/30 to-[#0B0B0F]/80 dark:from-[#0B0B0F]/85 dark:via-[#8A2FFF]/35 dark:to-[#0B0B0F]/90"></div>
+
+        <div className="container mx-auto px-4 text-center relative z-10">
           <div className="flex items-center justify-center gap-2 mb-6">
-            <Building2 className="w-12 h-12 text-primary" />
+            <Building2 className="w-12 h-12 text-white drop-shadow-lg" />
           </div>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-primary mb-6">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6 drop-shadow-2xl">
             Luminnus Imobiliaria
           </h1>
-          <p className="text-lg md:text-xl max-w-2xl mx-auto text-muted-foreground mb-8">
+          <p className="text-lg md:text-xl max-w-2xl mx-auto text-white/95 mb-8 drop-shadow-lg">
             Encontre imoveis selecionados com tecnologia inteligente e suporte da LIA.
             Sua jornada para o imovel dos sonhos comeca aqui.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/imobiliaria/imoveis">
-              <Button size="lg" className="w-full sm:w-auto gap-2">
+              <Button size="lg" className="w-full sm:w-auto gap-2 bg-[#8A2FFF] hover:bg-[#C08BFF] shadow-lg">
                 Ver imoveis disponiveis
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/imobiliaria/contato">
-              <Button size="lg" variant="outline" className="w-full sm:w-auto">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto bg-white/10 backdrop-blur-sm text-white border-white/30 hover:bg-white/20">
                 Falar com consultor
               </Button>
             </Link>
@@ -86,40 +95,127 @@ const ImobiliariaHome = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-card">
+      {/* Filtros do Cliente */}
+      <section className="py-16 bg-[#141418] dark:bg-[#141418]" id="filtros">
         <div className="container mx-auto px-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-12 text-foreground">
-            Por que escolher a Luminnus?
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                <Star className="w-8 h-8 text-primary" />
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <Search className="w-8 h-8 text-[#8A2FFF]" />
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Imoveis Selecionados</h3>
-              <p className="text-muted-foreground">Curadoria rigorosa para garantir as melhores opcoes do mercado.</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                Encontre o Imovel Ideal
+              </h2>
+              <p className="text-[#EDEDED]">
+                Preencha os filtros abaixo para encontrarmos as melhores opcoes para voce
+              </p>
             </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                <Shield className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Processo Seguro</h3>
-              <p className="text-muted-foreground">Documentacao verificada e acompanhamento em todas as etapas.</p>
-            </div>
-            <div className="text-center p-6">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-                <Users className="w-8 h-8 text-primary" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2 text-foreground">Suporte Personalizado</h3>
-              <p className="text-muted-foreground">Atendimento humanizado com apoio da nossa IA assistente LIA.</p>
-            </div>
+
+            <Card className="bg-[#0B0B0F] border-[#8A2FFF]/30">
+              <CardContent className="p-6">
+                <form className="space-y-6">
+                  {/* Linha 1: Localização e Tipo */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="localizacao" className="text-white">Localização *</Label>
+                      <Input
+                        id="localizacao"
+                        placeholder="Ex: Porto, Lisboa, Braga..."
+                        className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="tipo" className="text-white">Tipo de Imovel *</Label>
+                      <Select>
+                        <SelectTrigger className="bg-[#141418] border-[#8A2FFF] text-white">
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#141418] border-[#8A2FFF]">
+                          <SelectItem value="apartamento" className="text-white">Apartamento</SelectItem>
+                          <SelectItem value="vivenda" className="text-white">Vivenda / Casa</SelectItem>
+                          <SelectItem value="studio" className="text-white">Studio</SelectItem>
+                          <SelectItem value="terreno" className="text-white">Terreno</SelectItem>
+                          <SelectItem value="outro" className="text-white">Outro</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Linha 2: Tipologia e Casas de Banho */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="tipologia" className="text-white">Tipologia *</Label>
+                      <Select>
+                        <SelectTrigger className="bg-[#141418] border-[#8A2FFF] text-white">
+                          <SelectValue placeholder="Selecione a tipologia" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#141418] border-[#8A2FFF]">
+                          <SelectItem value="t0" className="text-white">T0</SelectItem>
+                          <SelectItem value="t1" className="text-white">T1</SelectItem>
+                          <SelectItem value="t2" className="text-white">T2</SelectItem>
+                          <SelectItem value="t3" className="text-white">T3</SelectItem>
+                          <SelectItem value="t4" className="text-white">T4</SelectItem>
+                          <SelectItem value="t5+" className="text-white">T5+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="banhos" className="text-white">Casas de Banho</Label>
+                      <Select>
+                        <SelectTrigger className="bg-[#141418] border-[#8A2FFF] text-white">
+                          <SelectValue placeholder="Selecione" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#141418] border-[#8A2FFF]">
+                          <SelectItem value="1" className="text-white">1</SelectItem>
+                          <SelectItem value="2" className="text-white">2</SelectItem>
+                          <SelectItem value="3" className="text-white">3</SelectItem>
+                          <SelectItem value="4+" className="text-white">4+</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  {/* Linha 3: Valor Aprovado e Intervalo de Preço */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="valor-aprovado" className="text-white">Valor Aprovado pelo Banco (€)</Label>
+                      <Input
+                        id="valor-aprovado"
+                        type="number"
+                        placeholder="Ex: 250000"
+                        className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">Intervalo de Preco Desejado (€)</Label>
+                      <div className="grid grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Min"
+                          type="number"
+                          className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                        />
+                        <Input
+                          placeholder="Max"
+                          type="number"
+                          className="bg-[#141418] border-[#8A2FFF] text-white placeholder:text-[#C7C7C7]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full bg-[#8A2FFF] hover:bg-[#C08BFF] text-white py-6 text-lg">
+                    <Search className="w-5 h-5 mr-2" />
+                    Buscar Imoveis
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* Featured Properties Grid */}
-      <section className="py-16">
+      <section className="py-16" id="imoveis-destaque">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl md:text-3xl font-bold text-foreground">
@@ -193,33 +289,51 @@ const ImobiliariaHome = () => {
               Preencha o formulario abaixo ou fale conosco pelo WhatsApp
             </p>
 
-            <Card>
+            <Card className="border-[#8A2FFF]/30">
               <CardContent className="p-6">
                 <form className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="nome">Nome</Label>
-                      <Input id="nome" placeholder="Seu nome completo" />
+                      <Label htmlFor="nome" className="text-foreground">Nome</Label>
+                      <Input
+                        id="nome"
+                        placeholder="Seu nome completo"
+                        className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                      />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input id="email" type="email" placeholder="seu@email.com" />
+                      <Label htmlFor="email" className="text-foreground">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="seu@email.com"
+                        className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                      />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone</Label>
-                    <Input id="telefone" placeholder="(11) 99999-9999" />
+                    <Label htmlFor="telefone" className="text-foreground">Telefone</Label>
+                    <Input
+                      id="telefone"
+                      placeholder="(11) 99999-9999"
+                      className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="mensagem">Mensagem</Label>
-                    <Textarea id="mensagem" placeholder="Como podemos ajudar?" rows={4} />
+                    <Label htmlFor="mensagem" className="text-foreground">Mensagem</Label>
+                    <Textarea
+                      id="mensagem"
+                      placeholder="Como podemos ajudar?"
+                      rows={4}
+                      className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                    />
                   </div>
                   <div className="flex flex-col sm:flex-row gap-3">
-                    <Button type="submit" className="flex-1">
+                    <Button type="submit" className="flex-1 bg-[#8A2FFF] hover:bg-[#C08BFF]">
                       <Phone className="w-4 h-4 mr-2" />
                       Enviar
                     </Button>
-                    <Button type="button" variant="outline" className="flex-1" onClick={handleWhatsApp}>
+                    <Button type="button" className="flex-1 bg-[#25D366] hover:bg-[#1EBE5C] text-white border-0" onClick={handleWhatsApp}>
                       <MessageCircle className="w-4 h-4 mr-2" />
                       WhatsApp
                     </Button>

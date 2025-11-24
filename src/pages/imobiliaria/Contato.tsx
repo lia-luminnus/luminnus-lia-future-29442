@@ -93,10 +93,10 @@ const Contato = () => {
               </div>
 
               {/* WhatsApp CTA */}
-              <Card className="bg-primary/5 border-primary/20">
+              <Card className="bg-[#8A2FFF]/10 border-[#8A2FFF]/30">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0">
+                    <div className="w-14 h-14 rounded-full bg-[#25D366] flex items-center justify-center flex-shrink-0">
                       <MessageCircle className="w-7 h-7 text-white" />
                     </div>
                     <div className="flex-1">
@@ -106,7 +106,7 @@ const Contato = () => {
                       <p className="text-sm text-muted-foreground mb-3">
                         Resposta rapida em horario comercial
                       </p>
-                      <Button onClick={handleWhatsApp} className="bg-green-500 hover:bg-green-600 text-white">
+                      <Button onClick={handleWhatsApp} className="bg-[#25D366] hover:bg-[#1EBE5C] text-white border-0">
                         <MessageCircle className="w-4 h-4 mr-2" />
                         Iniciar conversa
                       </Button>
@@ -126,37 +126,64 @@ const Contato = () => {
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="nome">Nome *</Label>
-                        <Input id="nome" placeholder="Seu nome completo" required />
+                        <Label htmlFor="nome" className="text-foreground">Nome *</Label>
+                        <Input
+                          id="nome"
+                          placeholder="Seu nome completo"
+                          required
+                          className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="email">Email *</Label>
-                        <Input id="email" type="email" placeholder="seu@email.com" required />
+                        <Label htmlFor="email" className="text-foreground">Email *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="seu@email.com"
+                          required
+                          className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                        />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="telefone">Telefone *</Label>
-                        <Input id="telefone" placeholder="(11) 99999-9999" required />
+                        <Label htmlFor="telefone" className="text-foreground">Telefone *</Label>
+                        <Input
+                          id="telefone"
+                          placeholder="(11) 99999-9999"
+                          required
+                          className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                        />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="assunto">Assunto</Label>
-                        <Input id="assunto" placeholder="Assunto da mensagem" />
+                        <Label htmlFor="assunto" className="text-foreground">Assunto</Label>
+                        <Input
+                          id="assunto"
+                          placeholder="Assunto da mensagem"
+                          className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
+                        />
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="mensagem">Mensagem *</Label>
+                      <Label htmlFor="mensagem" className="text-foreground">Mensagem *</Label>
                       <Textarea
                         id="mensagem"
                         placeholder="Descreva como podemos ajudar voce..."
                         rows={5}
                         required
+                        className="border-[#8A2FFF] focus:border-[#8A2FFF] placeholder:text-[#C7C7C7]"
                       />
                     </div>
-                    <Button type="submit" className="w-full gap-2">
-                      <Send className="w-4 h-4" />
-                      Enviar Mensagem
-                    </Button>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <Button type="submit" className="flex-1 bg-[#8A2FFF] hover:bg-[#C08BFF] gap-2">
+                        <Send className="w-4 h-4" />
+                        Enviar Mensagem
+                      </Button>
+                      <Button type="button" onClick={handleWhatsApp} className="flex-1 bg-[#25D366] hover:bg-[#1EBE5C] text-white border-0 gap-2">
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp
+                      </Button>
+                    </div>
                   </form>
                 </CardContent>
               </Card>
