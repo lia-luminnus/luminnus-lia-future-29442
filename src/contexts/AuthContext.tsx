@@ -161,21 +161,26 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        console.log('[AuthContext] Auth state changed:', event);
+        // Apenas atualizações síncronas no callback principal
         setSession(session);
         setUser(session?.user ?? null);
-        const userRole = await getUserRole(session?.user ?? null);
-        setRole(userRole);
-
-        // Sincroniza registro do cliente
+        
+        // Chamadas async com setTimeout para evitar deadlock
         if (session?.user) {
-          const id = await syncClienteRecord(session.user);
-          setClienteId(id);
+          setTimeout(async () => {
+            const userRole = await getUserRole(session.user);
+            setRole(userRole);
+            const id = await syncClienteRecord(session.user);
+            setClienteId(id);
+            setLoading(false);
+          }, 0);
         } else {
+          setRole(null);
           setClienteId(null);
+          setLoading(false);
         }
-
-        setLoading(false);
       }
     );
 
@@ -303,11 +308,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
    * Remove a sessao do usuario e limpa os dados de autenticacao
    */
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setSession(null);
-    setUser(null);
-    setRole(null);
-    setClienteId(null);
+    console.log('[AuthContext] Iniciando logout...');
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setClienteId(null);
+      console.log('[AuthContext] Logout completo, redirecionando...');
+      // Força redirecionamento limpo
+      window.location.href = '/';
+    } catch (error) {
+      console.error('[AuthContext] Erro no logout:', error);
+      // Mesmo com erro, limpa estados e redireciona
+      setSession(null);
+      setUser(null);
+      setRole(null);
+      setClienteId(null);
+      window.location.href = '/';
+    }
   };
 
   /**

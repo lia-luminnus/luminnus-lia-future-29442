@@ -42,12 +42,11 @@ const AccountMenu = () => {
 
   /**
    * FUNÇÃO: HANDLE LOGOUT
-   * Desloga o usuário e redireciona para a página inicial
+   * Desloga o usuário (signOut faz o redirect automaticamente)
    */
   const handleLogout = async () => {
-    await signOut();
     setIsOpen(false);
-    navigate('/');
+    await signOut(); // signOut já faz window.location.href = '/'
   };
 
   /**
