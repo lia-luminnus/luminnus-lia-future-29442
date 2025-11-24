@@ -4,18 +4,27 @@ import { supabase } from '@/integrations/supabase/client';
 
 const ADMIN_EMAILS = ["luminnus.lia.ai@gmail.com"];
 
+// Emails de administradores da imobiliaria
+const IMOB_ADMIN_EMAILS = ["admin@imobiliaria.com", "luminnus.lia.ai@gmail.com"];
+
+export type UserRole = "cliente" | "admin" | null;
+
 /**
- * INTERFACE DO CONTEXTO DE AUTENTICAÇÃO
- * Define os tipos e métodos disponíveis no AuthContext
+ * INTERFACE DO CONTEXTO DE AUTENTICACAO
+ * Define os tipos e metodos disponiveis no AuthContext
  */
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  role: UserRole;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  login: (email: string, password: string) => Promise<{ error: any }>;
+  logout: () => Promise<void>;
+  register: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
 }
 
 /**
@@ -73,10 +82,20 @@ const getErrorMessage = (error: any): string => {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Helper function to determine user role based on email
+ */
+const getUserRole = (email: string | undefined): UserRole => {
+  if (!email) return null;
+  if (IMOB_ADMIN_EMAILS.includes(email)) return "admin";
+  return "cliente";
+};
+
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [role, setRole] = useState<UserRole>(null);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -84,6 +103,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        setRole(getUserRole(session?.user?.email));
         setLoading(false);
       }
     );
@@ -92,6 +112,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      setRole(getUserRole(session?.user?.email));
       setLoading(false);
     });
 
@@ -196,15 +217,78 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   /**
-   * FUNÇÃO DE LOGOUT
-   * Remove a sessão do usuário e limpa os dados de autenticação
+   * FUNCAO DE LOGOUT
+   * Remove a sessao do usuario e limpa os dados de autenticacao
    */
   const signOut = async () => {
     await supabase.auth.signOut();
+    setRole(null);
+  };
+
+  /**
+   * FUNCAO DE LOGIN (alias para signIn)
+   * Autentica o usuario com email e senha para area da imobiliaria
+   */
+  const login = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      return { error: { message: getErrorMessage(error) } };
+    }
+
+    // Update role immediately after login
+    if (data?.user?.email) {
+      setRole(getUserRole(data.user.email));
+    }
+
+    return { error: null };
+  };
+
+  /**
+   * FUNCAO DE LOGOUT (alias para signOut)
+   */
+  const logout = async () => {
+    await signOut();
+  };
+
+  /**
+   * FUNCAO DE REGISTRO (alias para signUp)
+   * Cria uma nova conta de usuario na imobiliaria
+   */
+  const register = async (email: string, password: string, fullName: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/cliente`,
+        data: {
+          full_name: fullName,
+          role: 'cliente'
+        }
+      }
+    });
+
+    if (error) {
+      return { error: { message: getErrorMessage(error) } };
+    }
+
+    return { error: null };
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signInWithGoogle, signOut }}>
+    <AuthContext.Provider value={{
+      user,
+      session,
+      loading,
+      role,
+      signIn,
+      signUp,
+      signInWithGoogle,
+      signOut,
+      login,
+      logout,
+      register
+    }}>
       {children}
     </AuthContext.Provider>
   );
