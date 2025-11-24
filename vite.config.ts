@@ -5,6 +5,7 @@ import { componentTagger } from "lovable-tagger";
 
 // Gera timestamp único para cache busting
 const timestamp = Date.now();
+// Force TypeScript rebuild after Supabase schema update
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({

@@ -17,7 +17,7 @@ export interface Cliente {
   status_processo?: string;
   created_at: string;
   role: "cliente" | "admin";
-  user_id?: string;
+  user_id: string;
 }
 
 export interface Imovel {
@@ -127,7 +127,7 @@ export async function getClienteByUserId(userId: string): Promise<Cliente | null
 export async function createCliente(clienteData: Omit<Cliente, "id" | "created_at">): Promise<Cliente> {
   const { data, error } = await supabase
     .from("clientes")
-    .insert(clienteData)
+    .insert([clienteData])
     .select()
     .single();
 

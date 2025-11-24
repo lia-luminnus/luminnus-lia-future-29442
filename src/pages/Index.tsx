@@ -1,4 +1,4 @@
-import Header from "@/components/Header";
+import UnifiedHeader from "@/components/UnifiedHeader";
 import Hero from "@/components/Hero";
 import AboutLuminnus from "@/components/AboutLuminnus";
 import LiaStatistics from "@/components/LiaStatistics";
@@ -14,7 +14,7 @@ import FloatingChatButton from "@/components/FloatingChatButton";
 const Index = () => {
   return (
     <div className="min-h-screen bg-[#0B0B0F]">
-      <Header />
+      <UnifiedHeader />
       <Hero />
       <AboutLuminnus />
       <LiaStatistics />

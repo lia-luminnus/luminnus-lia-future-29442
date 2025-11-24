@@ -106,7 +106,7 @@ const AdminCompanies = () => {
         console.log('Tabela companies não existe, usando dados demo');
         setCompanies([]);
       } else {
-        setCompanies(data || []);
+        setCompanies((data || []) as Company[]);
       }
     } catch (error) {
       console.error('Erro ao carregar empresas:', error);
