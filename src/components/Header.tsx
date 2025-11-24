@@ -7,11 +7,10 @@ import LanguageSwitcher from "@/components/LanguageSwitcher";
 import AccountMenu from "@/components/AccountMenu";
 import luminmusLogo from "@/assets/luminnus-logo-new.png";
 
-const ADMIN_EMAIL = "luminnus.lia.ai@gmail.com";
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { user, signOut, role } = useAuth();
   const navigate = useNavigate();
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -160,11 +159,11 @@ const Header = () => {
               {user ? (
                 <>
                   <Link
-                    to={user.email === ADMIN_EMAIL ? "/admin-dashboard" : "/dashboard"}
+                    to={role === 'admin' ? "/admin-dashboard" : "/dashboard"}
                     className="bg-gradient-to-r from-[#6A00FF] to-[#00C2FF] text-white font-semibold px-5 py-2 rounded-md shadow-md hover:shadow-lg hover:scale-105 transition-all duration-300 text-center flex items-center justify-center gap-2"
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    {user.email === ADMIN_EMAIL ? (
+                    {role === 'admin' ? (
                       <>
                         <Shield className="w-4 h-4" />
                         Painel Admin

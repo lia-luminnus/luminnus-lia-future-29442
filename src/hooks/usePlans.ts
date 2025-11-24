@@ -91,18 +91,22 @@ export function usePlans() {
   }, []);
 
   const loadPlans = async () => {
+    console.log('🔍 [usePlans] Iniciando carregamento de planos...');
     try {
       setLoading(true);
       setError(null);
-
+      
+      console.log('📡 [usePlans] Consultando Supabase...');
       // Buscar planos do Supabase
       const { data, error: fetchError } = await supabase
         .from('plan_configs')
         .select('*')
         .order('created_at', { ascending: true });
 
+      console.log('📊 [usePlans] Resultado da query:', { data, fetchError });
+
       if (fetchError) {
-        console.error('Erro ao carregar planos do Supabase:', fetchError);
+        console.error('❌ [usePlans] Erro ao carregar planos do Supabase:', fetchError);
         // Usar dados estáticos como fallback
         setPlans(staticPlans);
         setError(fetchError);
@@ -110,20 +114,22 @@ export function usePlans() {
       }
 
       if (data && data.length > 0) {
+        console.log(`✅ [usePlans] ${data.length} planos encontrados no banco`);
         // Converter planos do formato do banco para o formato do frontend
         const convertedPlans = data.map(convertPlanFromDB);
         setPlans(convertedPlans);
       } else {
         // Se não houver planos no banco, usar dados estáticos
-        console.log('Nenhum plano encontrado no Supabase, usando dados estáticos');
+        console.log('⚠️ [usePlans] Nenhum plano encontrado no Supabase, usando dados estáticos');
         setPlans(staticPlans);
       }
     } catch (err) {
-      console.error('Erro ao carregar planos:', err);
+      console.error('💥 [usePlans] Erro ao carregar planos:', err);
       setError(err instanceof Error ? err : new Error('Erro desconhecido'));
       // Usar dados estáticos como fallback
       setPlans(staticPlans);
     } finally {
+      console.log('🏁 [usePlans] Carregamento finalizado');
       setLoading(false);
     }
   };
