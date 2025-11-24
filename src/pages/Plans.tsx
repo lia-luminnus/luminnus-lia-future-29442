@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Check, Sparkles, Bot, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import Header from "@/components/Header";
+import UnifiedHeader from "@/components/UnifiedHeader";
 import Footer from "@/components/Footer";
 import { usePlans } from "@/hooks/usePlans";
 
@@ -27,7 +27,7 @@ const Plans = () => {
 
   return (
     <div className="min-h-screen bg-[#0B0B0F]">
-      <Header />
+      <UnifiedHeader />
       
       <section className="py-32 lg:py-40 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0B0B0F] via-primary/5 to-[#0B0B0F]" />

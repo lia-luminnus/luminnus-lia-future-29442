@@ -84,24 +84,29 @@ const getErrorMessage = (error: any): string => {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
- * Helper function to determine user role
- * Prioriza role em user_metadata, senao verifica por email
+ * Helper function to determine user role from user_roles table
+ * IMPORTANTE: Agora busca role na tabela user_roles
  */
-const getUserRole = (user: User | null): UserRole => {
+const getUserRole = async (user: User | null): Promise<UserRole> => {
   if (!user) return null;
 
-  // Prioriza role em metadata (definido no registro)
-  const metadataRole = user.user_metadata?.role;
-  if (metadataRole === 'admin' || metadataRole === 'cliente') {
-    return metadataRole;
-  }
+  try {
+    // Consulta a tabela user_roles
+    const { data } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-  // Fallback: verifica por email
-  if (user.email && IMOB_ADMIN_EMAILS.includes(user.email)) {
-    return "admin";
+    if (data?.role === 'admin') return 'admin';
+    if (data?.role === 'cliente') return 'cliente';
+    
+    // Fallback: se não tiver role, retorna cliente
+    return 'cliente';
+  } catch (error) {
+    console.error('Erro ao buscar role:', error);
+    return 'cliente';
   }
-
-  return "cliente";
 };
 
 /**
@@ -123,14 +128,12 @@ const syncClienteRecord = async (user: User): Promise<string | null> => {
     }
 
     // Se nao existe, cria novo registro
-    const role = getUserRole(user);
     const { data: newCliente, error } = await supabase
       .from("clientes")
       .insert({
         user_id: user.id,
         nome: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Cliente',
         email: user.email || '',
-        role: role || 'cliente',
         status_processo: 'inicial'
       })
       .select("id")
@@ -161,7 +164,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       async (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
-        setRole(getUserRole(session?.user ?? null));
+        const userRole = await getUserRole(session?.user ?? null);
+        setRole(userRole);
 
         // Sincroniza registro do cliente
         if (session?.user) {
@@ -179,7 +183,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
-      setRole(getUserRole(session?.user ?? null));
+      const userRole = await getUserRole(session?.user ?? null);
+      setRole(userRole);
 
       // Sincroniza registro do cliente
       if (session?.user) {
@@ -210,9 +215,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
 
     // Verifica se o usuário é admin e redireciona
-    if (data?.user?.email && ADMIN_EMAILS.includes(data.user.email)) {
-      window.location.href = '/admin-dashboard';
-      return { error: null };
+    if (data?.user) {
+      const userRole = await getUserRole(data.user);
+      if (userRole === 'admin') {
+        window.location.href = '/admin-dashboard';
+        return { error: null };
+      }
     }
 
     // Para usuários comuns, verifica se tem plano ativo
@@ -296,7 +304,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
    */
   const signOut = async () => {
     await supabase.auth.signOut();
+    setSession(null);
+    setUser(null);
     setRole(null);
+    setClienteId(null);
   };
 
   /**
@@ -315,7 +326,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Update role immediately after login
     if (data?.user) {
-      const userRole = getUserRole(data.user);
+      const userRole = await getUserRole(data.user);
       setRole(userRole);
 
       // Sincroniza registro do cliente

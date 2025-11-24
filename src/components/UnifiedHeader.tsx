@@ -157,7 +157,9 @@ const UnifiedHeader = () => {
                 <>
                   <button 
                     onClick={handleHomeClick} 
-                    className="text-white hover:text-accent transition-all font-medium drop-shadow-md"
+                    className={`transition-all font-medium drop-shadow-md ${
+                      location.pathname === '/' ? 'text-accent' : 'text-white hover:text-accent'
+                    }`}
                   >
                     {t('nav_inicio')}
                   </button>
@@ -169,7 +171,9 @@ const UnifiedHeader = () => {
                   </button>
                   <Link 
                     to="/planos" 
-                    className="text-white hover:text-accent transition-all font-medium drop-shadow-md"
+                    className={`transition-all font-medium drop-shadow-md ${
+                      location.pathname === '/planos' ? 'text-accent' : 'text-white hover:text-accent'
+                    }`}
                   >
                     {t('nav_planos')}
                   </Link>
@@ -302,7 +306,9 @@ const UnifiedHeader = () => {
                     <>
                       <button 
                         onClick={handleHomeClick} 
-                        className="text-foreground hover:text-accent transition-colors font-medium text-left py-2"
+                        className={`transition-colors font-medium text-left py-2 ${
+                          location.pathname === '/' ? 'text-accent' : 'text-foreground hover:text-accent'
+                        }`}
                       >
                         {t('nav_inicio')}
                       </button>
@@ -314,7 +320,9 @@ const UnifiedHeader = () => {
                       </button>
                       <Link 
                         to="/planos" 
-                        className="text-foreground hover:text-accent transition-colors font-medium py-2" 
+                        className={`font-medium py-2 transition-colors ${
+                          location.pathname === '/planos' ? 'text-accent' : 'text-foreground hover:text-accent'
+                        }`}
                         onClick={() => setMobileMenuOpen(false)}
                       >
                         {t('nav_planos')}
