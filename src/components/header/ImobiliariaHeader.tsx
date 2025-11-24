@@ -7,11 +7,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import luminmusLogo from "@/assets/luminnus-logo-new.png";
 
-const ADMIN_EMAIL = "luminnus.lia.ai@gmail.com";
-
 const ImobiliariaHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -104,11 +102,11 @@ const ImobiliariaHeader = () => {
             {user ? (
               <div className="flex items-center gap-3">
                 <Link
-                  to={user.email === ADMIN_EMAIL ? "/admin-imob" : "/cliente"}
+                  to={role === 'admin' ? "/admin-imob" : "/cliente"}
                   className="bg-[#7B2FF7] text-white font-semibold px-5 py-2.5 rounded-xl shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] hover:shadow-[var(--shadow-purple-lg)] hover:-translate-y-0.5 transition-all duration-[var(--transition-smooth)] flex items-center gap-2"
                 >
                   <User className="w-4 h-4" />
-                  {user.email === ADMIN_EMAIL ? 'Painel Admin' : 'Minha Area'}
+                  {role === 'admin' ? 'Painel Admin' : 'Minha Area'}
                 </Link>
                 <Button
                   variant="ghost"
@@ -196,12 +194,12 @@ const ImobiliariaHeader = () => {
                   {user ? (
                     <>
                       <Link
-                        to={user.email === ADMIN_EMAIL ? "/admin-imob" : "/cliente"}
+                        to={role === 'admin' ? "/admin-imob" : "/cliente"}
                         onClick={() => setMobileMenuOpen(false)}
                         className="bg-[#7B2FF7] text-white font-semibold px-4 py-3.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-[var(--shadow-purple)] hover:bg-[#9F57FF] transition-all duration-[var(--transition-smooth)]"
                       >
                         <User className="w-5 h-5" />
-                        {user.email === ADMIN_EMAIL ? 'Painel Admin' : 'Minha Area'}
+                        {role === 'admin' ? 'Painel Admin' : 'Minha Area'}
                       </Link>
                       <Button
                         variant="outline"
