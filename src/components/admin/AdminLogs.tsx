@@ -72,7 +72,7 @@ const AdminLogs = () => {
         console.log('Tabela system_logs não existe');
         setLogs([]);
       } else {
-        setLogs(data || []);
+        setLogs((data || []) as LogEntry[]);
       }
     } catch (error) {
       console.error('Erro ao carregar logs:', error);

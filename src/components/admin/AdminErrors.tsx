@@ -74,7 +74,7 @@ const AdminErrors = () => {
         console.log('Tabela system_errors não existe');
         setErrors([]);
       } else {
-        setErrors(data || []);
+        setErrors((data || []) as ErrorEntry[]);
       }
     } catch (error) {
       setErrors([]);

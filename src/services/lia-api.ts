@@ -172,6 +172,7 @@ export async function processLiaActionLocal(action: LiaAction): Promise<LiaActio
           endereco: action.cliente_data.endereco,
           role: "cliente",
           status_processo: "inicial",
+          user_id: "", // Será preenchido quando o cliente criar conta
         });
         return { success: true, data: cliente };
       }
