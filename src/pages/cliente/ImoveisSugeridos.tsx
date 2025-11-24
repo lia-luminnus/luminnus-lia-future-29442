@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Bed, Bath, Square, Heart, Calendar, Star } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, Calendar, Star, MessageCircle } from "lucide-react";
 import ClienteLayout from "@/components/layout/ClienteLayout";
 
 // Mock data for suggested properties
@@ -67,6 +67,13 @@ const imoveisSugeridos = [
 
 const formatPrice = (price: number) => {
   return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const getWhatsAppLink = (imovel: typeof imoveisSugeridos[0]) => {
+  const message = encodeURIComponent(
+    `Ola! Tenho interesse no imovel: ${imovel.titulo} - ${imovel.endereco} (${formatPrice(imovel.preco)}). Podemos conversar?`
+  );
+  return `https://wa.me/5511999999999?text=${message}`;
 };
 
 const ClienteImoveisSugeridos = () => {
@@ -168,18 +175,34 @@ const ClienteImoveisSugeridos = () => {
                 </div>
               </CardContent>
 
-              <CardFooter className="flex items-center justify-between pt-2 border-t">
-                <span className="text-xl font-bold text-primary">
-                  {formatPrice(imovel.preco)}
-                </span>
-                <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="gap-1">
-                    <Calendar className="w-4 h-4" />
-                    Agendar
-                  </Button>
+              <CardFooter className="flex flex-col gap-3 pt-2 border-t">
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-xl font-bold text-primary">
+                    {formatPrice(imovel.preco)}
+                  </span>
                   <Link to={`/imobiliaria/imovel/${imovel.id}`}>
                     <Button size="sm">Ver detalhes</Button>
                   </Link>
+                </div>
+                <div className="flex gap-2 w-full">
+                  <Button variant="outline" size="sm" className="flex-1 gap-1">
+                    <Calendar className="w-4 h-4" />
+                    Agendar
+                  </Button>
+                  <a
+                    href={getWhatsAppLink(imovel)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1"
+                  >
+                    <Button
+                      size="sm"
+                      className="w-full gap-1 bg-green-500 hover:bg-green-600 text-white"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      WhatsApp
+                    </Button>
+                  </a>
                 </div>
               </CardFooter>
             </Card>
