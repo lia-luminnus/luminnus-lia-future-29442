@@ -14,7 +14,7 @@ const ADMIN_EMAIL = "luminnus.lia.ai@gmail.com";
 const UnifiedHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
-  const { user, signOut } = useAuth();
+  const { user, signOut, role } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
