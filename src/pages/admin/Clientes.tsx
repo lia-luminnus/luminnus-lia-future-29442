@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,79 +17,112 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, MoreVertical, Eye, Edit, Trash2, UserPlus, Phone, Mail } from "lucide-react";
+import { Search, MoreVertical, Eye, Edit, Trash2, UserPlus, Phone, Mail, Loader2 } from "lucide-react";
 import AdminImobLayout from "@/components/layout/AdminImobLayout";
+import { getClientes, getProcessos, deleteCliente, type Cliente, type Processo } from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data for clients
-const clientesMock = [
-  {
-    id: 1,
-    nome: "Maria Silva",
-    email: "maria@email.com",
-    telefone: "(11) 99999-1111",
-    status: "em_andamento",
-    etapa: "Validacao Bancaria",
-    datacadastro: "2024-11-01"
-  },
-  {
-    id: 2,
-    nome: "Joao Santos",
-    email: "joao@email.com",
-    telefone: "(11) 99999-2222",
-    status: "novo",
-    etapa: "Pre-analise",
-    datacastro: "2024-11-15"
-  },
-  {
-    id: 3,
-    nome: "Ana Costa",
-    email: "ana@email.com",
-    telefone: "(11) 99999-3333",
-    status: "em_andamento",
-    etapa: "Visitas",
-    datacastro: "2024-10-20"
-  },
-  {
-    id: 4,
-    nome: "Pedro Lima",
-    email: "pedro@email.com",
-    telefone: "(11) 99999-4444",
-    status: "concluido",
-    etapa: "Contrato",
-    datacastro: "2024-09-10"
-  },
-  {
-    id: 5,
-    nome: "Carla Mendes",
-    email: "carla@email.com",
-    telefone: "(11) 99999-5555",
-    status: "em_andamento",
-    etapa: "Documentacao",
-    datacastro: "2024-11-10"
-  },
+const ETAPAS_NOMES = [
+  "Pre-analise",
+  "Documentacao",
+  "Validacao Bancaria",
+  "Busca",
+  "Visitas",
+  "Negociacao",
+  "Contrato"
 ];
 
 const getStatusBadge = (status: string) => {
   switch (status) {
-    case "novo":
-      return <Badge className="bg-green-500">Novo</Badge>;
     case "em_andamento":
       return <Badge className="bg-blue-500">Em Andamento</Badge>;
     case "concluido":
       return <Badge className="bg-gray-500">Concluido</Badge>;
+    case "pendente":
+      return <Badge className="bg-orange-500">Pendente</Badge>;
     default:
-      return <Badge variant="secondary">{status}</Badge>;
+      return <Badge className="bg-green-500">Novo</Badge>;
   }
 };
 
 const AdminClientes = () => {
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [clientes, setClientes] = useState<(Cliente & { processo?: Processo })[]>([]);
 
-  const filteredClientes = clientesMock.filter(
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [clientesData, processosData] = await Promise.all([
+        getClientes(),
+        getProcessos().catch(() => [])
+      ]);
+
+      // Combinar clientes com seus processos
+      const clientesComProcesso = clientesData
+        .filter((c) => c.role === "cliente")
+        .map((cliente) => ({
+          ...cliente,
+          processo: processosData.find((p) => p.cliente_id === cliente.id)
+        }));
+
+      setClientes(clientesComProcesso);
+    } catch (error) {
+      console.error("Erro ao carregar clientes:", error);
+      toast({
+        title: "Erro",
+        description: "Nao foi possivel carregar os clientes",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir este cliente?")) return;
+
+    try {
+      await deleteCliente(id);
+      setClientes((prev) => prev.filter((c) => c.id !== id));
+      toast({
+        title: "Sucesso",
+        description: "Cliente excluido com sucesso"
+      });
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Nao foi possivel excluir o cliente",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const filteredClientes = clientes.filter(
     (cliente) =>
       cliente.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
       cliente.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Calcular estatisticas
+  const totalClientes = clientes.length;
+  const novos = clientes.filter((c) => !c.processo).length;
+  const emAndamento = clientes.filter((c) => c.processo?.status === "em_andamento").length;
+  const concluidos = clientes.filter((c) => c.processo?.status === "concluido").length;
+
+  if (loading) {
+    return (
+      <AdminImobLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminImobLayout>
+    );
+  }
 
   return (
     <AdminImobLayout>
@@ -110,31 +143,25 @@ const AdminClientes = () => {
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-foreground">{clientesMock.length}</p>
+              <p className="text-2xl font-bold text-foreground">{totalClientes}</p>
               <p className="text-sm text-muted-foreground">Total</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-green-500">
-                {clientesMock.filter(c => c.status === 'novo').length}
-              </p>
+              <p className="text-2xl font-bold text-green-500">{novos}</p>
               <p className="text-sm text-muted-foreground">Novos</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-blue-500">
-                {clientesMock.filter(c => c.status === 'em_andamento').length}
-              </p>
+              <p className="text-2xl font-bold text-blue-500">{emAndamento}</p>
               <p className="text-sm text-muted-foreground">Em Andamento</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-gray-500">
-                {clientesMock.filter(c => c.status === 'concluido').length}
-              </p>
+              <p className="text-2xl font-bold text-gray-500">{concluidos}</p>
               <p className="text-sm text-muted-foreground">Concluidos</p>
             </CardContent>
           </Card>
@@ -180,17 +207,23 @@ const AdminClientes = () => {
                             <Mail className="w-3 h-3" />
                             {cliente.email}
                           </p>
-                          <p className="text-sm flex items-center gap-1 text-muted-foreground">
-                            <Phone className="w-3 h-3" />
-                            {cliente.telefone}
-                          </p>
+                          {cliente.telefone && (
+                            <p className="text-sm flex items-center gap-1 text-muted-foreground">
+                              <Phone className="w-3 h-3" />
+                              {cliente.telefone}
+                            </p>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell>
-                        {getStatusBadge(cliente.status)}
+                        {getStatusBadge(cliente.processo?.status || "novo")}
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-foreground">{cliente.etapa}</span>
+                        <span className="text-sm text-foreground">
+                          {cliente.processo
+                            ? ETAPAS_NOMES[cliente.processo.etapa_atual - 1] || "Pre-analise"
+                            : "Aguardando"}
+                        </span>
                       </TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
@@ -208,7 +241,10 @@ const AdminClientes = () => {
                               <Edit className="w-4 h-4" />
                               Editar
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 text-red-500">
+                            <DropdownMenuItem
+                              className="gap-2 text-red-500"
+                              onClick={() => handleDelete(cliente.id)}
+                            >
                               <Trash2 className="w-4 h-4" />
                               Excluir
                             </DropdownMenuItem>

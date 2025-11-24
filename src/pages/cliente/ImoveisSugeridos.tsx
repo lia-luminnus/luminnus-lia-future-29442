@@ -1,82 +1,68 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Bed, Bath, Square, Heart, Calendar, Star, MessageCircle } from "lucide-react";
+import { MapPin, Bed, Bath, Square, Heart, Calendar, MessageCircle, Loader2 } from "lucide-react";
 import ClienteLayout from "@/components/layout/ClienteLayout";
-
-// Mock data for suggested properties
-const imoveisSugeridos = [
-  {
-    id: 1,
-    titulo: "Apartamento Moderno Centro",
-    tipo: "Apartamento",
-    endereco: "Centro, Sao Paulo - SP",
-    preco: 450000,
-    quartos: 2,
-    banheiros: 1,
-    area: 65,
-    imagem: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=300&fit=crop",
-    compatibilidade: 95,
-    destaque: true,
-    novo: true
-  },
-  {
-    id: 2,
-    titulo: "Casa com Jardim",
-    tipo: "Casa",
-    endereco: "Jardins, Sao Paulo - SP",
-    preco: 850000,
-    quartos: 3,
-    banheiros: 2,
-    area: 150,
-    imagem: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop",
-    compatibilidade: 88,
-    destaque: true,
-    novo: false
-  },
-  {
-    id: 3,
-    titulo: "Studio Compacto",
-    tipo: "Studio",
-    endereco: "Pinheiros, Sao Paulo - SP",
-    preco: 280000,
-    quartos: 1,
-    banheiros: 1,
-    area: 35,
-    imagem: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=400&h=300&fit=crop",
-    compatibilidade: 82,
-    destaque: false,
-    novo: true
-  },
-  {
-    id: 4,
-    titulo: "Apartamento Garden",
-    tipo: "Apartamento",
-    endereco: "Vila Madalena, Sao Paulo - SP",
-    preco: 680000,
-    quartos: 3,
-    banheiros: 2,
-    area: 110,
-    imagem: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?w=400&h=300&fit=crop",
-    compatibilidade: 78,
-    destaque: false,
-    novo: false
-  }
-];
+import { useAuth } from "@/contexts/AuthContext";
+import { getImoveisSugeridos, type ImovelSugerido, type Imovel } from "@/services/api";
 
 const formatPrice = (price: number) => {
-  return price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  return price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 };
 
-const getWhatsAppLink = (imovel: typeof imoveisSugeridos[0]) => {
+const getWhatsAppLink = (imovel: Imovel) => {
   const message = encodeURIComponent(
-    `Ola! Tenho interesse no imovel: ${imovel.titulo} - ${imovel.endereco} (${formatPrice(imovel.preco)}). Podemos conversar?`
+    `Ola! Tenho interesse no imovel: ${imovel.titulo} - ${imovel.localizacao} (${formatPrice(imovel.preco)}). Podemos conversar?`
   );
   return `https://wa.me/5511999999999?text=${message}`;
 };
 
 const ClienteImoveisSugeridos = () => {
+  const { clienteId } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [sugestoes, setSugestoes] = useState<ImovelSugerido[]>([]);
+
+  useEffect(() => {
+    const loadSugestoes = async () => {
+      if (!clienteId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getImoveisSugeridos(clienteId);
+        setSugestoes(data);
+      } catch (error) {
+        console.error("Erro ao carregar sugestoes:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSugestoes();
+  }, [clienteId]);
+
+  if (loading) {
+    return (
+      <ClienteLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </ClienteLayout>
+    );
+  }
+
+  // Extrai os imoveis das sugestoes
+  const imoveis = sugestoes
+    .filter((s) => s.imovel)
+    .map((s) => ({
+      ...s.imovel!,
+      nota_lia: s.nota_lia,
+      sugestao_id: s.id
+    }));
+
   return (
     <ClienteLayout>
       <div className="p-6 space-y-6">
@@ -92,125 +78,126 @@ const ClienteImoveisSugeridos = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <p className="text-3xl font-bold text-primary">{imoveisSugeridos.length}</p>
+              <p className="text-3xl font-bold text-primary">{imoveis.length}</p>
               <p className="text-sm text-muted-foreground">Imoveis Sugeridos</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-3xl font-bold text-green-500">
-                {imoveisSugeridos.filter(i => i.novo).length}
+                {imoveis.filter((i) => i.disponivel).length}
               </p>
-              <p className="text-sm text-muted-foreground">Novos Esta Semana</p>
+              <p className="text-sm text-muted-foreground">Disponiveis</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-3xl font-bold text-orange-500">
-                {imoveisSugeridos.filter(i => i.destaque).length}
+                {imoveis.filter((i) => i.nota_lia).length}
               </p>
-              <p className="text-sm text-muted-foreground">Em Destaque</p>
+              <p className="text-sm text-muted-foreground">Com Nota da LIA</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Properties Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {imoveisSugeridos.map((imovel) => (
-            <Card key={imovel.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={imovel.imagem}
-                  alt={imovel.titulo}
-                  className="w-full h-full object-cover transition-transform hover:scale-105"
-                />
-                <div className="absolute top-3 left-3 flex gap-2">
-                  <Badge>{imovel.tipo}</Badge>
-                  {imovel.novo && (
-                    <Badge className="bg-green-500">Novo</Badge>
+        {imoveis.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {imoveis.map((imovel) => (
+              <Card key={imovel.sugestao_id} className="overflow-hidden hover:shadow-lg transition-shadow">
+                <div className="relative h-48 overflow-hidden bg-muted">
+                  {imovel.fotos && imovel.fotos.length > 0 ? (
+                    <img
+                      src={imovel.fotos[0]}
+                      alt={imovel.titulo}
+                      className="w-full h-full object-cover transition-transform hover:scale-105"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <MapPin className="w-12 h-12 text-muted-foreground" />
+                    </div>
                   )}
-                  {imovel.destaque && (
-                    <Badge className="bg-orange-500 flex items-center gap-1">
-                      <Star className="w-3 h-3" /> Destaque
-                    </Badge>
-                  )}
-                </div>
-                <div className="absolute top-3 right-3">
-                  <Button
-                    variant="secondary"
-                    size="icon"
-                    className="rounded-full bg-white/80 hover:bg-white"
-                  >
-                    <Heart className="w-4 h-4 text-red-500" />
-                  </Button>
-                </div>
-                {/* Compatibility Badge */}
-                <div className="absolute bottom-3 right-3 bg-primary text-primary-foreground px-2 py-1 rounded-md text-sm font-medium">
-                  {imovel.compatibilidade}% compativel
-                </div>
-              </div>
-
-              <CardHeader className="pb-2">
-                <h3 className="text-lg font-semibold text-foreground">{imovel.titulo}</h3>
-                <p className="text-sm text-muted-foreground flex items-center gap-1">
-                  <MapPin className="w-4 h-4" />
-                  {imovel.endereco}
-                </p>
-              </CardHeader>
-
-              <CardContent className="pb-2">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <Bed className="w-4 h-4" />
-                    {imovel.quartos}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Bath className="w-4 h-4" />
-                    {imovel.banheiros}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <Square className="w-4 h-4" />
-                    {imovel.area}m²
-                  </span>
-                </div>
-              </CardContent>
-
-              <CardFooter className="flex flex-col gap-3 pt-2 border-t">
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-xl font-bold text-primary">
-                    {formatPrice(imovel.preco)}
-                  </span>
-                  <Link to={`/imobiliaria/imovel/${imovel.id}`}>
-                    <Button size="sm">Ver detalhes</Button>
-                  </Link>
-                </div>
-                <div className="flex gap-2 w-full">
-                  <Button variant="outline" size="sm" className="flex-1 gap-1">
-                    <Calendar className="w-4 h-4" />
-                    Agendar
-                  </Button>
-                  <a
-                    href={getWhatsAppLink(imovel)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1"
-                  >
+                  <div className="absolute top-3 left-3 flex gap-2">
+                    <Badge>{imovel.tipologia || "Imovel"}</Badge>
+                    {imovel.disponivel && <Badge className="bg-green-500">Disponivel</Badge>}
+                  </div>
+                  <div className="absolute top-3 right-3">
                     <Button
-                      size="sm"
-                      className="w-full gap-1 bg-green-500 hover:bg-green-600 text-white"
+                      variant="secondary"
+                      size="icon"
+                      className="rounded-full bg-white/80 hover:bg-white"
                     >
-                      <MessageCircle className="w-4 h-4" />
-                      WhatsApp
+                      <Heart className="w-4 h-4 text-red-500" />
                     </Button>
-                  </a>
+                  </div>
                 </div>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
 
-        {/* Empty State */}
-        {imoveisSugeridos.length === 0 && (
+                <CardHeader className="pb-2">
+                  <h3 className="text-lg font-semibold text-foreground">{imovel.titulo}</h3>
+                  <p className="text-sm text-muted-foreground flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    {imovel.localizacao}
+                  </p>
+                </CardHeader>
+
+                <CardContent className="pb-2">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Bed className="w-4 h-4" />
+                      {imovel.quartos || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Bath className="w-4 h-4" />
+                      {imovel.banheiros || 0}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Square className="w-4 h-4" />
+                      {imovel.area || 0}m2
+                    </span>
+                  </div>
+
+                  {imovel.nota_lia && (
+                    <div className="mt-3 p-2 rounded bg-primary/10 text-sm">
+                      <p className="font-medium text-primary">Nota da LIA:</p>
+                      <p className="text-foreground">{imovel.nota_lia}</p>
+                    </div>
+                  )}
+                </CardContent>
+
+                <CardFooter className="flex flex-col gap-3 pt-2 border-t">
+                  <div className="flex items-center justify-between w-full">
+                    <span className="text-xl font-bold text-primary">
+                      {formatPrice(imovel.preco)}
+                    </span>
+                    <Link to={`/imobiliaria/imovel/${imovel.id}`}>
+                      <Button size="sm">Ver detalhes</Button>
+                    </Link>
+                  </div>
+                  <div className="flex gap-2 w-full">
+                    <Button variant="outline" size="sm" className="flex-1 gap-1">
+                      <Calendar className="w-4 h-4" />
+                      Agendar
+                    </Button>
+                    <a
+                      href={getWhatsAppLink(imovel)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1"
+                    >
+                      <Button
+                        size="sm"
+                        className="w-full gap-1 bg-green-500 hover:bg-green-600 text-white"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        WhatsApp
+                      </Button>
+                    </a>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
           <Card>
             <CardContent className="p-12 text-center">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">

@@ -1,47 +1,91 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Calendar, FileText, Building2, Clock, ArrowRight, CheckCircle, AlertCircle } from "lucide-react";
+import { Calendar, FileText, Building2, Clock, ArrowRight, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import ClienteLayout from "@/components/layout/ClienteLayout";
+import { useAuth } from "@/contexts/AuthContext";
+import { getProcesso, getAgenda, type Processo, type AgendaEvento } from "@/services/api";
 
-// Mock data
-const statusProcesso = {
-  etapaAtual: 3,
-  totalEtapas: 7,
-  etapaNome: "Validacao Bancaria",
-  progresso: 43
-};
-
-const proximasVisitas = [
-  { id: 1, imovel: "Apartamento Centro", data: "25/11/2024", hora: "14:00" },
-  { id: 2, imovel: "Casa Jardins", data: "27/11/2024", hora: "10:00" },
-];
-
-const documentosPendentes = [
-  { id: 1, nome: "Comprovante de Renda", status: "pendente" },
-  { id: 2, nome: "RG/CPF", status: "aprovado" },
-  { id: 3, nome: "Comprovante de Residencia", status: "pendente" },
-];
-
-const etapasProcesso = [
-  { id: 1, nome: "Pre-analise", completa: true },
-  { id: 2, nome: "Documentacao", completa: true },
-  { id: 3, nome: "Validacao Bancaria", completa: false, atual: true },
-  { id: 4, nome: "Busca", completa: false },
-  { id: 5, nome: "Visitas", completa: false },
-  { id: 6, nome: "Negociacao", completa: false },
-  { id: 7, nome: "Contrato", completa: false },
+// Nomes das etapas do processo
+const ETAPAS_NOMES = [
+  "Pre-analise",
+  "Documentacao",
+  "Validacao Bancaria",
+  "Busca",
+  "Visitas",
+  "Negociacao",
+  "Contrato"
 ];
 
 const ClienteDashboard = () => {
+  const { clienteId, user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [processo, setProcesso] = useState<Processo | null>(null);
+  const [agenda, setAgenda] = useState<AgendaEvento[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      if (!clienteId) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const [processoData, agendaData] = await Promise.all([
+          getProcesso(clienteId).catch(() => null),
+          getAgenda(clienteId).catch(() => [])
+        ]);
+
+        setProcesso(processoData);
+        setAgenda(agendaData);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [clienteId]);
+
+  // Calcula progresso baseado na etapa atual
+  const etapaAtual = processo?.etapa_atual || 1;
+  const progresso = Math.round((etapaAtual / 7) * 100);
+
+  // Filtra proximas visitas
+  const proximasVisitas = agenda.filter(
+    (e) => e.tipo === "visita" && e.status !== "cancelado"
+  ).slice(0, 3);
+
+  // Gera etapas do processo
+  const etapasProcesso = ETAPAS_NOMES.map((nome, index) => ({
+    id: index + 1,
+    nome,
+    completa: index + 1 < etapaAtual,
+    atual: index + 1 === etapaAtual
+  }));
+
+  if (loading) {
+    return (
+      <ClienteLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </ClienteLayout>
+    );
+  }
+
   return (
     <ClienteLayout>
       <div className="p-6 space-y-6">
         {/* Page Header */}
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-          <p className="text-muted-foreground">Acompanhe o status do seu processo imobiliario</p>
+          <p className="text-muted-foreground">
+            Ola, {user?.user_metadata?.full_name || "Cliente"}! Acompanhe o status do seu processo imobiliario
+          </p>
         </div>
 
         {/* Stats Cards */}
@@ -54,7 +98,9 @@ const ClienteDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Etapa Atual</p>
-                  <p className="text-lg font-semibold text-foreground">{statusProcesso.etapaNome}</p>
+                  <p className="text-lg font-semibold text-foreground">
+                    {ETAPAS_NOMES[etapaAtual - 1] || "Pre-analise"}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -68,7 +114,7 @@ const ClienteDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Progresso</p>
-                  <p className="text-lg font-semibold text-foreground">{statusProcesso.progresso}%</p>
+                  <p className="text-lg font-semibold text-foreground">{progresso}%</p>
                 </div>
               </div>
             </CardContent>
@@ -95,9 +141,9 @@ const ClienteDashboard = () => {
                   <AlertCircle className="w-5 h-5 text-orange-500" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Docs Pendentes</p>
-                  <p className="text-lg font-semibold text-foreground">
-                    {documentosPendentes.filter(d => d.status === 'pendente').length}
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="text-lg font-semibold text-foreground capitalize">
+                    {processo?.status?.replace("_", " ") || "Em andamento"}
                   </p>
                 </div>
               </div>
@@ -119,7 +165,7 @@ const ClienteDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="mb-4">
-              <Progress value={statusProcesso.progresso} className="h-2" />
+              <Progress value={progresso} className="h-2" />
             </div>
             <div className="flex justify-between overflow-x-auto pb-2">
               {etapasProcesso.map((etapa, index) => (
@@ -169,10 +215,12 @@ const ClienteDashboard = () => {
                         <Building2 className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium text-foreground">{visita.imovel}</p>
+                        <p className="font-medium text-foreground">
+                          {visita.descricao || "Visita agendada"}
+                        </p>
                         <p className="text-sm text-muted-foreground flex items-center gap-2">
                           <Clock className="w-3 h-3" />
-                          {visita.data} as {visita.hora}
+                          {new Date(visita.data).toLocaleDateString("pt-BR")} as {visita.hora}
                         </p>
                       </div>
                     </div>
@@ -186,41 +234,31 @@ const ClienteDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Documentos Pendentes */}
+          {/* Observacoes do Processo */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
-                <span>Documentos</span>
-                <Link to="/cliente/meus-dados">
+                <span>Observacoes</span>
+                <Link to="/cliente/status">
                   <Button variant="ghost" size="sm" className="gap-1">
-                    Ver todos <ArrowRight className="w-4 h-4" />
+                    Ver status <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {documentosPendentes.map((doc) => (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-foreground">{doc.nome}</span>
-                    </div>
-                    <span
-                      className={`text-xs font-medium px-2 py-1 rounded-full ${
-                        doc.status === "aprovado"
-                          ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                          : "bg-orange-100 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400"
-                      }`}
-                    >
-                      {doc.status === "aprovado" ? "Aprovado" : "Pendente"}
-                    </span>
-                  </div>
-                ))}
-              </div>
+              {processo?.observacoes ? (
+                <div className="p-3 rounded-lg bg-muted/50">
+                  <p className="text-foreground">{processo.observacoes}</p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Atualizado em {new Date(processo.updated_at).toLocaleDateString("pt-BR")}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground text-center py-4">
+                  Nenhuma observacao registrada
+                </p>
+              )}
             </CardContent>
           </Card>
         </div>
