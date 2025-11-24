@@ -21,6 +21,7 @@ import { Loader2 } from "lucide-react";
 const AdminDashboard = () => {
   const { isAdmin, isLoading, adminEmail } = useAdminAuth();
   const [activeSection, setActiveSection] = useState("overview");
+  const [activeContext, setActiveContext] = useState<"lia" | "imobiliaria">("lia");
 
   // Enquanto verifica autenticação
   if (isLoading) {
@@ -50,6 +51,25 @@ const AdminDashboard = () => {
 
   // Renderiza a seção ativa
   const renderSection = () => {
+    if (activeContext === "imobiliaria") {
+      switch (activeSection) {
+        case "imob-inicio":
+          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Dashboard Imobiliária</h2><p>Em desenvolvimento...</p></div>;
+        case "imob-clientes":
+          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Gestão de Clientes</h2><p>Em desenvolvimento...</p></div>;
+        case "imob-imoveis":
+          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Gestão de Imóveis</h2><p>Em desenvolvimento...</p></div>;
+        case "imob-agenda":
+          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Agenda</h2><p>Em desenvolvimento...</p></div>;
+        case "imob-processos":
+          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Processos</h2><p>Em desenvolvimento...</p></div>;
+        case "imob-config":
+          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Configurações</h2><p>Em desenvolvimento...</p></div>;
+        default:
+          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Dashboard Imobiliária</h2><p>Em desenvolvimento...</p></div>;
+      }
+    }
+
     switch (activeSection) {
       case "overview":
         return <AdminOverview />;
@@ -89,7 +109,12 @@ const AdminDashboard = () => {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <AdminSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
+      <AdminSidebar 
+        activeSection={activeSection} 
+        onSectionChange={setActiveSection}
+        activeContext={activeContext}
+        onContextChange={setActiveContext}
+      />
 
       {/* Main Content */}
       <main className="flex-1 md:ml-64">
@@ -98,21 +123,34 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold text-foreground">
-                {activeSection === "overview" && "Visão Geral"}
-                {activeSection === "lia-chat" && "Assistente LIA"}
-                {activeSection === "users" && "Gerenciar Usuários"}
-                {activeSection === "companies" && "Gestão de Empresas"}
-                {activeSection === "lia-config" && "Configurações da LIA"}
-                {activeSection === "lia-core-updates" && "LIA Core Updates"}
-                {activeSection === "tools" && "Ferramentas e Testes"}
-                {activeSection === "history" && "Histórico de Interações"}
-                {activeSection === "plans" && "Planos e Permissões"}
-                {activeSection === "integrations" && "Integrações"}
-                {activeSection === "metrics" && "Métricas e Analytics"}
-                {activeSection === "support" && "Suporte"}
-                {activeSection === "logs" && "Logs do Sistema"}
-                {activeSection === "errors" && "Monitoramento de Erros"}
-                {activeSection === "technical" && "Configurações Técnicas"}
+                {activeContext === "imobiliaria" ? (
+                  <>
+                    {activeSection === "imob-inicio" && "Dashboard Imobiliária"}
+                    {activeSection === "imob-clientes" && "Gestão de Clientes"}
+                    {activeSection === "imob-imoveis" && "Gestão de Imóveis"}
+                    {activeSection === "imob-agenda" && "Agenda"}
+                    {activeSection === "imob-processos" && "Processos"}
+                    {activeSection === "imob-config" && "Configurações"}
+                  </>
+                ) : (
+                  <>
+                    {activeSection === "overview" && "Visão Geral"}
+                    {activeSection === "lia-chat" && "Assistente LIA"}
+                    {activeSection === "users" && "Gerenciar Usuários"}
+                    {activeSection === "companies" && "Gestão de Empresas"}
+                    {activeSection === "lia-config" && "Configurações da LIA"}
+                    {activeSection === "lia-core-updates" && "LIA Core Updates"}
+                    {activeSection === "tools" && "Ferramentas e Testes"}
+                    {activeSection === "history" && "Histórico de Interações"}
+                    {activeSection === "plans" && "Planos e Permissões"}
+                    {activeSection === "integrations" && "Integrações"}
+                    {activeSection === "metrics" && "Métricas e Analytics"}
+                    {activeSection === "support" && "Suporte"}
+                    {activeSection === "logs" && "Logs do Sistema"}
+                    {activeSection === "errors" && "Monitoramento de Erros"}
+                    {activeSection === "technical" && "Configurações Técnicas"}
+                  </>
+                )}
               </h1>
               <p className="text-sm text-muted-foreground">
                 Logado como: <span className="font-medium">{adminEmail}</span>

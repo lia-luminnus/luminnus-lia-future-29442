@@ -17,9 +17,12 @@ import {
   Plug,
   BarChart3,
   Headphones,
-  Sparkles
+  Sparkles,
+  Home,
+  Calendar
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -27,9 +30,18 @@ import { useNavigate } from "react-router-dom";
 interface AdminSidebarProps {
   activeSection: string;
   onSectionChange: (section: string) => void;
+  activeContext?: "lia" | "imobiliaria";
+  onContextChange?: (context: "lia" | "imobiliaria") => void;
 }
 
-const menuItems = [
+interface MenuItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+}
+
+const liaMenuItems: MenuItem[] = [
   { id: "overview", label: "Visão Geral", icon: LayoutDashboard },
   { id: "lia-chat", label: "Assistente LIA", icon: Bot },
   { id: "users", label: "Gerenciar Usuários", icon: Users },
@@ -47,13 +59,31 @@ const menuItems = [
   { id: "lia-config", label: "Configurações da LIA", icon: Settings },
 ];
 
-export const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarProps) => {
+const imobiliariaMenuItems: MenuItem[] = [
+  { id: "imob-inicio", label: "Início", icon: Home },
+  { id: "imob-clientes", label: "Clientes", icon: Users },
+  { id: "imob-imoveis", label: "Imóveis", icon: Building2 },
+  { id: "imob-agenda", label: "Agenda", icon: Calendar },
+  { id: "imob-processos", label: "Processos", icon: FileText },
+  { id: "imob-config", label: "Configurações", icon: Settings },
+];
+
+export const AdminSidebar = ({ 
+  activeSection, 
+  onSectionChange, 
+  activeContext = "lia",
+  onContextChange 
+}: AdminSidebarProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
+  
+  const menuItems = activeContext === "lia" ? liaMenuItems : imobiliariaMenuItems;
 
   const handleSignOut = async () => {
+    console.log('[AdminSidebar] Iniciando logout...');
     await signOut();
+    console.log('[AdminSidebar] Logout completo, redirecionando para home');
     navigate("/");
   };
 
@@ -78,11 +108,25 @@ export const AdminSidebar = ({ activeSection, onSectionChange }: AdminSidebarPro
       >
         <div className="flex h-full flex-col">
           {/* Header */}
-          <div className="flex items-center justify-center border-b border-primary/30 p-6">
+          <div className="border-b border-primary/30 p-6">
             <div className="text-center">
               <h1 className="text-2xl font-bold text-primary-foreground">LIA Admin</h1>
               <p className="text-sm text-primary-foreground/80">Painel de Controle</p>
             </div>
+          </div>
+
+          {/* Context Tabs */}
+          <div className="px-3 pt-4 pb-2">
+            <Tabs value={activeContext} onValueChange={(value) => onContextChange?.(value as "lia" | "imobiliaria")} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-primary-foreground/10">
+                <TabsTrigger value="lia" className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  LIA
+                </TabsTrigger>
+                <TabsTrigger value="imobiliaria" className="text-xs data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+                  Imobiliária
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
 
           {/* Navigation */}
