@@ -1,30 +1,96 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, Building2, FileCheck, Calendar, TrendingUp, ArrowRight, Clock } from "lucide-react";
+import { Users, Building2, FileCheck, Calendar, TrendingUp, ArrowRight, Clock, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import AdminImobLayout from "@/components/layout/AdminImobLayout";
-
-// Mock data for metrics
-const metricas = {
-  clientesAtivos: 24,
-  imoveisCadastrados: 156,
-  processosAndamento: 18,
-  reunioesMarcadas: 7
-};
-
-const ultimosClientes = [
-  { id: 1, nome: "Maria Silva", email: "maria@email.com", status: "em_andamento", etapa: "Validacao Bancaria" },
-  { id: 2, nome: "Joao Santos", email: "joao@email.com", status: "novo", etapa: "Pre-analise" },
-  { id: 3, nome: "Ana Costa", email: "ana@email.com", status: "em_andamento", etapa: "Visitas" },
-];
-
-const proximasReunies = [
-  { id: 1, cliente: "Maria Silva", tipo: "Visita", data: "25/11/2024", hora: "14:00" },
-  { id: 2, cliente: "Pedro Lima", tipo: "Reuniao", data: "25/11/2024", hora: "16:00" },
-  { id: 3, cliente: "Ana Costa", tipo: "Visita", data: "26/11/2024", hora: "10:00" },
-];
+import { getClientes, getImoveis, getProcessos, getAllAgenda, type Cliente, type Imovel, type Processo, type AgendaEvento } from "@/services/api";
 
 const AdminPainel = () => {
+  const [loading, setLoading] = useState(true);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [imoveis, setImoveis] = useState<Imovel[]>([]);
+  const [processos, setProcessos] = useState<Processo[]>([]);
+  const [agenda, setAgenda] = useState<AgendaEvento[]>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [clientesData, imoveisData, processosData, agendaData] = await Promise.all([
+          getClientes().catch(() => []),
+          getImoveis().catch(() => []),
+          getProcessos().catch(() => []),
+          getAllAgenda().catch(() => [])
+        ]);
+
+        setClientes(clientesData);
+        setImoveis(imoveisData);
+        setProcessos(processosData);
+        setAgenda(agendaData);
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Calcular metricas
+  const clientesAtivos = clientes.filter((c) => c.role === "cliente").length;
+  const imoveisCadastrados = imoveis.length;
+  const processosAndamento = processos.filter((p) => p.status === "em_andamento").length;
+  const reunioesMarcadas = agenda.filter(
+    (a) => a.status !== "cancelado" && new Date(a.data) >= new Date()
+  ).length;
+
+  // Ultimos clientes
+  const ultimosClientes = clientes
+    .filter((c) => c.role === "cliente")
+    .slice(0, 3)
+    .map((c) => {
+      const processo = processos.find((p) => p.cliente_id === c.id);
+      return {
+        ...c,
+        etapa: processo?.etapa_atual || 1,
+        status: processo?.status || "novo"
+      };
+    });
+
+  // Proximas reunioes
+  const proximasReunies = agenda
+    .filter((a) => a.status !== "cancelado")
+    .sort((a, b) => new Date(a.data).getTime() - new Date(b.data).getTime())
+    .slice(0, 3)
+    .map((a) => {
+      const cliente = clientes.find((c) => c.id === a.cliente_id);
+      return {
+        ...a,
+        clienteNome: cliente?.nome || "Cliente"
+      };
+    });
+
+  const etapasNomes = [
+    "Pre-analise",
+    "Documentacao",
+    "Validacao Bancaria",
+    "Busca",
+    "Visitas",
+    "Negociacao",
+    "Contrato"
+  ];
+
+  if (loading) {
+    return (
+      <AdminImobLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </AdminImobLayout>
+    );
+  }
+
   return (
     <AdminImobLayout>
       <div className="p-6 space-y-6">
@@ -41,7 +107,7 @@ const AdminPainel = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Clientes Ativos</p>
-                  <p className="text-3xl font-bold text-foreground">{metricas.clientesAtivos}</p>
+                  <p className="text-3xl font-bold text-foreground">{clientesAtivos}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center">
                   <Users className="w-6 h-6 text-blue-500" />
@@ -49,7 +115,7 @@ const AdminPainel = () => {
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm text-green-500">
                 <TrendingUp className="w-4 h-4" />
-                +12% este mes
+                Dados em tempo real
               </div>
             </CardContent>
           </Card>
@@ -59,15 +125,14 @@ const AdminPainel = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Imoveis Cadastrados</p>
-                  <p className="text-3xl font-bold text-foreground">{metricas.imoveisCadastrados}</p>
+                  <p className="text-3xl font-bold text-foreground">{imoveisCadastrados}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <Building2 className="w-6 h-6 text-primary" />
                 </div>
               </div>
-              <div className="flex items-center gap-1 mt-2 text-sm text-green-500">
-                <TrendingUp className="w-4 h-4" />
-                +8 novos
+              <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
+                {imoveis.filter((i) => i.disponivel).length} disponiveis
               </div>
             </CardContent>
           </Card>
@@ -77,14 +142,14 @@ const AdminPainel = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Processos em Andamento</p>
-                  <p className="text-3xl font-bold text-foreground">{metricas.processosAndamento}</p>
+                  <p className="text-3xl font-bold text-foreground">{processosAndamento}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center">
                   <FileCheck className="w-6 h-6 text-orange-500" />
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                5 aguardando acao
+                {processos.filter((p) => p.status === "pendente").length} pendentes
               </div>
             </CardContent>
           </Card>
@@ -94,14 +159,14 @@ const AdminPainel = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Reunioes Marcadas</p>
-                  <p className="text-3xl font-bold text-foreground">{metricas.reunioesMarcadas}</p>
+                  <p className="text-3xl font-bold text-foreground">{reunioesMarcadas}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-green-500/10 flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-green-500" />
                 </div>
               </div>
               <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                Proximos 7 dias
+                Proximos dias
               </div>
             </CardContent>
           </Card>
@@ -119,36 +184,42 @@ const AdminPainel = () => {
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {ultimosClientes.map((cliente) => (
-                  <div
-                    key={cliente.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                        <Users className="w-5 h-5 text-primary" />
+              {ultimosClientes.length > 0 ? (
+                <div className="space-y-4">
+                  {ultimosClientes.map((cliente) => (
+                    <div
+                      key={cliente.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{cliente.nome}</p>
+                          <p className="text-sm text-muted-foreground">{cliente.email}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{cliente.nome}</p>
-                        <p className="text-sm text-muted-foreground">{cliente.email}</p>
+                      <div className="text-right">
+                        <span
+                          className={`text-xs font-medium px-2 py-1 rounded-full ${
+                            cliente.status === "em_andamento"
+                              ? "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                              : "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
+                          }`}
+                        >
+                          {cliente.status === "em_andamento" ? "Em Andamento" : "Novo"}
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {etapasNomes[cliente.etapa - 1] || "Pre-analise"}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span
-                        className={`text-xs font-medium px-2 py-1 rounded-full ${
-                          cliente.status === "novo"
-                            ? "bg-green-100 text-green-700 dark:bg-green-900/20 dark:text-green-400"
-                            : "bg-blue-100 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-                        }`}
-                      >
-                        {cliente.status === "novo" ? "Novo" : "Em Andamento"}
-                      </span>
-                      <p className="text-xs text-muted-foreground mt-1">{cliente.etapa}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center py-4 text-muted-foreground">Nenhum cliente cadastrado</p>
+              )}
             </CardContent>
           </Card>
 
@@ -163,31 +234,37 @@ const AdminPainel = () => {
               </Link>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {proximasReunies.map((reuniao) => (
-                  <div
-                    key={reuniao.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                        <Calendar className="w-5 h-5 text-primary" />
+              {proximasReunies.length > 0 ? (
+                <div className="space-y-4">
+                  {proximasReunies.map((reuniao) => (
+                    <div
+                      key={reuniao.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                          <Calendar className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-foreground">{reuniao.clienteNome}</p>
+                          <p className="text-sm text-muted-foreground capitalize">{reuniao.tipo}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium text-foreground">{reuniao.cliente}</p>
-                        <p className="text-sm text-muted-foreground">{reuniao.tipo}</p>
+                      <div className="text-right">
+                        <p className="font-medium text-foreground">
+                          {new Date(reuniao.data).toLocaleDateString("pt-BR")}
+                        </p>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 justify-end">
+                          <Clock className="w-3 h-3" />
+                          {reuniao.hora}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-medium text-foreground">{reuniao.data}</p>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1 justify-end">
-                        <Clock className="w-3 h-3" />
-                        {reuniao.hora}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center py-4 text-muted-foreground">Nenhuma reuniao agendada</p>
+              )}
             </CardContent>
           </Card>
         </div>

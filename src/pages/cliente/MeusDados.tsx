@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,24 +7,64 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { User, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
 import ClienteLayout from "@/components/layout/ClienteLayout";
+import { getClienteById, updateCliente, type Cliente } from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
 
 const ClienteMeusDados = () => {
-  const { user } = useAuth();
+  const { user, clienteId } = useAuth();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cliente, setCliente] = useState<Cliente | null>(null);
   const [formData, setFormData] = useState({
-    nome: user?.user_metadata?.full_name || "",
-    email: user?.email || "",
-    telefone: "(11) 99999-9999",
-    endereco: "Rua Exemplo, 123",
-    bairro: "Centro",
-    cidade: "Sao Paulo",
-    estado: "SP",
-    cep: "01310-100",
-    observacoes: ""
+    nome: "",
+    email: "",
+    telefone: "",
+    endereco: ""
   });
 
+  useEffect(() => {
+    const loadCliente = async () => {
+      if (!clienteId) {
+        // Use dados do user se nao tiver clienteId
+        setFormData({
+          nome: user?.user_metadata?.full_name || "",
+          email: user?.email || "",
+          telefone: "",
+          endereco: ""
+        });
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const data = await getClienteById(clienteId);
+        if (data) {
+          setCliente(data);
+          setFormData({
+            nome: data.nome || "",
+            email: data.email || "",
+            telefone: data.telefone || "",
+            endereco: data.endereco || ""
+          });
+        }
+      } catch (error) {
+        console.error("Erro ao carregar dados:", error);
+        toast({
+          title: "Erro",
+          description: "Nao foi possivel carregar seus dados",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCliente();
+  }, [clienteId, user, toast]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [e.target.name]: e.target.value
     }));
@@ -32,13 +72,52 @@ const ClienteMeusDados = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!clienteId) {
+      toast({
+        title: "Erro",
+        description: "Nao foi possivel identificar seu cadastro",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSaving(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSaving(false);
-    // Show success message (in real app, use toast)
-    alert("Dados atualizados com sucesso!");
+
+    try {
+      const updated = await updateCliente(clienteId, {
+        nome: formData.nome,
+        telefone: formData.telefone,
+        endereco: formData.endereco
+      });
+
+      setCliente(updated);
+
+      toast({
+        title: "Sucesso",
+        description: "Dados atualizados com sucesso!"
+      });
+    } catch (error) {
+      console.error("Erro ao salvar:", error);
+      toast({
+        title: "Erro",
+        description: "Nao foi possivel salvar as alteracoes",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
   };
+
+  if (loading) {
+    return (
+      <ClienteLayout>
+        <div className="flex items-center justify-center h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </ClienteLayout>
+    );
+  }
 
   return (
     <ClienteLayout>
@@ -63,10 +142,21 @@ const ClienteMeusDados = () => {
                 <Mail className="w-4 h-4" />
                 {formData.email}
               </p>
-              <div className="mt-4 pt-4 border-t border-border">
-                <p className="text-sm text-muted-foreground">Cliente desde</p>
-                <p className="font-medium text-foreground">Novembro 2024</p>
-              </div>
+              {cliente && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-sm text-muted-foreground">Cliente desde</p>
+                  <p className="font-medium text-foreground">
+                    {new Date(cliente.created_at).toLocaleDateString("pt-BR", {
+                      month: "long",
+                      year: "numeric"
+                    })}
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">Status do processo</p>
+                  <p className="font-medium text-primary capitalize">
+                    {cliente.status_processo?.replace("_", " ") || "Inicial"}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -101,9 +191,7 @@ const ClienteMeusDados = () => {
                         name="email"
                         type="email"
                         value={formData.email}
-                        onChange={handleChange}
                         className="pl-10"
-                        placeholder="seu@email.com"
                         disabled
                       />
                     </div>
@@ -111,29 +199,17 @@ const ClienteMeusDados = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="telefone">Telefone</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                      <Input
-                        id="telefone"
-                        name="telefone"
-                        value={formData.telefone}
-                        onChange={handleChange}
-                        className="pl-10"
-                        placeholder="(11) 99999-9999"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cep">CEP</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="telefone">Telefone</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
-                      id="cep"
-                      name="cep"
-                      value={formData.cep}
+                      id="telefone"
+                      name="telefone"
+                      value={formData.telefone}
                       onChange={handleChange}
-                      placeholder="00000-000"
+                      className="pl-10"
+                      placeholder="(11) 99999-9999"
                     />
                   </div>
                 </div>
@@ -141,61 +217,16 @@ const ClienteMeusDados = () => {
                 <div className="space-y-2">
                   <Label htmlFor="endereco">Endereco</Label>
                   <div className="relative">
-                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input
+                    <MapPin className="absolute left-3 top-3 w-4 h-4 text-muted-foreground" />
+                    <Textarea
                       id="endereco"
                       name="endereco"
                       value={formData.endereco}
                       onChange={handleChange}
-                      className="pl-10"
-                      placeholder="Rua, numero, complemento"
+                      className="pl-10 min-h-[80px]"
+                      placeholder="Rua, numero, bairro, cidade - estado"
                     />
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="bairro">Bairro</Label>
-                    <Input
-                      id="bairro"
-                      name="bairro"
-                      value={formData.bairro}
-                      onChange={handleChange}
-                      placeholder="Bairro"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="cidade">Cidade</Label>
-                    <Input
-                      id="cidade"
-                      name="cidade"
-                      value={formData.cidade}
-                      onChange={handleChange}
-                      placeholder="Cidade"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="estado">Estado</Label>
-                    <Input
-                      id="estado"
-                      name="estado"
-                      value={formData.estado}
-                      onChange={handleChange}
-                      placeholder="UF"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="observacoes">Observacoes</Label>
-                  <Textarea
-                    id="observacoes"
-                    name="observacoes"
-                    value={formData.observacoes}
-                    onChange={handleChange}
-                    placeholder="Informacoes adicionais que deseja compartilhar..."
-                    rows={3}
-                  />
                 </div>
 
                 <div className="flex justify-end pt-4">
