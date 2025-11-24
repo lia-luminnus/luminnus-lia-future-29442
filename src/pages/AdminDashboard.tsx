@@ -16,6 +16,13 @@ import AdminIntegrations from "@/components/admin/AdminIntegrations";
 import AdminMetrics from "@/components/admin/AdminMetrics";
 import AdminSupport from "@/components/admin/AdminSupport";
 import AdminLiaCoreUpdates from "@/components/admin/AdminLiaCoreUpdates";
+import AdminBuscas from "@/components/admin/AdminBuscas";
+import AdminPainel from "@/pages/admin/Painel";
+import AdminClientes from "@/pages/admin/Clientes";
+import AdminImoveis from "@/pages/admin/Imoveis";
+import AdminAgenda from "@/pages/admin/Agenda";
+import AdminProcessos from "@/pages/admin/Processos";
+import AdminConfiguracoes from "@/pages/admin/Configuracoes";
 import { Loader2 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -54,19 +61,21 @@ const AdminDashboard = () => {
     if (activeContext === "imobiliaria") {
       switch (activeSection) {
         case "imob-inicio":
-          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Dashboard Imobiliária</h2><p>Em desenvolvimento...</p></div>;
+          return <AdminPainel />;
         case "imob-clientes":
-          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Gestão de Clientes</h2><p>Em desenvolvimento...</p></div>;
+          return <AdminClientes />;
         case "imob-imoveis":
-          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Gestão de Imóveis</h2><p>Em desenvolvimento...</p></div>;
+          return <AdminImoveis />;
         case "imob-agenda":
-          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Agenda</h2><p>Em desenvolvimento...</p></div>;
+          return <AdminAgenda />;
         case "imob-processos":
-          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Processos</h2><p>Em desenvolvimento...</p></div>;
+          return <AdminProcessos />;
+        case "imob-buscas":
+          return <AdminBuscas />;
         case "imob-config":
-          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Configurações</h2><p>Em desenvolvimento...</p></div>;
+          return <AdminConfiguracoes />;
         default:
-          return <div className="p-6 bg-card rounded-lg"><h2 className="text-2xl font-bold mb-4">Dashboard Imobiliária</h2><p>Em desenvolvimento...</p></div>;
+          return <AdminPainel />;
       }
     }
 
@@ -130,6 +139,7 @@ const AdminDashboard = () => {
                     {activeSection === "imob-imoveis" && "Gestão de Imóveis"}
                     {activeSection === "imob-agenda" && "Agenda"}
                     {activeSection === "imob-processos" && "Processos"}
+                    {activeSection === "imob-buscas" && "Buscas de Clientes"}
                     {activeSection === "imob-config" && "Configurações"}
                   </>
                 ) : (

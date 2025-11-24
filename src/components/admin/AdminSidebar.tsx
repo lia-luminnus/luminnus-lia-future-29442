@@ -65,6 +65,7 @@ const imobiliariaMenuItems: MenuItem[] = [
   { id: "imob-imoveis", label: "Imóveis", icon: Building2 },
   { id: "imob-agenda", label: "Agenda", icon: Calendar },
   { id: "imob-processos", label: "Processos", icon: FileText },
+  { id: "imob-buscas", label: "Buscas de Clientes", icon: Sparkles, badge: "Novo" },
   { id: "imob-config", label: "Configurações", icon: Settings },
 ];
 
