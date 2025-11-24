@@ -92,9 +92,8 @@ const UnifiedHeader = () => {
   };
 
   const handleLogout = async () => {
-    await signOut();
     setMobileMenuOpen(false);
-    navigate('/');
+    await signOut(); // signOut já faz window.location.href = '/'
   };
 
   const handleTabChange = (tab: string) => {
