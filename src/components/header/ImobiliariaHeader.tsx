@@ -52,7 +52,7 @@ const ImobiliariaHeader = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center cursor-pointer group text-2xl">
+          <Link to="/" className="flex items-center cursor-pointer group text-4xl">
             <img src={luminmusLogo} alt="Luminnus - Inteligencia & Solucoes" className="h-14 lg:h-18 w-auto object-contain transition-all duration-[var(--transition)] group-hover:scale-105 group-hover:brightness-110" />
           </Link>
 
