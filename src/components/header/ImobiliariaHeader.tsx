@@ -52,8 +52,8 @@ const ImobiliariaHeader = () => {
       <div className="container mx-auto px-4 lg:px-8">
         <div className="flex items-center justify-between h-20 lg:h-24">
           {/* Logo */}
-          <Link to="/" className="flex items-center cursor-pointer group text-4xl">
-            <img src={luminmusLogo} alt="Luminnus - Inteligencia & Solucoes" className="h-16 lg:h-20 w-auto object-contain transition-all duration-[var(--transition)] group-hover:scale-105 group-hover:brightness-110" />
+          <Link to="/imobiliaria" className="flex items-center cursor-pointer group text-4xl">
+            <img src={luminmusLogo} alt="Luminnus - Inteligencia & Solucoes" className="h-18 lg:h-22 w-auto object-contain transition-all duration-[var(--transition)] group-hover:scale-105 group-hover:brightness-110" />
           </Link>
 
           {/* Tab Navigation - Desktop */}
@@ -96,14 +96,14 @@ const ImobiliariaHeader = () => {
             <ThemeToggle />
 
             {user ? <div className="flex items-center gap-3">
-                <Link to={role === 'admin' ? "/admin-dashboard" : "/cliente/dashboard"} className="bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl shadow-lg hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2">
+                <Link to={role === 'admin' ? "/admin-imob" : "/cliente"} className="bg-primary text-primary-foreground font-semibold px-5 py-2.5 rounded-xl shadow-lg hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300 flex items-center gap-2">
                   <User className="w-4 h-4" />
                   {role === 'admin' ? 'Painel Admin' : 'Minha Área'}
                 </Link>
                 <Button variant="ghost" size="icon" onClick={handleLogout} className="hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20">
                   <LogOut className="w-4 h-4" />
                 </Button>
-              </div> : <Link to="/auth" className="bg-primary text-primary-foreground font-semibold px-6 py-2.5 rounded-xl shadow-lg hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300">
+              </div> : <Link to="/imobiliaria/login" className="bg-primary text-primary-foreground font-semibold px-6 py-2.5 rounded-xl shadow-lg hover:bg-primary/90 hover:-translate-y-0.5 transition-all duration-300">
                 Entrar
               </Link>}
           </div>
@@ -157,7 +157,7 @@ const ImobiliariaHeader = () => {
 
                   {/* Auth Buttons - Mobile */}
                   {user ? <>
-                      <Link to={role === 'admin' ? "/admin-dashboard" : "/cliente/dashboard"} onClick={() => setMobileMenuOpen(false)} className="bg-primary text-primary-foreground font-semibold px-4 py-3.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-lg hover:bg-primary/90 transition-all duration-300">
+                      <Link to={role === 'admin' ? "/admin-imob" : "/cliente"} onClick={() => setMobileMenuOpen(false)} className="bg-primary text-primary-foreground font-semibold px-4 py-3.5 rounded-xl text-center flex items-center justify-center gap-2 shadow-lg hover:bg-primary/90 transition-all duration-300">
                         <User className="w-5 h-5" />
                         {role === 'admin' ? 'Painel Admin' : 'Minha Área'}
                       </Link>
@@ -165,7 +165,7 @@ const ImobiliariaHeader = () => {
                         <LogOut className="w-4 h-4" />
                         Sair
                       </Button>
-                    </> : <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="bg-primary text-primary-foreground font-semibold px-4 py-3.5 rounded-xl text-center shadow-lg hover:bg-primary/90 transition-all duration-300">
+                    </> : <Link to="/imobiliaria/login" onClick={() => setMobileMenuOpen(false)} className="bg-primary text-primary-foreground font-semibold px-4 py-3.5 rounded-xl text-center shadow-lg hover:bg-primary/90 transition-all duration-300">
                       Entrar
                     </Link>}
                 </nav>
