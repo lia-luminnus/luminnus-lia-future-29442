@@ -20,12 +20,12 @@ interface AuthContextType {
   role: UserRole;
   clienteId: string | null;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string, address?: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   login: (email: string, password: string) => Promise<{ error: any }>;
   logout: () => Promise<void>;
-  register: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+  register: (email: string, password: string, fullName: string, phone?: string, address?: string) => Promise<{ error: any }>;
 }
 
 /**
@@ -134,6 +134,8 @@ const syncClienteRecord = async (user: User): Promise<string | null> => {
         user_id: user.id,
         nome: user.user_metadata?.full_name || user.email?.split('@')[0] || 'Cliente',
         email: user.email || '',
+        telefone: user.user_metadata?.phone || null,
+        endereco: user.user_metadata?.address || null,
         status_processo: 'inicial'
       })
       .select("id")
@@ -262,13 +264,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
    * Cria uma nova conta de usuário
    * Retorna erro traduzido em português se houver falha
    */
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    fullName: string,
+    phone?: string,
+    address?: string
+  ) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { full_name: fullName }
+        data: { 
+          full_name: fullName,
+          phone: phone || '',
+          address: address || ''
+        }
       }
     });
 
@@ -374,7 +386,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
    * FUNCAO DE REGISTRO (alias para signUp)
    * Cria uma nova conta de usuario na imobiliaria
    */
-  const register = async (email: string, password: string, fullName: string) => {
+  const register = async (
+    email: string, 
+    password: string, 
+    fullName: string,
+    phone?: string,
+    address?: string
+  ) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
@@ -382,6 +400,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         emailRedirectTo: `${window.location.origin}/cliente`,
         data: {
           full_name: fullName,
+          phone: phone || '',
+          address: address || '',
           role: 'cliente'
         }
       }
