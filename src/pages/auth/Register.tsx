@@ -310,8 +310,8 @@ const Register = () => {
             alt="Vista aérea de Aveiro"
             className="absolute inset-0 w-full h-full object-cover"
           />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/90 via-primary/70 to-transparent" />
-          <div className="relative h-full flex items-center justify-center p-12">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+          <div className="relative h-full flex items-center justify-end pb-12 p-12">
             <div className="max-w-md text-white space-y-6">
               <h2 className="text-4xl font-bold leading-tight">
                 Encontre seu imóvel dos sonhos
