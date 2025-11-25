@@ -239,8 +239,8 @@ const handleGoogleSignIn = async () => {
               alt="Casas coloridas de Aveiro"
               className="absolute inset-0 w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/90 to-primary/70 mix-blend-multiply" />
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-12 text-white">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+            <div className="absolute inset-0 flex flex-col items-center justify-end pb-12 p-12 text-white">
               <h2 className="text-4xl font-bold mb-4 text-center">
                 Encontre o lar dos seus sonhos
               </h2>
