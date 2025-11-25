@@ -10,7 +10,7 @@ const Hero = () => {
 
   return (
     <section
-      id="hero-lia"
+      id="inicio"
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
       style={{
         background: 'linear-gradient(135deg, #0B0B0D 0%, #1A1037 100%)',
